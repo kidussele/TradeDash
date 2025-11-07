@@ -1,6 +1,6 @@
 'use client';
 
-import { FileUp, PanelLeft } from 'lucide-react';
+import { FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

@@ -12,6 +12,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   useSidebar,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
@@ -51,6 +52,9 @@ export function AppSidebar() {
           >
             TradeDash
           </h1>
+          <div className="ml-auto">
+             <SidebarTrigger className="hidden md:flex" />
+          </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
