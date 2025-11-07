@@ -72,19 +72,6 @@ export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
                     cy="50%"
                     outerRadius={80}
                     innerRadius={60}
-                    labelLine={false}
-                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
-                        const RADIAN = Math.PI / 180;
-                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-                        return (
-                            <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" className="text-xs fill-foreground">
-                                {`${(percent * 100).toFixed(0)}%`}
-                            </text>
-                        );
-                    }}
                 >
                     {chartData.map((entry) => (
                         <Cell key={`cell-${entry.name}`} fill={entry.fill} opacity={0.7} />
