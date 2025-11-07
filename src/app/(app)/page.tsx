@@ -7,7 +7,7 @@ import { DailyPnlChart } from '@/components/dashboard/daily-pnl-chart';
 import { TradeDashScore } from '@/components/dashboard/tradedash-score';
 import { RecentTrades } from '@/components/dashboard/recent-trades';
 import { TradingCalendar } from '@/components/dashboard/trading-calendar';
-import type { JournalEntry } from '../journal/page';
+import type { JournalEntry, Emotion } from '../journal/page';
 
 export type StatCardData = {
   title: string;
@@ -60,6 +60,34 @@ function getDayWithMostPnl(entries: JournalEntry[], type: 'win' | 'loss'): StatC
     };
 }
 
+function getMostProfitableEmotion(entries: JournalEntry[]): StatCardData {
+    const emotionPnl: Partial<Record<Emotion, number>> = {};
+    entries.forEach(entry => {
+        if (entry.emotion && entry.pnl !== undefined) {
+            emotionPnl[entry.emotion] = (emotionPnl[entry.emotion] || 0) + entry.pnl;
+        }
+    });
+
+    const sortedEmotions = Object.entries(emotionPnl).sort(([, pnlA], [, pnlB]) => (pnlB || 0) - (pnlA || 0));
+
+    if (sortedEmotions.length === 0 || (sortedEmotions[0][1] || 0) === 0) {
+        return {
+            title: 'Best Emotion',
+            value: 'N/A',
+            change: 'No data',
+            changeType: 'positive',
+        };
+    }
+
+    const [emotion, pnl] = sortedEmotions[0] as [Emotion, number];
+    return {
+        title: 'Best Emotion',
+        value: emotion,
+        change: pnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+        changeType: pnl >= 0 ? 'positive' : 'negative',
+    };
+}
+
 
 export default function DashboardPage() {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[] | null>(null);
@@ -91,16 +119,6 @@ export default function DashboardPage() {
       const tradesWithOutcome = closedTrades.filter(trade => trade.result === 'Win' || trade.result === 'Loss' || trade.result === 'Breakeven').length;
       const winRate = tradesWithOutcome > 0 ? (wins / tradesWithOutcome) * 100 : 0;
       
-      const totalReturn = closedTrades.reduce((acc, trade) => {
-        const entry = trade.entryPrice;
-        const pnl = trade.pnl || 0;
-        if (entry > 0 && trade.positionSize > 0) {
-          return acc + (pnl / (trade.positionSize * entry));
-        }
-        return acc;
-      }, 0);
-      const avgReturn = closedTrades.length > 0 ? (totalReturn / closedTrades.length) * 100 : 0;
-
       const pnlValues = closedTrades.map(t => t.pnl || 0).filter(pnl => pnl !== 0);
       const meanPnl = pnlValues.length > 0 ? pnlValues.reduce((a,b) => a + b, 0) / pnlValues.length : 0;
       const stdDev = pnlValues.length > 0 ? Math.sqrt(pnlValues.map(x => Math.pow(x - meanPnl, 2)).reduce((a, b) => a + b) / pnlValues.length) : 0;
@@ -108,6 +126,7 @@ export default function DashboardPage() {
 
       const bestDay = getDayWithMostPnl(journalEntries, 'win');
       const worstDay = getDayWithMostPnl(journalEntries, 'loss');
+      const mostProfitableEmotion = getMostProfitableEmotion(journalEntries);
 
       setStatsData([
         {
@@ -123,14 +142,14 @@ export default function DashboardPage() {
           changeType: winRate > 50 ? 'positive' : 'negative',
         },
         bestDay,
-        worstDay,
+        mostProfitableEmotion,
       ]);
     } else if (journalEntries !== null) { // Only run if journalEntries has been initialized
         setStatsData([
             { title: 'Net P&L', value: '$0.00', change: '', changeType: 'positive' },
             { title: 'Win Rate', value: '0.0%', change: '', changeType: 'negative' },
             { title: 'Best Day', value: 'N/A', change: '', changeType: 'positive' },
-            { title: 'Worst Day', value: 'N/A', change: '', changeType: 'negative' },
+            { title: 'Best Emotion', value: 'N/A', change: '', changeType: 'positive' },
         ]);
     }
   }, [journalEntries]);
