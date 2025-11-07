@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import {
@@ -47,6 +48,7 @@ const CurrencyFlags = ({ currencyPair }: { currencyPair?: string }) => {
     const getCountryCode = (currency: string) => {
         const customMap: Record<string, string> = {
             'USD': 'US',
+            'EUR': 'EU',
             'JPY': 'JP',
             'GBP': 'GB',
             'AUD': 'AU',
@@ -237,15 +239,12 @@ export default function NotebookPage() {
           {notes.map((note, index) => (
             <Card key={note.id} className="flex flex-col">
               {note.imageUrl && (
-                <div className="relative w-full h-40">
-                  <Image
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
                     src={note.imageUrl}
                     alt={note.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover rounded-t-lg"
-                  />
-                </div>
+                    className="object-cover rounded-t-lg w-full h-40"
+                />
               )}
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -298,3 +297,5 @@ export default function NotebookPage() {
     </div>
   );
 }
+
+    
