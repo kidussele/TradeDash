@@ -18,7 +18,7 @@ type CumulativePnlChartProps = {
 };
 
 export function CumulativePnlChart({ entries }: CumulativePnlChartProps) {
-  const cumulativePnlData = entries
+  const cumulativePnlData = (entries || [])
     .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && (entry.entryTime || entry.date))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .reduce((acc, entry) => {

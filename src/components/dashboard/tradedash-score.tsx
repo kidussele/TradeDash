@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import React, { useState, useEffect } from 'react';
@@ -17,7 +18,7 @@ export function TradeDashScore({ entries }: TradeDashScoreProps) {
   const circumference = 2 * Math.PI * radius;
 
   useEffect(() => {
-    const closedTrades = entries.filter(e => e.result !== 'Ongoing' && e.pnl !== undefined);
+    const closedTrades = (entries || []).filter(e => e.result !== 'Ongoing' && e.pnl !== undefined);
     if (closedTrades.length === 0) {
       setScore(0);
       return;
@@ -30,8 +31,8 @@ export function TradeDashScore({ entries }: TradeDashScoreProps) {
     const adherenceRate = (followedPlan / closedTrades.length) * 100;
     
     const rMultiples = closedTrades.map(t => t.rMultiple).filter((r): r is number => r !== undefined);
-    const avgRMultiple = rMultiples.reduce((acc, r) => acc + r, 0) / rMultiples.length;
-    const rMultipleStdDev = Math.sqrt(rMultiples.map(x => Math.pow(x - avgRMultiple, 2)).reduce((a, b) => a + b) / rMultiples.length);
+    const avgRMultiple = rMultiples.length > 0 ? rMultiples.reduce((acc, r) => acc + r, 0) / rMultiples.length : 0;
+    const rMultipleStdDev = rMultiples.length > 0 ? Math.sqrt(rMultiples.map(x => Math.pow(x - avgRMultiple, 2)).reduce((a, b) => a + b) / rMultiples.length) : 0;
     const rMultipleConsistency = rMultipleStdDev > 0 ? (1 / rMultipleStdDev) * 10 : 10; // Normalize
 
     // Weighted score

@@ -32,7 +32,7 @@ function DayContent(props: DayContentProps & { calendarData: Record<string, { pn
 }
 
 export function TradingCalendar({ entries }: TradingCalendarProps) {
-  const calendarData = entries
+  const calendarData = (entries || [])
     .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && (entry.entryTime || entry.date))
     .reduce((acc, entry) => {
         const dateStr = new Date(entry.date).toISOString().split('T')[0];

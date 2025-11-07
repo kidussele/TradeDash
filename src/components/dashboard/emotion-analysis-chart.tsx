@@ -24,7 +24,7 @@ type EmotionAnalysisChartProps = {
 };
 
 export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
-    const emotionData = entries
+    const emotionData = (entries || [])
         .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && entry.emotion)
         .reduce((acc, entry) => {
             const emotion = entry.emotion!;
@@ -56,7 +56,7 @@ export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
                                 <div>
                                     <p className="font-medium">{props.payload.name}</p>
                                     <p>P&L: {props.payload.pnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</p>
-                                    <p>Trades: {value} ({((value / entries.filter(e => e.emotion).length) * 100).toFixed(1)}%)</p>
+                                    <p>Trades: {value} ({((value / (entries || []).filter(e => e.emotion).length) * 100).toFixed(1)}%)</p>
                                 </div>
                             )}
                             nameKey="count"

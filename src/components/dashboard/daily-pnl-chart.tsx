@@ -24,7 +24,7 @@ type DailyPnlChartProps = {
 };
 
 export function DailyPnlChart({ entries }: DailyPnlChartProps) {
-    const dailyPnlData = entries
+    const dailyPnlData = (entries || [])
         .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && (entry.entryTime || entry.date))
         .reduce((acc, entry) => {
             const date = new Date(entry.date).toISOString().split('T')[0];

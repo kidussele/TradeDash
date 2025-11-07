@@ -17,7 +17,7 @@ type RecentTradesProps = {
 };
 
 export function RecentTrades({ entries }: RecentTradesProps) {
-  const recentTradesData = entries
+  const recentTradesData = (entries || [])
     .sort((a, b) => (new Date(b.date).getTime()) - (new Date(a.date).getTime()))
     .slice(0, 5)
     .map(entry => ({
