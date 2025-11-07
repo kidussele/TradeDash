@@ -22,73 +22,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, ImageIcon, BookCopy } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
+import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 
 export type Note = {
   id: number;
   title: string;
   content: string;
-  currencyPair?: string;
-  imageUrl?: string;
-  linkUrl?: string;
   createdAt: Date;
 };
-
-const CurrencyFlags = ({ currencyPair }: { currencyPair?: string }) => {
-    if (!currencyPair || currencyPair.length < 6) return null;
-
-    const sanitizedPair = currencyPair.replace(/[^A-Z]/g, '');
-    if (sanitizedPair.length !== 6) return null;
-
-    const baseCurrency = sanitizedPair.substring(0, 3);
-    const quoteCurrency = sanitizedPair.substring(3, 6);
-
-    const getFlagUrl = (currency: string) => {
-        const upperCurrency = currency.toUpperCase();
-        if (upperCurrency === 'EUR') {
-            return 'https://flagcdn.com/w40/eu.png';
-        }
-
-        const customMap: Record<string, string> = {
-            'USD': 'US',
-            'JPY': 'JP',
-            'GBP': 'GB',
-            'AUD': 'AU',
-            'CAD': 'CA',
-            'CHF': 'CH',
-            'NZD': 'NZ',
-        };
-        const countryCode = customMap[upperCurrency] || upperCurrency.substring(0, 2);
-        return `https://flagsapi.com/${countryCode}/shiny/32.png`;
-    }
-
-    const baseFlagUrl = getFlagUrl(baseCurrency);
-    const quoteFlagUrl = getFlagUrl(quoteCurrency);
-
-    return (
-        <div className="flex items-center">
-            <Image
-                src={baseFlagUrl}
-                alt={`${baseCurrency} flag`}
-                width={24}
-                height={24}
-                className="rounded-full bg-background"
-                unoptimized
-            />
-            <Image
-                src={quoteFlagUrl}
-                alt={`${quoteCurrency} flag`}
-                width={24}
-                height={24}
-                className="rounded-full bg-background -ml-2"
-                unoptimized
-            />
-        </div>
-    );
-};
-
 
 export default function NotebookPage() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -119,9 +60,6 @@ export default function NotebookPage() {
       id: editIndex !== null ? notes[editIndex].id : Date.now(),
       title: currentNote.title || 'Untitled Note',
       content: currentNote.content || '',
-      currencyPair: currentNote.currencyPair?.toUpperCase(),
-      imageUrl: currentNote.imageUrl,
-      linkUrl: currentNote.linkUrl,
       createdAt: editIndex !== null ? notes[editIndex].createdAt : new Date(),
     };
 
@@ -161,8 +99,8 @@ export default function NotebookPage() {
     <div className="space-y-6">
        <div className="flex justify-between items-center">
             <div>
-                <h1 className="text-2xl font-bold">Market Analysis</h1>
-                <p className="text-muted-foreground">Your personal space for market analysis and trading ideas.</p>
+                <h1 className="text-2xl font-bold">Notebook</h1>
+                <p className="text-muted-foreground">Your personal space for self-analysis and weekly reviews.</p>
             </div>
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                 <DialogTrigger asChild>
@@ -182,17 +120,7 @@ export default function NotebookPage() {
                                 id="title"
                                 value={currentNote.title || ''}
                                 onChange={(e) => setCurrentNote({ ...currentNote, title: e.target.value })}
-                                placeholder="e.g., EUR/USD Breakout Analysis"
-                            />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="currencyPair">Currency Pair</Label>
-                            <Input
-                                id="currencyPair"
-                                value={currentNote.currencyPair || ''}
-                                onChange={(e) => setCurrentNote({ ...currentNote, currencyPair: e.target.value })}
-                                placeholder="e.g., EURUSD"
-                                maxLength={7}
+                                placeholder="e.g., Weekly Review - May 20-24"
                             />
                         </div>
                         <div className="space-y-2">
@@ -202,25 +130,7 @@ export default function NotebookPage() {
                                 value={currentNote.content || ''}
                                 onChange={(e) => setCurrentNote({ ...currentNote, content: e.target.value })}
                                 placeholder="Write your analysis, thoughts, and observations..."
-                                className="min-h-[150px]"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="imageUrl">Image URL</Label>
-                            <Input
-                                id="imageUrl"
-                                value={currentNote.imageUrl || ''}
-                                onChange={(e) => setCurrentNote({ ...currentNote, imageUrl: e.target.value })}
-                                placeholder="https://example.com/chart.png"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="linkUrl">Link URL</Label>
-                            <Input
-                                id="linkUrl"
-                                value={currentNote.linkUrl || ''}
-                                onChange={(e) => setCurrentNote({ ...currentNote, linkUrl: e.target.value })}
-                                placeholder="https://example.com/news-article"
+                                className="min-h-[200px]"
                             />
                         </div>
                     </div>
@@ -237,25 +147,14 @@ export default function NotebookPage() {
        {notes.length === 0 ? (
          <div className="text-center py-24 border-2 border-dashed rounded-lg">
             <h2 className="text-xl font-semibold text-muted-foreground">No notes yet</h2>
-            <p className="text-muted-foreground mt-2">Click "Add Note" to start your journal.</p>
+            <p className="text-muted-foreground mt-2">Click "Add Note" to start your notebook.</p>
          </div>
        ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {notes.map((note, index) => (
             <Card key={note.id} className="flex flex-col">
-              {note.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                    src={note.imageUrl}
-                    alt={note.title}
-                    className="object-cover rounded-t-lg w-full h-40"
-                />
-              )}
               <CardHeader>
-                <div className="flex items-center gap-2">
-                  <CurrencyFlags currencyPair={note.currencyPair} />
-                  <CardTitle>{note.title}</CardTitle>
-                </div>
+                <CardTitle>{note.title}</CardTitle>
                 <CardDescription>
                   {note.createdAt.toLocaleDateString('en-US', {
                     year: 'numeric',
@@ -269,23 +168,7 @@ export default function NotebookPage() {
                   {note.content}
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between items-center">
-                 <div className="flex items-center gap-2">
-                    {note.linkUrl && (
-                        <Button variant="ghost" size="icon" asChild>
-                            <Link href={note.linkUrl} target="_blank">
-                                <LinkIcon className="h-4 w-4" />
-                            </Link>
-                        </Button>
-                    )}
-                    {note.imageUrl && (
-                        <Button variant="ghost" size="icon" asChild>
-                             <Link href={note.imageUrl} target="_blank">
-                                <ImageIcon className="h-4 w-4" />
-                            </Link>
-                        </Button>
-                    )}
-                 </div>
+              <CardFooter className="flex justify-end items-center">
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(index)}>
                     <Edit className="h-4 w-4" />
