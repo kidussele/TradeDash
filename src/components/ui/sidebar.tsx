@@ -168,7 +168,7 @@ const Sidebar = React.forwardRef<
     {
       side = "left",
       variant = "sidebar",
-      collapsible = "offcanvas",
+      collapsible = "icon",
       className,
       children,
       ...props
@@ -191,7 +191,7 @@ const Sidebar = React.forwardRef<
         </div>
       )
     }
-
+    
     if (isMobile) {
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
@@ -271,7 +271,7 @@ const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn("h-7 w-7", className)}
+      className={cn(className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
