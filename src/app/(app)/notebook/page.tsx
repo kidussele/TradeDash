@@ -104,11 +104,7 @@ export default function NotebookPage() {
 
   return (
     <div className="space-y-6">
-       <div className="flex justify-between items-center">
-            <div>
-                <h1 className="text-2xl font-bold">Market Analysis</h1>
-                <p className="text-muted-foreground">Your personal space for trading ideas and analysis.</p>
-            </div>
+       <div className="flex justify-end items-center">
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                 <DialogTrigger asChild>
                     <Button onClick={handleAddNew}>
@@ -240,5 +236,4 @@ export default function NotebookPage() {
     </div>
   );
 }
-
     
