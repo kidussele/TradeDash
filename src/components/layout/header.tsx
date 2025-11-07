@@ -10,6 +10,7 @@ const pathToTitle: { [key: string]: string } = {
   '/backtest-journal': 'Backtest Journal',
   '/report': 'Reports',
   '/news': 'News',
+  '/notebook': 'Notebook',
   '/image-preview': 'Image Preview',
 };
 
