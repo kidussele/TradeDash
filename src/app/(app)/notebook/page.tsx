@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, Image as ImageIcon, BookCopy } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, ImageIcon, BookCopy } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -46,7 +46,6 @@ const CurrencyFlags = ({ currencyPair }: { currencyPair?: string }) => {
 
     const getCountryCode = (currency: string) => {
         const customMap: Record<string, string> = {
-            'EUR': 'EU',
             'USD': 'US',
             'JPY': 'JP',
             'GBP': 'GB',
