@@ -87,7 +87,7 @@ export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
                     }}
                 >
                     {chartData.map((entry) => (
-                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                        <Cell key={`cell-${entry.name}`} fill={entry.fill} opacity={0.7} />
                     ))}
                 </Pie>
                  <ChartLegend
