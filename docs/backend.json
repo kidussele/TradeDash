@@ -1,160 +1,154 @@
 {
   "entities": {
     "UserProfile": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user's profile in the TradeDash application.",
+      "description": "Represents a user's profile information.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user profile."
-        },
-        "email": {
-          "type": "string",
-          "description": "User's email address.",
-          "format": "email"
-        },
-        "firstName": {
-          "type": "string",
-          "description": "User's first name."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "User's last name."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user profile was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user profile was last updated.",
-          "format": "date-time"
-        }
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "email",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["email", "createdAt"]
     },
-    "Trade": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Trade",
-      "type": "object",
-      "description": "Represents a single trade executed by a user.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the trade."
+    "JournalEntry": {
+        "title": "JournalEntry",
+        "type": "object",
+        "description": "A single entry in the user's trading journal.",
+        "properties": {
+            "id": { "type": "number" },
+            "date": { "type": "string", "format": "date-time" },
+            "session": { "type": "string", "enum": ["London", "New York", "Tokyo", "Sydney"] },
+            "currencyPair": { "type": "string" },
+            "direction": { "type": "string", "enum": ["Long", "Short"] },
+            "entryPrice": { "type": "number" },
+            "stopLoss": { "type": "number" },
+            "takeProfit": { "type": "number" },
+            "positionSize": { "type": "number" },
+            "entryTime": { "type": "string", "format": "date-time" },
+            "exitTime": { "type": "string", "format": "date-time" },
+            "pnl": { "type": "number" },
+            "rMultiple": { "type": "number" },
+            "result": { "type": "string", "enum": ["Win", "Loss", "Breakeven", "Ongoing"] },
+            "notes": { "type": "string" },
+            "screenshotBefore": { "type": "string", "format": "uri" },
+            "screenshotAfter": { "type": "string", "format": "uri" },
+            "adherenceToPlan": { "type": "string", "enum": ["Yes", "No", "Partial"] },
+            "emotion": { "type": "string", "enum": ["Greedy", "Fearful", "Confident", "Neutral", "Anxious", "Patient"] }
         },
-        "userProfileId": {
-          "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Trade)"
+        "required": ["id", "date", "currencyPair", "direction", "entryPrice", "stopLoss", "takeProfit", "positionSize", "result", "notes", "adherenceToPlan"]
+    },
+    "BacktestJournalEntry": {
+        "title": "BacktestJournalEntry",
+        "type": "object",
+        "description": "A single entry in the user's backtest journal.",
+        "properties": {
+            "id": { "type": "number" },
+            "date": { "type": "string", "format": "date-time" },
+            "session": { "type": "string", "enum": ["London", "New York", "Tokyo", "Sydney"] },
+            "currencyPair": { "type": "string" },
+            "direction": { "type": "string", "enum": ["Long", "Short"] },
+            "entryPrice": { "type": "number" },
+            "stopLoss": { "type": "number" },
+            "takeProfit": { "type": "number" },
+            "positionSize": { "type": "number" },
+            "entryTime": { "type": "string", "format": "date-time" },
+            "exitTime": { "type": "string", "format": "date-time" },
+            "pnl": { "type": "number" },
+            "rMultiple": { "type": "number" },
+            "result": { "type": "string", "enum": ["Win", "Loss", "Breakeven", "Ongoing"] },
+            "notes": { "type": "string" },
+            "screenshotBefore": { "type": "string", "format": "uri" },
+            "screenshotAfter": { "type": "string", "format": "uri" },
+            "adherenceToPlan": { "type": "string", "enum": ["Yes", "No", "Partial"] }
         },
-        "openDate": {
-          "type": "string",
-          "description": "Date and time when the trade was opened.",
-          "format": "date-time"
+        "required": ["id", "date", "currencyPair", "direction", "entryPrice", "stopLoss", "takeProfit", "positionSize", "result", "notes", "adherenceToPlan"]
+    },
+    "Goal": {
+        "title": "Goal",
+        "type": "object",
+        "description": "A user's personal or trading goal.",
+        "properties": {
+            "id": { "type": "string" },
+            "period": { "type": "string", "enum": ["Monthly", "Quarterly", "Half Year", "Yearly", "Big Goal"] },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "imageUrl": { "type": "string", "format": "uri" },
+            "linkUrl": { "type": "string", "format": "uri" },
+            "imageHint": { "type": "string" }
         },
-        "closeDate": {
-          "type": "string",
-          "description": "Date and time when the trade was closed.",
-          "format": "date-time"
+        "required": ["id", "period", "title", "description", "imageUrl"]
+    },
+    "Note": {
+        "title": "Note",
+        "type": "object",
+        "description": "A note in the user's market analysis or self-development notebook.",
+        "properties": {
+            "id": { "type": "number" },
+            "title": { "type": "string" },
+            "content": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "currencyPair": { "type": "string" },
+            "imageUrl": { "type": "string", "format": "uri" },
+            "linkUrl": { "type": "string", "format": "uri" }
         },
-        "symbol": {
-          "type": "string",
-          "description": "Trading symbol (e.g., AAPL, TSLA)."
+        "required": ["id", "title", "content", "createdAt"]
+    },
+    "Checklist": {
+        "title": "Checklist",
+        "type": "object",
+        "description": "A single strategy checklist.",
+        "properties": {
+            "id": { "type": "number" },
+            "title": { "type": "string" },
+            "items": { 
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "number" },
+                        "text": { "type": "string" },
+                        "isChecked": { "type": "boolean" }
+                    },
+                    "required": ["id", "text", "isChecked"]
+                }
+            }
         },
-        "netPL": {
-          "type": "number",
-          "description": "Net profit or loss for the trade."
-        },
-        "positionSize": {
-          "type": "number",
-          "description": "The size of the trade position."
-        },
-        "orderType": {
-          "type": "string",
-          "description": "Type of order executed (e.g., Market, Limit)."
-        },
-        "notes": {
-          "type": "string",
-          "description": "Any notes or comments about the trade."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the trade record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the trade record was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "userProfileId",
-        "openDate",
-        "closeDate",
-        "symbol",
-        "netPL",
-        "positionSize",
-        "orderType",
-        "createdAt",
-        "updatedAt"
-      ]
+        "required": ["id", "title", "items"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores user profile information. The 'userId' parameter corresponds to the Firebase Auth UID, ensuring that only the authenticated user can access their profile data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Auth UID of the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/trades/{tradeId}",
-        "definition": {
-          "entityName": "Trade",
-          "schema": {
-            "$ref": "#/backend/entities/Trade"
-          },
-          "description": "Stores trade data for a specific user.  The 'userId' parameter corresponds to the Firebase Auth UID, ensuring that only the authenticated user can access their trade data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Auth UID of the user."
-            },
-            {
-              "name": "tradeId",
-              "description": "Unique identifier for the trade."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure is designed to ensure data isolation and ownership based on user accounts. Each user has their own dedicated space for storing their profile information and trade data. This approach provides excellent data isolation and simplifies security rules. The structure is designed to prevent unauthorized access. All data is stored under a user's document, ensuring that only the authenticated user can access their data.\n\nTrades are stored as a subcollection under the user's document (users/{userId}/trades/{tradeId}). This enforces clear ownership and simplifies querying and managing trades for a specific user.\n\nThis structure ensures authorization independence. The security rules can be written to allow each user to read and write only their own data, based on the `request.auth.uid` without needing to access other documents or collections.\n\nThe structure supports QAPs (Rules are not Filters). Since each user's data is stored in its own subcollection, listing trades is straightforward. Security rules can easily verify that the requesting user is the owner of the data, allowing only authenticated users to retrieve their own trade data."
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores public information about a user."
+    },
+    "/users/{userId}/journalEntries/{entryId}": {
+        "schema": { "$ref": "#/entities/JournalEntry" },
+        "description": "User's live trading journal entries."
+    },
+    "/users/{userId}/backtestJournalEntries/{entryId}": {
+        "schema": { "$ref": "#/entities/BacktestJournalEntry" },
+        "description": "User's backtest trading journal entries."
+    },
+    "/users/{userId}/goals/{goalId}": {
+        "schema": { "$ref": "#/entities/Goal" },
+        "description": "User's motivational goals."
+    },
+    "/users/{userId}/notebookNotes/{noteId}": {
+        "schema": { "$ref": "#/entities/Note" },
+        "description": "User's market analysis notes."
+    },
+    "/users/{userId}/selfDevelopmentNotes/{noteId}": {
+        "schema": { "$ref": "#/entities/Note" },
+        "description": "User's self-development notes."
+    },
+    "/users/{userId}/strategyChecklists/{checklistId}": {
+        "schema": { "$ref": "#/entities/Checklist" },
+        "description": "User's trading strategy checklists."
+    }
   }
 }
