@@ -162,7 +162,7 @@ export default function AuthPage() {
             </div>
           </CardContent>
           <CardFooter className="flex-col gap-4">
-            <Button className="w-full" onClick={handleLogin}>Login</Button>
+            <Button className="w-full" onClick={handleLogin} type="button">Login</Button>
             <div className="relative w-full">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
@@ -174,7 +174,7 @@ export default function AuthPage() {
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 w-full">
-               <Button variant="outline" onClick={handleGoogleLogin}>
+               <Button variant="outline" onClick={handleGoogleLogin} type="button">
                  <GoogleIcon className="mr-2 h-4 w-4" />
                  Login with Google
                </Button>
@@ -205,7 +205,7 @@ export default function AuthPage() {
             </div>
           </CardContent>
           <CardFooter className="flex-col gap-4">
-            <Button className="w-full" onClick={handleSignup}>Create Account</Button>
+            <Button className="w-full" onClick={handleSignup} type="button">Create Account</Button>
           </CardFooter>
         </Card>
       </TabsContent>
