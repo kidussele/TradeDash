@@ -7,7 +7,7 @@ import { DailyPnlChart } from '@/components/dashboard/daily-pnl-chart';
 import { TradeDashScore } from '@/components/dashboard/tradedash-score';
 import { RecentTrades } from '@/components/dashboard/recent-trades';
 import { TradingCalendar } from '@/components/dashboard/trading-calendar';
-import type { JournalEntry } from '@/app/journal/page';
+import type { JournalEntry } from '../journal/page';
 
 export type StatCardData = {
   title: string;
@@ -40,6 +40,15 @@ function getDayWithMostPnl(entries: JournalEntry[], type: 'win' | 'loss'): StatC
             change: '',
             changeType: 'positive',
         };
+    }
+    
+    if (type === 'loss' && sortedDays[0][1] >= 0) {
+      return {
+          title: 'Worst Day',
+          value: 'N/A',
+          change: 'No losing days',
+          changeType: 'positive',
+      };
     }
 
     const [date, pnl] = sortedDays[0];
@@ -79,7 +88,7 @@ export default function DashboardPage() {
       const totalPnl = closedTrades.reduce((acc, trade) => acc + (trade.pnl || 0), 0);
       
       const wins = closedTrades.filter(trade => trade.result === 'Win').length;
-      const tradesWithOutcome = closedTrades.filter(trade => trade.result === 'Win' || trade.result === 'Loss').length;
+      const tradesWithOutcome = closedTrades.filter(trade => trade.result === 'Win' || trade.result === 'Loss' || trade.result === 'Breakeven').length;
       const winRate = tradesWithOutcome > 0 ? (wins / tradesWithOutcome) * 100 : 0;
       
       const totalReturn = closedTrades.reduce((acc, trade) => {

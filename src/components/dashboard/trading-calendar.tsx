@@ -52,7 +52,7 @@ export function TradingCalendar({ entries }: TradingCalendarProps) {
     .map((d) => new Date(d.replace(/-/g, '/')));
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Trading Calendar</CardTitle>        
         <CardDescription>Your performance at a glance.</CardDescription>
@@ -73,7 +73,7 @@ export function TradingCalendar({ entries }: TradingCalendarProps) {
             IconLeft: () => <ChevronLeft className="h-4 w-4" />,
             IconRight: () => <ChevronRight className="h-4 w-4" />,
           }}
-          className="p-0"
+          className="p-0 w-full"
           classNames={{
             months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
             month: 'space-y-4 w-full',
