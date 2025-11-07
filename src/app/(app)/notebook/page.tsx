@@ -246,9 +246,9 @@ export default function NotebookPage() {
                 </div>
               )}
               <CardHeader>
-                <div className="flex justify-between items-start">
-                    <CardTitle>{note.title}</CardTitle>
-                    <CurrencyFlags currencyPair={note.currencyPair} />
+                <div className="flex items-center gap-2">
+                  <CurrencyFlags currencyPair={note.currencyPair} />
+                  <CardTitle>{note.title}</CardTitle>
                 </div>
                 <CardDescription>
                   {note.createdAt.toLocaleDateString('en-US', {
