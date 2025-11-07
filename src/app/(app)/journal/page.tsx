@@ -409,12 +409,12 @@ export default function JournalPage() {
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close preview</span>
                     </Button>
-                    <Image
+                    {/* Using <img> directly as next/image needs width/height and remotePatterns for external URLs */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                         src={previewImageUrl}
                         alt="Screenshot preview"
-                        width={400}
-                        height={300}
-                        className="rounded-md object-cover"
+                        className="rounded-md object-cover aspect-video"
                     />
                 </CardContent>
             </Card>

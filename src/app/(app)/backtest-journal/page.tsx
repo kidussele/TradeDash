@@ -402,6 +402,7 @@ export default function BacktestJournalPage() {
                         <span className="sr-only">Close preview</span>
                     </Button>
                     {/* Using <img> directly as next/image needs width/height and remotePatterns for external URLs */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={previewImageUrl} alt="Screenshot preview" className="rounded-md object-cover aspect-video" />
                 </CardContent>
             </Card>
