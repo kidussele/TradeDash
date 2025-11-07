@@ -5,17 +5,17 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell } from 'recha
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import type { ChartConfig } from '@/components/ui/chart';
-import type { JournalEntry } from '@/app/journal/page';
+import type { JournalEntry } from '@/app/(app)/journal/page';
 
 const chartConfig = {
   pnl: {
     label: 'Daily P&L',
   },
   positive: {
-    color: 'hsl(var(--positive))',
+    color: 'hsl(var(--chart-1))',
   },
   negative: {
-    color: 'hsl(var(--negative))',
+    color: 'hsl(var(--chart-2))',
   },
 } satisfies ChartConfig;
 
@@ -38,6 +38,7 @@ export function DailyPnlChart({ entries }: DailyPnlChartProps) {
     const chartData = Object.entries(dailyPnlData).map(([date, pnl]) => ({
         date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
         pnl,
+        fill: pnl >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
     })).slice(-7); // Get last 7 days
 
   return (
@@ -53,10 +54,25 @@ export function DailyPnlChart({ entries }: DailyPnlChartProps) {
             <CartesianGrid vertical={false} />
             <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
             <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `$${value}`} />
-            <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+            <Tooltip 
+                cursor={false} 
+                content={
+                    <ChartTooltipContent 
+                        indicator="dot"
+                        formatter={(value, name) => (
+                             <div className="flex flex-col">
+                                <span className="font-medium">{name}</span>
+                                <span className={Number(value) >= 0 ? 'text-positive' : 'text-negative'}>
+                                    {Number(value).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                                </span>
+                            </div>
+                        )}
+                    />
+                } 
+            />
             <Bar dataKey="pnl" radius={4}>
                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'} />
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
             </Bar>
           </BarChart>
