@@ -8,6 +8,7 @@ import { getNews } from './actions';
 import type { GenerateNewsSummaryOutput } from '@/ai/flows/generate-news-summary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type NewsArticle = GenerateNewsSummaryOutput['articles'][0];
 
@@ -71,33 +72,40 @@ const NewsSection = ({ topic }: { topic: string }) => {
   }
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4 capitalize">{topic.replace(' market', '')} News</h2>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {news.map((article, index) => (
-          <Card key={index} className="flex flex-col">
-            <CardHeader>
-              <div className="flex items-start gap-2">
-                <Badge
-                  variant={getImpactBadgeVariant(article.impact)}
-                  className="mt-1 flex-shrink-0"
-                >
-                    {article.impact}
-                </Badge>
-                <CardTitle className="text-lg">{article.headline}</CardTitle>
-              </div>
-              <CardDescription className="flex items-center gap-2 text-xs pt-2">
-                <span>{article.publishedAt}</span>
-                <Badge variant="secondary">{article.source}</Badge>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <p className="text-sm text-muted-foreground">{article.summary}</p>
-            </CardContent>
-          </Card>
-        ))}
+    <TooltipProvider>
+      <div>
+        <h2 className="text-2xl font-bold mb-4 capitalize">{topic.replace(' market', '')} News</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {news.map((article, index) => (
+            <Card key={index} className="flex flex-col">
+              <CardHeader>
+                <div className="flex items-start gap-3">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant={getImpactBadgeVariant(article.impact)}
+                        className="mt-1.5 flex-shrink-0 p-0 size-3"
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="capitalize">{article.impact} Impact</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <CardTitle className="text-lg">{article.headline}</CardTitle>
+                </div>
+                <CardDescription className="flex items-center gap-2 text-xs pt-2 pl-[21px]">
+                  <span>{article.publishedAt}</span>
+                  <Badge variant="secondary">{article.source}</Badge>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow pl-[45px]">
+                <p className="text-sm text-muted-foreground">{article.summary}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
 
