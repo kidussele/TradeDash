@@ -1,3 +1,4 @@
+
 'use client';
 
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -11,6 +12,7 @@ const pathToTitle: { [key: string]: string } = {
   '/report': 'Reports',
   '/news': 'News',
   '/notebook': 'Market Analysis',
+  '/strategy-checklist': 'Strategy Checklist',
   '/image-preview': 'Image Preview',
 };
 
