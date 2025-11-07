@@ -11,7 +11,7 @@ const pathToTitle: { [key: string]: string } = {
   '/backtest-journal': 'Backtest Journal',
   '/report': 'Reports',
   '/news': 'News',
-  '/notebook': 'Notebook',
+  '/notebook': 'Market Analysis',
   '/strategy-checklist': 'Strategy Checklist',
   '/image-preview': 'Image Preview',
 };
@@ -35,3 +35,5 @@ export function Header() {
     </header>
   );
 }
+
+    

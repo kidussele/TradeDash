@@ -22,12 +22,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import Link from 'next/link';
 
 export type Note = {
   id: number;
   title: string;
   content: string;
+  currencyPair?: string;
+  imageUrl?: string;
+  linkUrl?: string;
   createdAt: Date;
 };
 
@@ -40,7 +44,7 @@ export default function NotebookPage() {
 
   useEffect(() => {
     setIsClient(true);
-    const storedNotes = localStorage.getItem('notebookEntries');
+    const storedNotes = localStorage.getItem('analysisNotebookEntries');
     if (storedNotes) {
       setNotes(JSON.parse(storedNotes).map((note: any) => ({
         ...note,
@@ -51,7 +55,7 @@ export default function NotebookPage() {
 
   useEffect(() => {
     if (isClient) {
-      localStorage.setItem('notebookEntries', JSON.stringify(notes));
+      localStorage.setItem('analysisNotebookEntries', JSON.stringify(notes));
     }
   }, [notes, isClient]);
 
@@ -60,6 +64,9 @@ export default function NotebookPage() {
       id: editIndex !== null ? notes[editIndex].id : Date.now(),
       title: currentNote.title || 'Untitled Note',
       content: currentNote.content || '',
+      currencyPair: currentNote.currencyPair,
+      imageUrl: currentNote.imageUrl,
+      linkUrl: currentNote.linkUrl,
       createdAt: editIndex !== null ? notes[editIndex].createdAt : new Date(),
     };
 
@@ -99,8 +106,8 @@ export default function NotebookPage() {
     <div className="space-y-6">
        <div className="flex justify-between items-center">
             <div>
-                <h1 className="text-2xl font-bold">Notebook</h1>
-                <p className="text-muted-foreground">Your personal space for self-analysis and weekly reviews.</p>
+                <h1 className="text-2xl font-bold">Market Analysis</h1>
+                <p className="text-muted-foreground">Your personal space for trading ideas and analysis.</p>
             </div>
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                 <DialogTrigger asChild>
@@ -111,7 +118,7 @@ export default function NotebookPage() {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px]">
                     <DialogHeader>
-                        <DialogTitle>{editIndex !== null ? 'Edit' : 'Add'} Note</DialogTitle>
+                        <DialogTitle>{editIndex !== null ? 'Edit' : 'Add'} Analysis Note</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="space-y-2">
@@ -120,7 +127,16 @@ export default function NotebookPage() {
                                 id="title"
                                 value={currentNote.title || ''}
                                 onChange={(e) => setCurrentNote({ ...currentNote, title: e.target.value })}
-                                placeholder="e.g., Weekly Review - May 20-24"
+                                placeholder="e.g., EUR/USD Long Setup"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="currency-pair">Currency Pair</Label>
+                            <Input
+                                id="currency-pair"
+                                value={currentNote.currencyPair || ''}
+                                onChange={(e) => setCurrentNote({ ...currentNote, currencyPair: e.target.value })}
+                                placeholder="e.g., EUR/USD"
                             />
                         </div>
                         <div className="space-y-2">
@@ -131,6 +147,24 @@ export default function NotebookPage() {
                                 onChange={(e) => setCurrentNote({ ...currentNote, content: e.target.value })}
                                 placeholder="Write your analysis, thoughts, and observations..."
                                 className="min-h-[200px]"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="image-url">Image URL</Label>
+                            <Input
+                                id="image-url"
+                                value={currentNote.imageUrl || ''}
+                                onChange={(e) => setCurrentNote({ ...currentNote, imageUrl: e.target.value })}
+                                placeholder="https://..."
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="link-url">Link URL</Label>
+                            <Input
+                                id="link-url"
+                                value={currentNote.linkUrl || ''}
+                                onChange={(e) => setCurrentNote({ ...currentNote, linkUrl: e.target.value })}
+                                placeholder="https://..."
                             />
                         </div>
                     </div>
@@ -147,28 +181,49 @@ export default function NotebookPage() {
        {notes.length === 0 ? (
          <div className="text-center py-24 border-2 border-dashed rounded-lg">
             <h2 className="text-xl font-semibold text-muted-foreground">No notes yet</h2>
-            <p className="text-muted-foreground mt-2">Click "Add Note" to start your notebook.</p>
+            <p className="text-muted-foreground mt-2">Click "Add Note" to start your analysis notebook.</p>
          </div>
        ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {notes.map((note, index) => (
             <Card key={note.id} className="flex flex-col">
               <CardHeader>
-                <CardTitle>{note.title}</CardTitle>
-                <CardDescription>
-                  {note.createdAt.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </CardDescription>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle>{note.title}</CardTitle>
+                        <CardDescription>
+                          {note.createdAt.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </CardDescription>
+                    </div>
+                    {note.currencyPair && <div className="text-sm font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">{note.currencyPair}</div>}
+                </div>
               </CardHeader>
               <CardContent className="flex-grow">
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                   {note.content}
                 </p>
+                {note.imageUrl && (
+                     <div className="mt-4">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={note.imageUrl} alt="Analysis chart" className="rounded-md object-cover aspect-video" />
+                     </div>
+                )}
               </CardContent>
-              <CardFooter className="flex justify-end items-center">
+              <CardFooter className="flex justify-between items-center">
+                 <div>
+                    {note.linkUrl && (
+                        <Button variant="link" asChild className="p-0 h-auto">
+                            <Link href={note.linkUrl} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                View Resource
+                            </Link>
+                        </Button>
+                    )}
+                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(index)}>
                     <Edit className="h-4 w-4" />
@@ -185,3 +240,5 @@ export default function NotebookPage() {
     </div>
   );
 }
+
+    

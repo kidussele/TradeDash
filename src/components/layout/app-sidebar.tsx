@@ -37,7 +37,7 @@ const menuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/journal', label: 'Journal', icon: BookText },
   { href: '/backtest-journal', label: 'Backtest Journal', icon: FlaskConical },
-  { href: '/notebook', label: 'Notebook', icon: BookCopy },
+  { href: '/notebook', label: 'Market Analysis', icon: BookCopy },
   { href: '/strategy-checklist', label: 'Strategy Checklist', icon: ClipboardCheck },
   { href: '/report', label: 'Reports', icon: FileText },
   { href: '/news', label: 'News', icon: Newspaper },
@@ -166,3 +166,5 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+    
