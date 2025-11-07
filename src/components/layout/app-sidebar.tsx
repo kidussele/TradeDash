@@ -42,18 +42,18 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
+        <div className={cn("flex items-center gap-2 p-2", !open && "justify-center")}>
           <Activity className="size-7 text-primary" />
           <h1
             className={cn(
               'text-lg font-semibold transition-opacity duration-200',
-              open ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              !open && "opacity-0 pointer-events-none"
             )}
           >
             TradeDash
           </h1>
-          <div className="ml-auto">
-             <SidebarTrigger className="hidden md:flex" />
+          <div className={cn("ml-auto", open && "hidden md:flex")}>
+             <SidebarTrigger />
           </div>
         </div>
       </SidebarHeader>
