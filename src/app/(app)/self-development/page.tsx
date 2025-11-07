@@ -98,7 +98,10 @@ export default function SelfDevelopmentPage() {
   return (
     <div className="space-y-6">
        <div className="flex justify-between items-center">
-            <div/>
+            <div>
+              <h1 className="text-2xl font-bold">Self Development</h1>
+              <p className="text-muted-foreground">A space for personal growth and reflection.</p>
+            </div>
             <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => {
               setIsEditDialogOpen(isOpen);
               if (!isOpen) {

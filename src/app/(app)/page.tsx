@@ -71,7 +71,7 @@ export default function DashboardPage() {
     user ? collection(firestore, 'users', user.uid, 'journalEntries') : null
   , [user, firestore]);
   
-  const { data: journalEntries, isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
+  const { data: journalEntries = [], isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
 
   const [statsData, setStatsData] = useState<StatCardData[]>([]);
 
@@ -114,8 +114,7 @@ export default function DashboardPage() {
     }
   }, [journalEntries]);
 
-  // Render a loading state or nothing until the journal entries are loaded
-  if (isLoading || !journalEntries) {
+  if (isLoading) {
       return null;
   }
 
