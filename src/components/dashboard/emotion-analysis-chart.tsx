@@ -11,12 +11,12 @@ const chartConfig = {
   pnl: {
     label: 'P&L',
   },
-  positive: {
-    color: 'hsl(var(--positive))',
-  },
-  negative: {
-    color: 'hsl(var(--negative))',
-  },
+  Confident: { color: 'hsl(var(--chart-1))', label: 'Confident' },
+  Fearful: { color: 'hsl(var(--chart-2))', label: 'Fearful' },
+  Greedy: { color: 'hsl(var(--chart-3))', label: 'Greedy' },
+  Anxious: { color: 'hsl(var(--chart-4))', label: 'Anxious' },
+  Patient: { color: 'hsl(var(--chart-5))', label: 'Patient' },
+  Neutral: { color: 'hsl(var(--muted-foreground))', label: 'Neutral' },
 } satisfies ChartConfig;
 
 type EmotionAnalysisChartProps = {
@@ -29,12 +29,12 @@ export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
         .reduce((acc, entry) => {
             const emotion = entry.emotion!;
             if (!acc[emotion]) {
-                acc[emotion] = { pnl: 0, count: 0, name: emotion };
+                acc[emotion] = { pnl: 0, count: 0, name: emotion, fill: `var(--color-${emotion})` };
             }
             acc[emotion].pnl += entry.pnl!;
             acc[emotion].count += 1;
             return acc;
-        }, {} as Record<Emotion, { pnl: number, count: number, name: string }>);
+        }, {} as Record<Emotion, { pnl: number, count: number, name: string, fill: string }>);
     
     const chartData = Object.values(emotionData);
 
@@ -86,8 +86,8 @@ export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
                         );
                     }}
                 >
-                    {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'} />
+                    {chartData.map((entry) => (
+                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                     ))}
                 </Pie>
                  <ChartLegend
