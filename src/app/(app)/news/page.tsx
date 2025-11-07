@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { getNews } from './actions';
 import type { GenerateNewsSummaryOutput } from '@/ai/flows/generate-news-summary';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 type NewsArticle = GenerateNewsSummaryOutput['articles'][0];
 
@@ -25,6 +26,20 @@ const NewsSection = ({ topic }: { topic: string }) => {
     };
     fetchNews();
   }, [topic]);
+
+  const getImpactBadgeVariant = (impact: 'low' | 'medium' | 'high') => {
+    switch (impact) {
+      case 'high':
+        return 'impact-high';
+      case 'medium':
+        return 'impact-medium';
+      case 'low':
+        return 'impact-low';
+      default:
+        return 'secondary';
+    }
+  };
+
 
   if (error) {
     return (
@@ -62,13 +77,21 @@ const NewsSection = ({ topic }: { topic: string }) => {
         {news.map((article, index) => (
           <Card key={index} className="flex flex-col">
             <CardHeader>
-              <CardTitle className="text-lg">{article.headline}</CardTitle>
-              <CardDescription className="flex items-center gap-2 text-xs">
+              <div className="flex items-start gap-2">
+                <Badge
+                  variant={getImpactBadgeVariant(article.impact)}
+                  className="mt-1.5 h-3.5 w-3.5 flex-shrink-0 p-0"
+                >
+                    <span className="sr-only">{article.impact} impact</span>
+                </Badge>
+                <CardTitle className="text-lg">{article.headline}</CardTitle>
+              </div>
+              <CardDescription className="flex items-center gap-2 text-xs ml-[22px]">
                 <span>{article.publishedAt}</span>
                 <Badge variant="secondary">{article.source}</Badge>
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow">
+            <CardContent className="flex-grow ml-[22px]">
               <p className="text-sm text-muted-foreground">{article.summary}</p>
             </CardContent>
           </Card>

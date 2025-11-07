@@ -23,6 +23,7 @@ const GenerateNewsSummaryOutputSchema = z.object({
       summary: z.string().describe('A concise summary of the news article.'),
       source: z.string().describe('The mock source of the news (e.g., Reuters, Bloomberg).'),
       publishedAt: z.string().describe('The publication date and time in a friendly format (e.g., "2 hours ago").'),
+      impact: z.enum(['low', 'medium', 'high']).describe('The market impact of the news: low, medium, or high.'),
     })
   ).describe('A list of generated news articles.'),
 });
@@ -38,7 +39,7 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateNewsSummaryOutputSchema},
   prompt: `You are a financial news generator. Create a list of 5 recent and relevant news articles about the following topic: {{{topic}}}.
 
-  For each article, provide a realistic headline, a brief summary, a plausible source (like Reuters, Bloomberg, etc.), and a relative publication time (e.g., "1 hour ago", "3 hours ago"). The news should be current and impactful for a trader.`,
+  For each article, provide a realistic headline, a brief summary, a plausible source (like Reuters, Bloomberg, etc.), a relative publication time (e.g., "1 hour ago", "3 hours ago"), and its market impact ('low', 'medium', or 'high'). The news should be current and impactful for a trader.`,
 });
 
 const generateNewsSummaryFlow = ai.defineFlow(
