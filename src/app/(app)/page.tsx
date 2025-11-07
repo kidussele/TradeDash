@@ -8,6 +8,7 @@ import { TradeDashScore } from '@/components/dashboard/tradedash-score';
 import { RecentTrades } from '@/components/dashboard/recent-trades';
 import { TradingCalendar } from '@/components/dashboard/trading-calendar';
 import type { JournalEntry, Emotion } from '../journal/page';
+import { EmotionAnalysisChart } from '@/components/dashboard/emotion-analysis-chart';
 
 export type StatCardData = {
   title: string;
@@ -60,40 +61,9 @@ function getDayWithMostPnl(entries: JournalEntry[], type: 'win' | 'loss'): StatC
     };
 }
 
-function getMostProfitableEmotion(entries: JournalEntry[]): StatCardData {
-    const emotionPnl: Partial<Record<Emotion, number>> = {};
-    entries.forEach(entry => {
-        if (entry.emotion && entry.pnl !== undefined) {
-            emotionPnl[entry.emotion] = (emotionPnl[entry.emotion] || 0) + entry.pnl;
-        }
-    });
-
-    const sortedEmotions = Object.entries(emotionPnl).sort(([, pnlA], [, pnlB]) => (pnlB || 0) - (pnlA || 0));
-
-    if (sortedEmotions.length === 0 || (sortedEmotions[0][1] || 0) === 0) {
-        return {
-            title: 'Best Emotion',
-            value: 'N/A',
-            change: 'No data',
-            changeType: 'positive',
-        };
-    }
-
-    const [emotion, pnl] = sortedEmotions[0] as [Emotion, number];
-    return {
-        title: 'Best Emotion',
-        value: emotion,
-        change: pnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-        changeType: pnl >= 0 ? 'positive' : 'negative',
-    };
-}
-
-
 export default function DashboardPage() {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[] | null>(null);
   const [statsData, setStatsData] = useState<StatCardData[]>([]);
-  const [mostProfitableEmotion, setMostProfitableEmotion] = useState<StatCardData | null>(null);
-
 
   useEffect(() => {
     // This effect now only runs on the client, preventing SSR issues with localStorage.
@@ -123,8 +93,6 @@ export default function DashboardPage() {
       
       const bestDay = getDayWithMostPnl(journalEntries, 'win');
       const worstDay = getDayWithMostPnl(journalEntries, 'loss');
-      setMostProfitableEmotion(getMostProfitableEmotion(journalEntries));
-
 
       setStatsData([
         {
@@ -149,12 +117,6 @@ export default function DashboardPage() {
             { title: 'Best Day', value: 'N/A', change: '', changeType: 'positive' },
             { title: 'Worst Day', value: 'N/A', change: '', changeType: 'positive' },
         ]);
-        setMostProfitableEmotion({
-            title: 'Best Emotion',
-            value: 'N/A',
-            change: '',
-            changeType: 'positive',
-        });
     }
   }, [journalEntries]);
 
@@ -182,11 +144,9 @@ export default function DashboardPage() {
       <div className="col-span-4 lg:col-span-2">
         <RecentTrades entries={journalEntries} />
       </div>
-       {mostProfitableEmotion && (
-         <div className="col-span-4 lg:col-span-2">
-            <StatCard {...mostProfitableEmotion} />
-        </div>
-       )}
+      <div className="col-span-4 lg:col-span-2">
+        <EmotionAnalysisChart entries={journalEntries} />
+      </div>
       <div className="col-span-4 lg:col-span-2">
         <TradingCalendar entries={journalEntries} />
       </div>
