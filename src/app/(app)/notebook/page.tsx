@@ -48,7 +48,6 @@ const CurrencyFlags = ({ currencyPair }: { currencyPair?: string }) => {
     const getCountryCode = (currency: string) => {
         const customMap: Record<string, string> = {
             'USD': 'US',
-            'EUR': 'EU',
             'JPY': 'JP',
             'GBP': 'GB',
             'AUD': 'AU',
@@ -56,7 +55,8 @@ const CurrencyFlags = ({ currencyPair }: { currencyPair?: string }) => {
             'CHF': 'CH',
             'NZD': 'NZ',
         };
-        return customMap[currency.toUpperCase()] || currency.substring(0, 2);
+        const upperCurrency = currency.toUpperCase();
+        return customMap[upperCurrency] || upperCurrency.substring(0, 2);
     }
 
     const baseFlag = getCountryCode(baseCurrency);
@@ -297,5 +297,3 @@ export default function NotebookPage() {
     </div>
   );
 }
-
-    
