@@ -62,6 +62,41 @@ export type BacktestJournalEntry = {
   adherenceToPlan: 'Yes' | 'No' | 'Partial';
 };
 
+function getBestSession(entries: BacktestJournalEntry[]): StatCardData {
+    const sessionPnl: Record<TradingSession, number> = {
+        'London': 0,
+        'New York': 0,
+        'Tokyo': 0,
+        'Sydney': 0,
+    };
+
+    entries.forEach(entry => {
+        if (entry.session && entry.pnl !== undefined) {
+            sessionPnl[entry.session] += entry.pnl;
+        }
+    });
+
+    const bestSession = Object.entries(sessionPnl).sort(([, pnlA], [, pnlB]) => pnlB - pnlA)[0];
+
+    if (!bestSession || bestSession[1] === 0) {
+        return {
+            title: 'Best Session',
+            value: 'N/A',
+            change: '',
+            changeType: 'positive',
+        };
+    }
+    
+    const [session, pnl] = bestSession;
+
+    return {
+        title: 'Best Session',
+        value: session,
+        change: pnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+        changeType: pnl >= 0 ? 'positive' : 'negative',
+    };
+}
+
 
 export default function BacktestJournalPage() {
   const [entries, setEntries] = useState<BacktestJournalEntry[]>([]);
@@ -101,20 +136,12 @@ export default function BacktestJournalPage() {
       const tradesWithOutcome = closedTrades.filter(trade => trade.result === 'Win' || trade.result === 'Loss' || trade.result === 'Breakeven').length;
       const winRate = tradesWithOutcome > 0 ? (wins / tradesWithOutcome) * 100 : 0;
       
-      const totalReturn = closedTrades.reduce((acc, trade) => {
-        const entry = trade.entryPrice;
-        const pnl = trade.pnl || 0;
-        if (entry > 0 && trade.positionSize > 0) {
-          return acc + (pnl / (trade.positionSize * entry));
-        }
-        return acc;
-      }, 0);
-      const avgReturn = closedTrades.length > 0 ? (totalReturn / closedTrades.length) * 100 : 0;
-
       const pnlValues = closedTrades.map(t => t.pnl || 0).filter(pnl => pnl !== 0);
       const meanPnl = pnlValues.length > 0 ? pnlValues.reduce((a,b) => a + b, 0) / pnlValues.length : 0;
       const stdDev = pnlValues.length > 0 ? Math.sqrt(pnlValues.map(x => Math.pow(x - meanPnl, 2)).reduce((a, b) => a + b) / pnlValues.length) : 0;
       const sharpeRatio = stdDev > 0 ? meanPnl / stdDev : 0;
+
+      const bestSession = getBestSession(entries);
 
 
       setStatsData([
@@ -130,12 +157,7 @@ export default function BacktestJournalPage() {
           change: '',
           changeType: winRate > 50 ? 'positive' : 'negative',
         },
-        {
-          title: 'Avg. Return',
-          value: `${avgReturn.toFixed(2)}%`,
-          change: '',
-          changeType: avgReturn >= 0 ? 'positive' : 'negative',
-        },
+        bestSession,
         {
           title: 'Sharpe Ratio',
           value: sharpeRatio.toFixed(2),
@@ -147,7 +169,7 @@ export default function BacktestJournalPage() {
         setStatsData([
             { title: 'Net P&L', value: '$0.00', change: '', changeType: 'positive' },
             { title: 'Win Rate', value: '0.0%', change: '', changeType: 'negative' },
-            { title: 'Avg. Return', value: '0.00%', change: '', changeType: 'positive' },
+            { title: 'Best Session', value: 'N/A', change: '', changeType: 'positive' },
             { title: 'Sharpe Ratio', value: '0.00', change: '', changeType: 'positive' },
         ]);
     }
@@ -539,3 +561,5 @@ export default function BacktestJournalPage() {
     </Tabs>
   );
 }
+
+    
