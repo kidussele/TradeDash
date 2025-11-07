@@ -56,7 +56,7 @@ export function AppSidebar() {
               TradeDash
             </h1>
            </div>
-           <div className={cn("ml-auto", state === 'collapsed' && "absolute -right-1.5 top-2")}>
+           <div className={cn("ml-auto", state === 'collapsed' && "hidden")}>
              <SidebarTrigger />
           </div>
         </div>

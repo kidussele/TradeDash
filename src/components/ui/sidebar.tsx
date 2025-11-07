@@ -181,7 +181,7 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile, toggleSidebar } = useSidebar()
 
     if (collapsible === "none") {
       return (
@@ -257,6 +257,17 @@ const Sidebar = React.forwardRef<
             className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
           >
             {children}
+            <button
+                aria-label="Toggle Sidebar"
+                onClick={toggleSidebar}
+                className={cn(
+                    "absolute top-3 z-20 flex size-6 cursor-pointer items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground opacity-0 ring-offset-background transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                    side === 'left' ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2',
+                    "group-data-[collapsible=icon]:opacity-100",
+                )}
+            >
+                <PanelLeft className={cn("size-4 transition-transform", state === "collapsed" && "rotate-180")} />
+            </button>
           </div>
         </div>
       </div>
