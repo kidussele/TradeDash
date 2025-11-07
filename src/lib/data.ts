@@ -1,3 +1,5 @@
+// This file contains placeholder data and can be removed if you connect to a real data source.
+
 export type StatCardData = {
   title: string;
   value: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
+import { useForm, type SubmitHandler, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -53,7 +53,7 @@ const journalEntrySchema = z.object({
   afterScreenshot: z.string().url('Must be a valid URL.').optional().or(z.literal('')),
 });
 
-type JournalEntry = z.infer<typeof journalEntrySchema> & { id: number };
+export type JournalEntry = z.infer<typeof journalEntrySchema> & { id: number };
 type Inputs = z.infer<typeof journalEntrySchema>;
 
 function JournalForm({
@@ -70,6 +70,7 @@ function JournalForm({
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors },
   } = useForm<Inputs>({
     resolver: zodResolver(journalEntrySchema),
@@ -80,6 +81,22 @@ function JournalForm({
       preTradeConviction: 5,
     },
   });
+
+  const [entryPrice, stopLoss, takeProfit, direction] = useWatch({
+    control,
+    name: ['entryPrice', 'stopLoss', 'takeProfit', 'direction'],
+  });
+
+  useEffect(() => {
+    if (entryPrice && stopLoss && takeProfit) {
+      const risk = Math.abs(entryPrice - stopLoss);
+      const reward = Math.abs(takeProfit - entryPrice);
+      if (risk > 0) {
+        const ratio = reward / risk;
+        setValue('riskRewardRatio', `1:${ratio.toFixed(2)}`);
+      }
+    }
+  }, [entryPrice, stopLoss, takeProfit, setValue]);
 
   useEffect(() => {
     if (isEditing && defaultValues) {
@@ -231,7 +248,7 @@ function JournalForm({
                       </div>
                       <div>
                           <Label htmlFor="riskRewardRatio">Risk-to-Reward</Label>
-                          <Input id="riskRewardRatio" placeholder="e.g., 2:1" {...register('riskRewardRatio')} />
+                          <Input id="riskRewardRatio" placeholder="e.g., 1:2" {...register('riskRewardRatio')} readOnly className="bg-muted"/>
                           {errors.riskRewardRatio && <p className="text-sm text-destructive">{errors.riskRewardRatio.message}</p>}
                       </div>
                   </div>
@@ -342,6 +359,25 @@ export default function JournalPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  useEffect(() => {
+    const storedEntries = localStorage.getItem('journalEntries');
+    if (storedEntries) {
+      // Need to parse dates correctly from JSON
+      const parsedEntries = JSON.parse(storedEntries).map((entry: any) => ({
+        ...entry,
+        entryTime: entry.entryTime ? new Date(entry.entryTime) : undefined,
+        exitTime: entry.exitTime ? new Date(entry.exitTime) : undefined,
+      }));
+      setEntries(parsedEntries);
+    }
+  }, []);
+
+  const updateAndStoreEntries = (newEntries: JournalEntry[]) => {
+    setEntries(newEntries);
+    localStorage.setItem('journalEntries', JSON.stringify(newEntries));
+  };
+
+
   const onSubmit: SubmitHandler<Inputs> = (data) => {
     // If data is null, it's a cancel action
     if (data === null) {
@@ -358,19 +394,21 @@ export default function JournalPage() {
     }
 
     if (editingId) {
-      setEntries(entries.map((entry) => (entry.id === editingId ? { ...entry, ...data } : entry)));
+      const updatedEntries = entries.map((entry) => (entry.id === editingId ? { ...entry, ...data } : entry));
+      updateAndStoreEntries(updatedEntries);
     } else {
       const newEntry: JournalEntry = {
         id: Date.now(),
         ...data,
       };
-      setEntries([newEntry, ...entries]);
+      updateAndStoreEntries([newEntry, ...entries]);
     }
     setEditingId(null);
   };
 
   const deleteEntry = (id: number) => {
-    setEntries(entries.filter((entry) => entry.id !== id));
+    const updatedEntries = entries.filter((entry) => entry.id !== id);
+    updateAndStoreEntries(updatedEntries);
   };
   
   const handleEdit = (entry: JournalEntry) => {

@@ -3,15 +3,19 @@
 import * as React from 'react';
 import { DayPicker, type DayContentProps } from 'react-day-picker';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { calendarData } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
+import type { JournalEntry } from '@/app/journal/page';
 
-function DayContent(props: DayContentProps) {
+type TradingCalendarProps = {
+  entries: JournalEntry[];
+};
+
+function DayContent(props: DayContentProps & { calendarData: Record<string, { pnl: number }> }) {
   const dateStr = format(props.date, 'yyyy-MM-dd');
-  const dayData = calendarData[dateStr];
+  const dayData = props.calendarData[dateStr];
   return (
     <div className="relative flex flex-col items-center justify-center h-full w-full p-1">
       <div>{format(props.date, 'd')}</div>
@@ -26,7 +30,18 @@ function DayContent(props: DayContentProps) {
   );
 }
 
-export function TradingCalendar() {
+export function TradingCalendar({ entries }: TradingCalendarProps) {
+  const calendarData = entries
+    .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && entry.entryTime)
+    .reduce((acc, entry) => {
+        const dateStr = entry.entryTime!.toISOString().split('T')[0];
+        if (!acc[dateStr]) {
+            acc[dateStr] = { pnl: 0 };
+        }
+        acc[dateStr].pnl += entry.pnl!;
+        return acc;
+    }, {} as Record<string, { pnl: number }>);
+
   const profitableDays = Object.keys(calendarData)
     .filter((d) => calendarData[d].pnl > 0)
     .map((d) => new Date(d.replace(/-/g, '/')));
@@ -41,7 +56,7 @@ export function TradingCalendar() {
         <CardTitle>Trading Calendar</CardTitle>        
         <CardDescription>Your performance at a glance.</CardDescription>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 flex justify-center">
         <DayPicker
           modifiers={{
             profitable: profitableDays,
@@ -53,7 +68,7 @@ export function TradingCalendar() {
             selected: '!bg-primary !text-primary-foreground',
           }}
           components={{
-            DayContent: DayContent,
+            DayContent: (props) => <DayContent {...props} calendarData={calendarData} />,
             IconLeft: () => <ChevronLeft className="h-4 w-4" />,
             IconRight: () => <ChevronRight className="h-4 w-4" />,
           }}
