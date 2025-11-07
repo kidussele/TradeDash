@@ -15,6 +15,7 @@ const pathToTitle: { [key: string]: string } = {
   '/strategy-checklist': 'Strategy Checklist',
   '/self-development': 'Self Development',
   '/image-preview': 'Image Preview',
+  '/goals': 'Goals',
 };
 
 export function Header() {
