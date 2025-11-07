@@ -29,10 +29,57 @@ export type Note = {
   id: number;
   title: string;
   content: string;
+  currencyPair?: string;
   imageUrl?: string;
   linkUrl?: string;
   createdAt: Date;
 };
+
+const CurrencyFlags = ({ currencyPair }: { currencyPair?: string }) => {
+    if (!currencyPair || currencyPair.length !== 6) return null;
+
+    const baseCurrency = currencyPair.substring(0, 3);
+    const quoteCurrency = currencyPair.substring(3, 6);
+
+    const getCountryCode = (currency: string) => {
+        const customMap: Record<string, string> = {
+            'EUR': 'EU',
+            'USD': 'US',
+            'JPY': 'JP',
+            'GBP': 'GB',
+            'AUD': 'AU',
+            'CAD': 'CA',
+            'CHF': 'CH',
+            'NZD': 'NZ',
+        };
+        return customMap[currency.toUpperCase()] || currency.substring(0, 2);
+    }
+
+    const baseFlag = getCountryCode(baseCurrency);
+    const quoteFlag = getCountryCode(quoteCurrency);
+
+    return (
+        <div className="flex items-center">
+            <Image
+                src={`https://flagsapi.com/${baseFlag}/shiny/32.png`}
+                alt={`${baseCurrency} flag`}
+                width={24}
+                height={24}
+                className="rounded-full"
+                unoptimized
+            />
+            <Image
+                src={`https://flagsapi.com/${quoteFlag}/shiny/32.png`}
+                alt={`${quoteCurrency} flag`}
+                width={24}
+                height={24}
+                className="rounded-full -ml-2"
+                unoptimized
+            />
+        </div>
+    );
+};
+
 
 export default function NotebookPage() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -63,6 +110,7 @@ export default function NotebookPage() {
       id: editIndex !== null ? notes[editIndex].id : Date.now(),
       title: currentNote.title || 'Untitled Note',
       content: currentNote.content || '',
+      currencyPair: currentNote.currencyPair?.toUpperCase(),
       imageUrl: currentNote.imageUrl,
       linkUrl: currentNote.linkUrl,
       createdAt: editIndex !== null ? notes[editIndex].createdAt : new Date(),
@@ -104,7 +152,7 @@ export default function NotebookPage() {
     <div className="space-y-6">
        <div className="flex justify-between items-center">
             <div>
-                <h1 className="text-2xl font-bold">Notebook</h1>
+                <h1 className="text-2xl font-bold">Market Analysis</h1>
                 <p className="text-muted-foreground">Your personal space for market analysis and trading ideas.</p>
             </div>
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -126,6 +174,16 @@ export default function NotebookPage() {
                                 value={currentNote.title || ''}
                                 onChange={(e) => setCurrentNote({ ...currentNote, title: e.target.value })}
                                 placeholder="e.g., EUR/USD Breakout Analysis"
+                            />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="currencyPair">Currency Pair</Label>
+                            <Input
+                                id="currencyPair"
+                                value={currentNote.currencyPair || ''}
+                                onChange={(e) => setCurrentNote({ ...currentNote, currencyPair: e.target.value })}
+                                placeholder="e.g., EURUSD"
+                                maxLength={6}
                             />
                         </div>
                         <div className="space-y-2">
@@ -188,7 +246,10 @@ export default function NotebookPage() {
                 </div>
               )}
               <CardHeader>
-                <CardTitle>{note.title}</CardTitle>
+                <div className="flex justify-between items-start">
+                    <CardTitle>{note.title}</CardTitle>
+                    <CurrencyFlags currencyPair={note.currencyPair} />
+                </div>
                 <CardDescription>
                   {note.createdAt.toLocaleDateString('en-US', {
                     year: 'numeric',

@@ -36,7 +36,7 @@ const menuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/journal', label: 'Journal', icon: BookText },
   { href: '/backtest-journal', label: 'Backtest Journal', icon: FlaskConical },
-  { href: '/notebook', label: 'Notebook', icon: BookMarked },
+  { href: '/notebook', label: 'Market Analysis', icon: BookMarked },
   { href: '/report', label: 'Reports', icon: FileText },
   { href: '/news', label: 'News', icon: Newspaper },
 ];
