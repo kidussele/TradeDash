@@ -9,38 +9,67 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { JournalEntry } from '@/app/(app)/journal/page';
 import type { BacktestJournalEntry } from '@/app/(app)/backtest-journal/page';
-import { Download } from 'lucide-react';
+import { Download, Calendar as CalendarIcon } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
+import { addDays, format, startOfDay } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 
 type AnyEntry = JournalEntry | BacktestJournalEntry;
 
 const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) => {
   const [entries, setEntries] = useState<AnyEntry[]>([]);
+  const [filteredEntries, setFilteredEntries] = useState<AnyEntry[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+
   const storageKey = journalType === 'live' ? 'journalEntries' : 'backtestJournalEntries';
   const reportTitle = journalType === 'live' ? 'Live Trading Journal Report' : 'Backtest Trading Journal Report';
   const fileName = journalType === 'live' ? 'live_journal_report' : 'backtest_journal_report';
-
 
   useEffect(() => {
     setIsClient(true);
     const storedEntries = localStorage.getItem(storageKey);
     if (storedEntries) {
-      setEntries(JSON.parse(storedEntries).map((entry: any) => ({
+      const parsed = JSON.parse(storedEntries).map((entry: any) => ({
         ...entry,
         date: entry.date ? new Date(entry.date) : new Date(),
         entryTime: entry.entryTime ? new Date(entry.entryTime) : undefined,
         exitTime: entry.exitTime ? new Date(entry.exitTime) : undefined,
-      })));
+      }));
+      setEntries(parsed);
+      setFilteredEntries(parsed); // Initially, show all entries
     }
   }, [storageKey]);
 
-  const generateSummary = () => {
-    const closedTrades = entries.filter(e => e.result !== 'Ongoing' && e.pnl !== undefined);
+  useEffect(() => {
+    if (!dateRange?.from && !dateRange?.to) {
+        setFilteredEntries(entries);
+        return;
+    }
+
+    const filtered = entries.filter(entry => {
+        const entryDate = startOfDay(new Date(entry.date));
+        const from = dateRange.from ? startOfDay(dateRange.from) : null;
+        const to = dateRange.to ? startOfDay(dateRange.to) : null;
+
+        if (from && to) return entryDate >= from && entryDate <= to;
+        if (from) return entryDate >= from;
+        if (to) return entryDate <= to;
+        return true;
+    });
+    setFilteredEntries(filtered);
+  }, [dateRange, entries]);
+
+
+  const generateSummary = (summaryEntries: AnyEntry[]) => {
+    const closedTrades = summaryEntries.filter(e => e.result !== 'Ongoing' && e.pnl !== undefined);
     const totalPnl = closedTrades.reduce((acc, trade) => acc + (trade.pnl || 0), 0);
     const wins = closedTrades.filter(trade => trade.result === 'Win').length;
     const losses = closedTrades.filter(trade => trade.result === 'Loss').length;
     const breakevens = closedTrades.filter(trade => trade.result === 'Breakeven').length;
-    const winRate = closedTrades.length > 0 ? (wins / (wins + losses)) * 100 : 0;
+    const winRate = (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : 0;
     const totalTrades = closedTrades.length;
 
     return {
@@ -55,18 +84,18 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const summary = generateSummary();
+    const summary = generateSummary(filteredEntries);
 
-    // Add title
     doc.setFontSize(22);
     doc.text(reportTitle, 14, 22);
 
-    // Add summary
     doc.setFontSize(12);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+    const dateRangeStr = dateRange?.from ? `${format(dateRange.from, "LLL dd, y")} to ${dateRange.to ? format(dateRange.to, "LLL dd, y") : 'present'}` : 'All time';
+    doc.text(`Date Range: ${dateRangeStr}`, 14, 32);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 40);
     
     (doc as any).autoTable({
-      startY: 40,
+      startY: 50,
       head: [['Metric', 'Value']],
       body: [
         ['Total Trades', summary.totalTrades],
@@ -79,11 +108,10 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
       theme: 'striped',
     });
     
-    // Add trades table
     (doc as any).autoTable({
         startY: (doc as any).lastAutoTable.finalY + 10,
         head: [['Date', 'Pair', 'Direction', 'P&L', 'Result', 'R-Multiple']],
-        body: entries.map(entry => [
+        body: filteredEntries.map(entry => [
             entry.date.toLocaleDateString(),
             entry.currencyPair,
             entry.direction,
@@ -94,19 +122,43 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
         theme: 'grid',
     });
 
-
     doc.save(`${fileName}.pdf`);
   };
 
   const handleExportExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(entries.map(e => ({
-        ...e,
-        date: e.date.toLocaleDateString(),
-        entryTime: e.entryTime?.toLocaleString(),
-        exitTime: e.exitTime?.toLocaleString(),
-    })));
+    const summary = generateSummary(filteredEntries);
+    const summaryData = [
+        { Metric: 'Total Trades', Value: summary.totalTrades },
+        { Metric: 'Net P&L', Value: summary.totalPnl },
+        { Metric: 'Win Rate (%)', Value: summary.winRate.toFixed(2) },
+        { Metric: 'Wins', Value: summary.wins },
+        { Metric: 'Losses', Value: summary.losses },
+        { Metric: 'Breakevens', Value: summary.breakevens },
+    ];
+    
+    const tradeData = filteredEntries.map(e => ({
+        Date: e.date.toLocaleDateString(),
+        Session: e.session || 'N/A',
+        'Currency Pair': e.currencyPair,
+        Direction: e.direction,
+        'Entry Price': e.entryPrice,
+        'Stop-Loss': e.stopLoss,
+        'Take-Profit': e.takeProfit,
+        'Position Size': e.positionSize,
+        'P&L': e.pnl ?? 'N/A',
+        'R-Multiple': e.rMultiple?.toFixed(2) ?? 'N/A',
+        Result: e.result,
+        'Adherence to Plan': e.adherenceToPlan,
+        Notes: e.notes,
+    }));
+
+    const summaryWorksheet = XLSX.utils.json_to_sheet(summaryData);
+    const tradesWorksheet = XLSX.utils.json_to_sheet(tradeData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Trades');
+
+    XLSX.utils.book_append_sheet(workbook, summaryWorksheet, 'Summary');
+    XLSX.utils.book_append_sheet(workbook, tradesWorksheet, 'Trades');
+
     XLSX.writeFile(workbook, `${fileName}.xlsx`);
   };
   
@@ -120,8 +172,53 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
           Generate and export a full report of your {journalType} trading activity.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        {entries.length > 0 ? (
+      <CardContent className="space-y-6">
+        <div className="flex flex-wrap items-center gap-4">
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                        id="date"
+                        variant={"outline"}
+                        className={cn(
+                            "w-[300px] justify-start text-left font-normal",
+                            !dateRange && "text-muted-foreground"
+                        )}
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateRange?.from ? (
+                            dateRange.to ? (
+                                <>
+                                    {format(dateRange.from, "LLL dd, y")} -{" "}
+                                    {format(dateRange.to, "LLL dd, y")}
+                                </>
+                            ) : (
+                                format(dateRange.from, "LLL dd, y")
+                            )
+                        ) : (
+                            <span>Pick a date range</span>
+                        )}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={setDateRange}
+                        numberOfMonths={2}
+                    />
+                </PopoverContent>
+            </Popover>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={() => setDateRange({ from: new Date(), to: new Date() })}>Today</Button>
+                <Button variant="outline" onClick={() => setDateRange({ from: addDays(new Date(), -6), to: new Date() })}>Last 7 Days</Button>
+                <Button variant="outline" onClick={() => setDateRange({ from: addDays(new Date(), -29), to: new Date() })}>Last 30 Days</Button>
+                <Button variant="ghost" onClick={() => setDateRange(undefined)}>Reset</Button>
+            </div>
+        </div>
+
+        {filteredEntries.length > 0 ? (
           <div className="flex gap-4">
             <Button onClick={handleExportPDF}>
                 <Download className="mr-2" />
@@ -134,7 +231,7 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
           </div>
         ) : (
           <div className="text-center py-12 text-muted-foreground">
-            No entries found in this journal to generate a report.
+            No entries found in the selected date range.
           </div>
         )}
       </CardContent>
