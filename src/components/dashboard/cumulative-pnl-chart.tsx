@@ -1,3 +1,4 @@
+
 'use client';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,12 +19,12 @@ type CumulativePnlChartProps = {
 
 export function CumulativePnlChart({ entries }: CumulativePnlChartProps) {
   const cumulativePnlData = entries
-    .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && entry.entryTime)
-    .sort((a, b) => a.entryTime!.getTime() - b.entryTime!.getTime())
+    .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && (entry.entryTime || entry.date))
+    .sort((a, b) => (a.entryTime || a.date)!.getTime() - (b.entryTime || b.date)!.getTime())
     .reduce((acc, entry) => {
       const lastPnl = acc.length > 0 ? acc[acc.length - 1].cumulativePnl : 0;
       acc.push({
-        date: entry.entryTime!.toISOString().split('T')[0],
+        date: (entry.entryTime || entry.date)!.toISOString().split('T')[0],
         cumulativePnl: lastPnl + (entry.pnl || 0),
       });
       return acc;
@@ -48,7 +49,7 @@ export function CumulativePnlChart({ entries }: CumulativePnlChartProps) {
                 tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               />
               <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `$${value}`} />
-              <Tooltip cursor={false} content={<ChartTooltipContent indicator="line" labelFormatter={(value, payload) => payload[0] ? new Date(payload[0].payload.date).toLocaleDateString('en-US', { weekday: 'long' }) : ''} />} />
+              <Tooltip cursor={false} content={<ChartTooltipContent indicator="line" labelFormatter={(value, payload) => payload[0] ? new Date(payload[0].payload.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''} />} />
               <Area
                 dataKey="cumulativePnl"
                 type="natural"
@@ -68,3 +69,5 @@ export function CumulativePnlChart({ entries }: CumulativePnlChartProps) {
     </Card>
   );
 }
+
+    

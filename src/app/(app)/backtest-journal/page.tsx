@@ -38,11 +38,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { CumulativePnlChart } from '@/components/dashboard/cumulative-pnl-chart';
 import type { StatCardData } from '@/app/(app)/page';
-import type { JournalEntry } from '@/app/(app)/journal/page';
+import type { JournalEntry, TradingSession } from '@/app/(app)/journal/page';
 
 
 export type BacktestJournalEntry = {
   id: number;
+  date: Date;
+  session?: TradingSession;
   currencyPair: string;
   direction: 'Long' | 'Short';
   entryPrice: number;
@@ -76,6 +78,7 @@ export default function BacktestJournalPage() {
     if (storedEntries) {
         setEntries(JSON.parse(storedEntries).map((entry: any) => ({
             ...entry,
+            date: entry.date ? new Date(entry.date) : new Date(),
             entryTime: entry.entryTime ? new Date(entry.entryTime) : undefined,
             exitTime: entry.exitTime ? new Date(entry.exitTime) : undefined,
         })));
@@ -117,34 +120,34 @@ export default function BacktestJournalPage() {
         {
           title: 'Net P&L',
           value: totalPnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-          change: '+0.0%', // Placeholder
-          changeType: 'positive',
+          change: '',
+          changeType: totalPnl >= 0 ? 'positive' : 'negative',
         },
         {
           title: 'Win Rate',
           value: `${winRate.toFixed(1)}%`,
-          change: '+0.0%', // Placeholder
+          change: '',
           changeType: winRate > 50 ? 'positive' : 'negative',
         },
         {
           title: 'Avg. Return',
           value: `${avgReturn.toFixed(2)}%`,
-          change: '+0.0%', // Placeholder
+          change: '',
           changeType: avgReturn >= 0 ? 'positive' : 'negative',
         },
         {
           title: 'Sharpe Ratio',
           value: sharpeRatio.toFixed(2),
-          change: '+0.0', // Placeholder
+          change: '',
           changeType: sharpeRatio >= 0 ? 'positive' : 'negative',
         },
       ]);
     } else if (entries.length === 0) {
         setStatsData([
-            { title: 'Net P&L', value: '$0.00', change: '0%', changeType: 'positive' },
-            { title: 'Win Rate', value: '0.0%', change: '0%', changeType: 'negative' },
-            { title: 'Avg. Return', value: '0.00%', change: '0%', changeType: 'positive' },
-            { title: 'Sharpe Ratio', value: '0.00', change: '0.0', changeType: 'positive' },
+            { title: 'Net P&L', value: '$0.00', change: '', changeType: 'positive' },
+            { title: 'Win Rate', value: '0.0%', change: '', changeType: 'negative' },
+            { title: 'Avg. Return', value: '0.00%', change: '', changeType: 'positive' },
+            { title: 'Sharpe Ratio', value: '0.00', change: '', changeType: 'positive' },
         ]);
     }
   }, [entries]);
@@ -170,6 +173,8 @@ export default function BacktestJournalPage() {
     
     const finalEntry: BacktestJournalEntry = {
       id: editIndex !== null ? entries[editIndex].id : Date.now(),
+      date: currentEntry.date || new Date(),
+      session: currentEntry.session,
       currencyPair: currentEntry.currencyPair || '',
       direction: currentEntry.direction || 'Long',
       entryPrice: Number(currentEntry.entryPrice) || 0,
@@ -203,6 +208,7 @@ export default function BacktestJournalPage() {
     setEditIndex(index);
     setCurrentEntry({
         ...entries[index],
+        date: entries[index].date ? new Date(entries[index].date) : new Date(),
         entryTime: entries[index].entryTime ? new Date(entries[index].entryTime!) : undefined,
         exitTime: entries[index].exitTime ? new Date(entries[index].exitTime!) : undefined,
     });
@@ -211,7 +217,7 @@ export default function BacktestJournalPage() {
 
   const handleAddNew = () => {
     setEditIndex(null);
-    setCurrentEntry({ result: 'Ongoing', direction: 'Long' });
+    setCurrentEntry({ result: 'Ongoing', direction: 'Long', date: new Date() });
     setIsEditDialogOpen(true);
   };
 
@@ -244,6 +250,11 @@ export default function BacktestJournalPage() {
     return null; // Or a loading spinner
   }
 
+  const chartEntries = entries.map(e => ({
+    ...e,
+    entryTime: e.date,
+  }));
+
   return (
     <Tabs defaultValue="journal">
         <div className="flex justify-between items-center mb-4">
@@ -264,137 +275,163 @@ export default function BacktestJournalPage() {
                 </DialogHeader>
                 <div className="overflow-y-auto pr-6">
                 <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="space-y-2">
-                    <Label htmlFor="currency-pair">Currency Pair</Label>
-                    <Input
-                        id="currency-pair"
-                        value={currentEntry.currencyPair || ''}
-                        onChange={(e) => setCurrentEntry({ ...currentEntry, currencyPair: e.target.value })}
-                    />
+                    <div className="space-y-2">
+                        <Label htmlFor="date">Date</Label>
+                        <Input
+                            id="date"
+                            type="date"
+                            value={currentEntry.date ? currentEntry.date.toISOString().split('T')[0] : ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, date: new Date(e.target.value) })}
+                        />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="session">Session</Label>
+                        <Select
+                            value={currentEntry.session}
+                            onValueChange={(value: TradingSession) => setCurrentEntry({ ...currentEntry, session: value })}
+                        >
+                            <SelectTrigger id="session">
+                            <SelectValue placeholder="Select session" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="London">London</SelectItem>
+                                <SelectItem value="New York">New York</SelectItem>
+                                <SelectItem value="Tokyo">Tokyo</SelectItem>
+                                <SelectItem value="Sydney">Sydney</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="space-y-2">
-                    <Label htmlFor="direction">Direction</Label>
-                    <Select
-                        value={currentEntry.direction}
-                        onValueChange={(value: 'Long' | 'Short') => setCurrentEntry({ ...currentEntry, direction: value })}
-                    >
-                        <SelectTrigger id="direction">
-                        <SelectValue placeholder="Select direction" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        <SelectItem value="Long">Long</SelectItem>
-                        <SelectItem value="Short">Short</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        <Label htmlFor="currency-pair">Currency Pair</Label>
+                        <Input
+                            id="currency-pair"
+                            value={currentEntry.currencyPair || ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, currencyPair: e.target.value })}
+                        />
                     </div>
                     <div className="space-y-2">
-                    <Label htmlFor="entry-price">Entry Price</Label>
-                    <Input
-                        id="entry-price"
-                        type="number"
-                        value={currentEntry.entryPrice || ''}
-                        onChange={(e) => setCurrentEntry({ ...currentEntry, entryPrice: parseFloat(e.target.value) })}
-                    />
+                        <Label htmlFor="direction">Direction</Label>
+                        <Select
+                            value={currentEntry.direction}
+                            onValueChange={(value: 'Long' | 'Short') => setCurrentEntry({ ...currentEntry, direction: value })}
+                        >
+                            <SelectTrigger id="direction">
+                            <SelectValue placeholder="Select direction" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="Long">Long</SelectItem>
+                            <SelectItem value="Short">Short</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="space-y-2">
-                    <Label htmlFor="stop-loss">Stop-Loss</Label>
-                    <Input
-                        id="stop-loss"
-                        type="number"
-                        value={currentEntry.stopLoss || ''}
-                        onChange={(e) => setCurrentEntry({ ...currentEntry, stopLoss: parseFloat(e.target.value) })}
-                    />
+                        <Label htmlFor="entry-price">Entry Price</Label>
+                        <Input
+                            id="entry-price"
+                            type="number"
+                            value={currentEntry.entryPrice || ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, entryPrice: parseFloat(e.target.value) })}
+                        />
                     </div>
                     <div className="space-y-2">
-                    <Label htmlFor="take-profit">Take-Profit</Label>
-                    <Input
-                        id="take-profit"
-                        type="number"
-                        value={currentEntry.takeProfit || ''}
-                        onChange={(e) => setCurrentEntry({ ...currentEntry, takeProfit: parseFloat(e.target.value) })}
-                    />
+                        <Label htmlFor="stop-loss">Stop-Loss</Label>
+                        <Input
+                            id="stop-loss"
+                            type="number"
+                            value={currentEntry.stopLoss || ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, stopLoss: parseFloat(e.target.value) })}
+                        />
                     </div>
                     <div className="space-y-2">
-                    <Label>Risk/Reward Ratio</Label>
-                    <Input value={rr} readOnly disabled />
+                        <Label htmlFor="take-profit">Take-Profit</Label>
+                        <Input
+                            id="take-profit"
+                            type="number"
+                            value={currentEntry.takeProfit || ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, takeProfit: parseFloat(e.target.value) })}
+                        />
                     </div>
                     <div className="space-y-2">
-                    <Label htmlFor="position-size">Position Size</Label>
-                    <Input
-                        id="position-size"
-                        type="number"
-                        value={currentEntry.positionSize || ''}
-                        onChange={(e) => setCurrentEntry({ ...currentEntry, positionSize: parseFloat(e.target.value) })}
-                    />
+                        <Label>Risk/Reward Ratio</Label>
+                        <Input value={rr} readOnly disabled />
                     </div>
                     <div className="space-y-2">
-                    <Label htmlFor="result">Result</Label>
-                    <Select
-                        value={currentEntry.result}
-                        onValueChange={(value: BacktestJournalEntry['result']) => setCurrentEntry({ ...currentEntry, result: value })}
-                    >
-                        <SelectTrigger id="result">
-                        <SelectValue placeholder="Select result" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        <SelectItem value="Win">Win</SelectItem>
-                        <SelectItem value="Loss">Loss</SelectItem>
-                        <SelectItem value="Breakeven">Breakeven</SelectItem>
-                        <SelectItem value="Ongoing">Ongoing</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        <Label htmlFor="position-size">Position Size</Label>
+                        <Input
+                            id="position-size"
+                            type="number"
+                            value={currentEntry.positionSize || ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, positionSize: parseFloat(e.target.value) })}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="result">Result</Label>
+                        <Select
+                            value={currentEntry.result}
+                            onValueChange={(value: BacktestJournalEntry['result']) => setCurrentEntry({ ...currentEntry, result: value })}
+                        >
+                            <SelectTrigger id="result">
+                            <SelectValue placeholder="Select result" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="Win">Win</SelectItem>
+                            <SelectItem value="Loss">Loss</SelectItem>
+                            <SelectItem value="Breakeven">Breakeven</SelectItem>
+                            <SelectItem value="Ongoing">Ongoing</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="space-y-2 col-span-2">
-                    <Label htmlFor="pnl">Net P&L</Label>
-                    <Input
-                        id="pnl"
-                        type="number"
-                        value={currentEntry.pnl ?? ''}
-                        onChange={(e) => setCurrentEntry({ ...currentEntry, pnl: parseFloat(e.target.value) || undefined })}
-                        placeholder="e.g. 150.50"
-                    />
+                        <Label htmlFor="pnl">Net P&L</Label>
+                        <Input
+                            id="pnl"
+                            type="number"
+                            value={currentEntry.pnl ?? ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, pnl: parseFloat(e.target.value) || undefined })}
+                            placeholder="e.g. 150.50"
+                        />
                     </div>
                     <div className="space-y-2 col-span-2">
-                    <Label htmlFor="adherence">Adherence to Plan</Label>
-                    <Select
-                        value={currentEntry.adherenceToPlan}
-                        onValueChange={(value: 'Yes' | 'No' | 'Partial') => setCurrentEntry({ ...currentEntry, adherenceToPlan: value })}
-                    >
-                        <SelectTrigger id="adherence">
-                        <SelectValue placeholder="Select adherence" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        <SelectItem value="Yes">Yes</SelectItem>
-                        <SelectItem value="No">No</SelectItem>
-                        <SelectItem value="Partial">Partial</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        <Label htmlFor="adherence">Adherence to Plan</Label>
+                        <Select
+                            value={currentEntry.adherenceToPlan}
+                            onValueChange={(value: 'Yes' | 'No' | 'Partial') => setCurrentEntry({ ...currentEntry, adherenceToPlan: value })}
+                        >
+                            <SelectTrigger id="adherence">
+                            <SelectValue placeholder="Select adherence" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="Yes">Yes</SelectItem>
+                            <SelectItem value="No">No</SelectItem>
+                            <SelectItem value="Partial">Partial</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="space-y-2 col-span-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea
-                        id="notes"
-                        value={currentEntry.notes || ''}
-                        onChange={(e) => setCurrentEntry({ ...currentEntry, notes: e.target.value })}
-                    />
+                        <Label htmlFor="notes">Notes</Label>
+                        <Textarea
+                            id="notes"
+                            value={currentEntry.notes || ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, notes: e.target.value })}
+                        />
                     </div>
                     <div className="space-y-2">
-                    <Label htmlFor="screenshot-before">Screenshot Before</Label>
-                    <Input
-                        id="screenshot-before"
-                        value={currentEntry.screenshotBefore || ''}
-                        onChange={(e) => setCurrentEntry({ ...currentEntry, screenshotBefore: e.target.value })}
-                        placeholder="https://..."
-                    />
+                        <Label htmlFor="screenshot-before">Screenshot Before</Label>
+                        <Input
+                            id="screenshot-before"
+                            value={currentEntry.screenshotBefore || ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, screenshotBefore: e.target.value })}
+                            placeholder="https://..."
+                        />
                     </div>
                     <div className="space-y-2">
-                    <Label htmlFor="screenshot-after">Screenshot After</Label>
-                    <Input
-                        id="screenshot-after"
-                        value={currentEntry.screenshotAfter || ''}
-                        onChange={(e) => setCurrentEntry({ ...currentEntry, screenshotAfter: e.target.value })}
-                        placeholder="https://..."
-                    />
+                        <Label htmlFor="screenshot-after">Screenshot After</Label>
+                        <Input
+                            id="screenshot-after"
+                            value={currentEntry.screenshotAfter || ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, screenshotAfter: e.target.value })}
+                            placeholder="https://..."
+                        />
                     </div>
                 </div>
                 </div>
@@ -411,11 +448,9 @@ export default function BacktestJournalPage() {
             <Table>
                 <TableHeader>
                 <TableRow>
+                    <TableHead>Date</TableHead>
                     <TableHead>Pair</TableHead>
                     <TableHead>Direction</TableHead>
-                    <TableHead>Entry Price</TableHead>
-                    <TableHead>Stop-Loss</TableHead>
-                    <TableHead>Take-Profit</TableHead>
                     <TableHead>P&L</TableHead>
                     <TableHead>Result</TableHead>
                     <TableHead>Before</TableHead>
@@ -426,11 +461,9 @@ export default function BacktestJournalPage() {
                 <TableBody>
                 {entries.map((entry, index) => (
                     <TableRow key={entry.id}>
+                    <TableCell>{entry.date.toLocaleDateString()}</TableCell>
                     <TableCell className="font-medium">{entry.currencyPair}</TableCell>
                     <TableCell>{entry.direction}</TableCell>
-                    <TableCell>{entry.entryPrice}</TableCell>
-                    <TableCell>{entry.stopLoss}</TableCell>
-                    <TableCell>{entry.takeProfit}</TableCell>
                     <TableCell className={getResultColor(entry.result)}>
                         {entry.pnl?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) ?? 'N/A'}
                     </TableCell>
@@ -477,7 +510,7 @@ export default function BacktestJournalPage() {
                     </div>
                 ))}
                 <div className="col-span-4 lg:col-span-4">
-                    <CumulativePnlChart entries={entries as JournalEntry[]} />
+                    <CumulativePnlChart entries={chartEntries as JournalEntry[]} />
                 </div>
             </div>
         </TabsContent>
@@ -505,3 +538,5 @@ export default function BacktestJournalPage() {
     </Tabs>
   );
 }
+
+    

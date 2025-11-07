@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableHeader,
@@ -17,7 +18,7 @@ type RecentTradesProps = {
 
 export function RecentTrades({ entries }: RecentTradesProps) {
   const recentTradesData = entries
-    .sort((a, b) => (b.entryTime?.getTime() || 0) - (a.entryTime?.getTime() || 0))
+    .sort((a, b) => ((b.entryTime || b.date)?.getTime() || 0) - ((a.entryTime || a.date)?.getTime() || 0))
     .slice(0, 5)
     .map(entry => ({
         symbol: entry.currencyPair,
@@ -68,3 +69,5 @@ export function RecentTrades({ entries }: RecentTradesProps) {
     </Card>
   );
 }
+
+    

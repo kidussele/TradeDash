@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell } from 'recharts';
@@ -24,9 +25,9 @@ type DailyPnlChartProps = {
 
 export function DailyPnlChart({ entries }: DailyPnlChartProps) {
     const dailyPnlData = entries
-        .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && entry.entryTime)
+        .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && (entry.entryTime || entry.date))
         .reduce((acc, entry) => {
-            const date = entry.entryTime!.toISOString().split('T')[0];
+            const date = (entry.entryTime || entry.date)!.toISOString().split('T')[0];
             if (!acc[date]) {
                 acc[date] = 0;
             }
@@ -69,3 +70,5 @@ export function DailyPnlChart({ entries }: DailyPnlChartProps) {
     </Card>
   );
 }
+
+    

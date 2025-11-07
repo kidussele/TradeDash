@@ -36,8 +36,12 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 
+export type TradingSession = 'London' | 'New York' | 'Tokyo' | 'Sydney';
+
 export type JournalEntry = {
   id: number;
+  date: Date;
+  session?: TradingSession;
   currencyPair: string;
   direction: 'Long' | 'Short';
   entryPrice: number;
@@ -71,6 +75,7 @@ export default function JournalPage() {
     if (storedEntries) {
         setEntries(JSON.parse(storedEntries).map((entry: any) => ({
             ...entry,
+            date: entry.date ? new Date(entry.date) : new Date(),
             entryTime: entry.entryTime ? new Date(entry.entryTime) : undefined,
             exitTime: entry.exitTime ? new Date(entry.exitTime) : undefined,
         })));
@@ -104,6 +109,8 @@ export default function JournalPage() {
 
     const finalEntry: JournalEntry = {
       id: editIndex !== null ? entries[editIndex].id : Date.now(),
+      date: currentEntry.date || new Date(),
+      session: currentEntry.session,
       currencyPair: currentEntry.currencyPair || '',
       direction: currentEntry.direction || 'Long',
       entryPrice: Number(currentEntry.entryPrice) || 0,
@@ -137,6 +144,7 @@ export default function JournalPage() {
     setEditIndex(index);
     setCurrentEntry({
         ...entries[index],
+        date: entries[index].date ? new Date(entries[index].date) : new Date(),
         entryTime: entries[index].entryTime ? new Date(entries[index].entryTime!) : undefined,
         exitTime: entries[index].exitTime ? new Date(entries[index].exitTime!) : undefined,
     });
@@ -145,7 +153,7 @@ export default function JournalPage() {
 
   const handleAddNew = () => {
     setEditIndex(null);
-    setCurrentEntry({ result: 'Ongoing', direction: 'Long', entryTime: new Date() });
+    setCurrentEntry({ result: 'Ongoing', direction: 'Long', date: new Date() });
     setIsEditDialogOpen(true);
   };
 
@@ -195,13 +203,39 @@ export default function JournalPage() {
             </DialogHeader>
             <div className="overflow-y-auto pr-6">
               <div className="grid grid-cols-2 gap-4 py-4">
-              <div className="space-y-2">
-                  <Label htmlFor="currency-pair">Currency Pair</Label>
-                  <Input
-                    id="currency-pair"
-                    value={currentEntry.currencyPair || ''}
-                    onChange={(e) => setCurrentEntry({ ...currentEntry, currencyPair: e.target.value })}
-                  />
+                <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input
+                        id="date"
+                        type="date"
+                        value={currentEntry.date ? currentEntry.date.toISOString().split('T')[0] : ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, date: new Date(e.target.value) })}
+                    />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="session">Session</Label>
+                    <Select
+                        value={currentEntry.session}
+                        onValueChange={(value: TradingSession) => setCurrentEntry({ ...currentEntry, session: value })}
+                    >
+                        <SelectTrigger id="session">
+                        <SelectValue placeholder="Select session" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="London">London</SelectItem>
+                            <SelectItem value="New York">New York</SelectItem>
+                            <SelectItem value="Tokyo">Tokyo</SelectItem>
+                            <SelectItem value="Sydney">Sydney</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="currency-pair">Currency Pair</Label>
+                    <Input
+                        id="currency-pair"
+                        value={currentEntry.currencyPair || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, currencyPair: e.target.value })}
+                    />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="direction">Direction</Label>
@@ -341,11 +375,9 @@ export default function JournalPage() {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Date</TableHead>
             <TableHead>Pair</TableHead>
             <TableHead>Direction</TableHead>
-            <TableHead>Entry Price</TableHead>
-            <TableHead>Stop-Loss</TableHead>
-            <TableHead>Take-Profit</TableHead>
             <TableHead>P&L</TableHead>
             <TableHead>Result</TableHead>
             <TableHead>Before</TableHead>
@@ -356,11 +388,9 @@ export default function JournalPage() {
         <TableBody>
           {entries.map((entry, index) => (
             <TableRow key={entry.id}>
+              <TableCell>{entry.date.toLocaleDateString()}</TableCell>
               <TableCell className="font-medium">{entry.currencyPair}</TableCell>
               <TableCell>{entry.direction}</TableCell>
-              <TableCell>{entry.entryPrice}</TableCell>
-              <TableCell>{entry.stopLoss}</TableCell>
-              <TableCell>{entry.takeProfit}</TableCell>
               <TableCell className={getResultColor(entry.result)}>
                 {entry.pnl?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) ?? 'N/A'}
               </TableCell>
@@ -425,3 +455,5 @@ export default function JournalPage() {
     </div>
   );
 }
+
+    

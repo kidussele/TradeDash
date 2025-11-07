@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -15,6 +16,36 @@ export type StatCardData = {
   changeType: 'positive' | 'negative';
 };
 
+function getDayWithMostPnl(entries: JournalEntry[], type: 'win' | 'loss'): StatCardData {
+    const dailyPnl: Record<string, number> = {};
+    entries.forEach(entry => {
+        if (entry.result !== 'Ongoing' && entry.pnl !== undefined && entry.date) {
+            const dateStr = entry.date.toISOString().split('T')[0];
+            dailyPnl[dateStr] = (dailyPnl[dateStr] || 0) + entry.pnl;
+        }
+    });
+
+    const sortedDays = Object.entries(dailyPnl).sort(([, pnlA], [, pnlB]) => type === 'win' ? pnlB - pnlA : pnlA - pnlB);
+
+    if (sortedDays.length === 0) {
+        return {
+            title: type === 'win' ? 'Best Day' : 'Worst Day',
+            value: 'N/A',
+            change: '',
+            changeType: 'positive',
+        };
+    }
+
+    const [date, pnl] = sortedDays[0];
+    return {
+        title: type === 'win' ? 'Best Day' : 'Worst Day',
+        value: pnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+        change: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        changeType: pnl >= 0 ? 'positive' : 'negative',
+    };
+}
+
+
 export default function DashboardPage() {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[] | null>(null);
   const [statsData, setStatsData] = useState<StatCardData[]>([]);
@@ -25,6 +56,7 @@ export default function DashboardPage() {
     if (storedEntries) {
       const parsedEntries: JournalEntry[] = JSON.parse(storedEntries).map((entry: any) => ({
         ...entry,
+        date: entry.date ? new Date(entry.date) : new Date(),
         entryTime: entry.entryTime ? new Date(entry.entryTime) : undefined,
         exitTime: entry.exitTime ? new Date(entry.exitTime) : undefined,
       }));
@@ -58,39 +90,31 @@ export default function DashboardPage() {
       const stdDev = pnlValues.length > 0 ? Math.sqrt(pnlValues.map(x => Math.pow(x - meanPnl, 2)).reduce((a, b) => a + b) / pnlValues.length) : 0;
       const sharpeRatio = stdDev > 0 ? meanPnl / stdDev : 0;
 
+      const bestDay = getDayWithMostPnl(journalEntries, 'win');
+      const worstDay = getDayWithMostPnl(journalEntries, 'loss');
 
       setStatsData([
         {
           title: 'Net P&L',
           value: totalPnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-          change: '+0.0%', // Placeholder
-          changeType: 'positive',
+          change: '',
+          changeType: totalPnl >= 0 ? 'positive' : 'negative',
         },
         {
           title: 'Win Rate',
           value: `${winRate.toFixed(1)}%`,
-          change: '+0.0%', // Placeholder
+          change: '',
           changeType: winRate > 50 ? 'positive' : 'negative',
         },
-        {
-          title: 'Avg. Return',
-          value: `${avgReturn.toFixed(2)}%`,
-          change: '+0.0%', // Placeholder
-          changeType: avgReturn >= 0 ? 'positive' : 'negative',
-        },
-        {
-          title: 'Sharpe Ratio',
-          value: sharpeRatio.toFixed(2),
-          change: '+0.0', // Placeholder
-          changeType: sharpeRatio >= 0 ? 'positive' : 'negative',
-        },
+        bestDay,
+        worstDay,
       ]);
     } else if (journalEntries !== null) { // Only run if journalEntries has been initialized
         setStatsData([
-            { title: 'Net P&L', value: '$0.00', change: '0%', changeType: 'positive' },
-            { title: 'Win Rate', value: '0.0%', change: '0%', changeType: 'negative' },
-            { title: 'Avg. Return', value: '0.00%', change: '0%', changeType: 'positive' },
-            { title: 'Sharpe Ratio', value: '0.00', change: '0.0', changeType: 'positive' },
+            { title: 'Net P&L', value: '$0.00', change: '', changeType: 'positive' },
+            { title: 'Win Rate', value: '0.0%', change: '', changeType: 'negative' },
+            { title: 'Best Day', value: 'N/A', change: '', changeType: 'positive' },
+            { title: 'Worst Day', value: 'N/A', change: '', changeType: 'negative' },
         ]);
     }
   }, [journalEntries]);
@@ -125,3 +149,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
