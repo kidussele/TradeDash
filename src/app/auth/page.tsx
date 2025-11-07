@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Activity, Chrome, Github } from "lucide-react";
+import { Activity } from "lucide-react";
 import Link from 'next/link';
 import { useAuth } from '@/firebase';
 import {
@@ -29,6 +30,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { FirebaseError } from 'firebase/app';
 
 
 export default function AuthPage() {
@@ -49,6 +51,41 @@ export default function AuthPage() {
       router.push('/');
     }
   }, [user, isUserLoading, router]);
+  
+  const handleAuthError = (error: FirebaseError) => {
+    let title = 'Authentication Failed';
+    let description = 'An unexpected error occurred. Please try again.';
+
+    switch (error.code) {
+      case 'auth/invalid-credential':
+      case 'auth/wrong-password':
+      case 'auth/user-not-found':
+        title = 'Login Failed';
+        description = 'The email or password you entered is incorrect.';
+        break;
+      case 'auth/email-already-in-use':
+        title = 'Signup Failed';
+        description = 'An account with this email address already exists.';
+        break;
+      case 'auth/weak-password':
+        title = 'Signup Failed';
+        description = 'The password is too weak. Please use at least 6 characters.';
+        break;
+      case 'auth/invalid-email':
+         title = 'Invalid Email';
+         description = 'Please enter a valid email address.';
+         break;
+      default:
+        // Keep the generic message for other errors
+        break;
+    }
+    
+    toast({
+      variant: 'destructive',
+      title: title,
+      description: description,
+    });
+  };
 
   const handleLogin = () => {
     if (!loginEmail || !loginPassword) {
@@ -59,7 +96,7 @@ export default function AuthPage() {
       });
       return;
     }
-    initiateEmailSignIn(auth, loginEmail, loginPassword);
+    initiateEmailSignIn(auth, loginEmail, loginPassword, handleAuthError);
   };
 
   const handleSignup = () => {
@@ -71,11 +108,11 @@ export default function AuthPage() {
       });
       return;
     }
-    initiateEmailSignUp(auth, signupEmail, signupPassword);
+    initiateEmailSignUp(auth, signupEmail, signupPassword, handleAuthError);
   };
 
   const handleAnonymousLogin = () => {
-    initiateAnonymousSignIn(auth);
+    initiateAnonymousSignIn(auth, handleAuthError);
   };
 
 
