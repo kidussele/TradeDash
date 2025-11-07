@@ -45,7 +45,12 @@ const CurrencyFlags = ({ currencyPair }: { currencyPair?: string }) => {
     const baseCurrency = sanitizedPair.substring(0, 3);
     const quoteCurrency = sanitizedPair.substring(3, 6);
 
-    const getCountryCode = (currency: string) => {
+    const getFlagUrl = (currency: string) => {
+        const upperCurrency = currency.toUpperCase();
+        if (upperCurrency === 'EUR') {
+            return 'https://flagcdn.com/w40/eu.png';
+        }
+
         const customMap: Record<string, string> = {
             'USD': 'US',
             'JPY': 'JP',
@@ -55,29 +60,29 @@ const CurrencyFlags = ({ currencyPair }: { currencyPair?: string }) => {
             'CHF': 'CH',
             'NZD': 'NZ',
         };
-        const upperCurrency = currency.toUpperCase();
-        return customMap[upperCurrency] || upperCurrency.substring(0, 2);
+        const countryCode = customMap[upperCurrency] || upperCurrency.substring(0, 2);
+        return `https://flagsapi.com/${countryCode}/shiny/32.png`;
     }
 
-    const baseFlag = getCountryCode(baseCurrency);
-    const quoteFlag = getCountryCode(quoteCurrency);
+    const baseFlagUrl = getFlagUrl(baseCurrency);
+    const quoteFlagUrl = getFlagUrl(quoteCurrency);
 
     return (
         <div className="flex items-center">
             <Image
-                src={`https://flagsapi.com/${baseFlag}/shiny/32.png`}
+                src={baseFlagUrl}
                 alt={`${baseCurrency} flag`}
                 width={24}
                 height={24}
-                className="rounded-full"
+                className="rounded-full bg-background"
                 unoptimized
             />
             <Image
-                src={`https://flagsapi.com/${quoteFlag}/shiny/32.png`}
+                src={quoteFlagUrl}
                 alt={`${quoteCurrency} flag`}
                 width={24}
                 height={24}
-                className="rounded-full -ml-2"
+                className="rounded-full bg-background -ml-2"
                 unoptimized
             />
         </div>
