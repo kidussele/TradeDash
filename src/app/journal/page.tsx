@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 
 const journalEntrySchema = z.object({
   entryTime: z.date({ required_error: 'Entry date is required.'}),
+  entryTimeTime: z.string().optional(), // For time input
   exitTime: z.date().optional(),
   timeframe: z.string().min(1, 'Timeframe is required.'),
   currencyPair: z.string().min(1, 'Currency pair is required.'),
@@ -73,6 +74,16 @@ export default function JournalPage() {
       id: Date.now(),
       ...data,
     };
+    
+    // Combine date and time
+    if (data.entryTime && data.entryTimeTime) {
+      const [hours, minutes] = data.entryTimeTime.split(':').map(Number);
+      const combinedDateTime = new Date(data.entryTime);
+      combinedDateTime.setHours(hours);
+      combinedDateTime.setMinutes(minutes);
+      newEntry.entryTime = combinedDateTime;
+    }
+
     setEntries([newEntry, ...entries]);
     reset();
   };
@@ -95,7 +106,7 @@ export default function JournalPage() {
                 <AccordionItem value="item-1">
                   <AccordionTrigger className="text-base font-semibold">Trade Details</AccordionTrigger>
                   <AccordionContent className="grid gap-4 pt-4">
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="entryTime">Entry Date</Label>
                          <Controller
@@ -129,11 +140,15 @@ export default function JournalPage() {
                         {errors.entryTime && <p className="text-sm text-destructive">{errors.entryTime.message}</p>}
                       </div>
                       <div>
+                          <Label htmlFor="entryTimeTime">Entry Time</Label>
+                          <Input id="entryTimeTime" type="time" {...register('entryTimeTime')} />
+                      </div>
+                    </div>
+                    <div>
                         <Label htmlFor="timeframe">Timeframe</Label>
                         <Input id="timeframe" placeholder="e.g., H4, M15" {...register('timeframe')} />
                         {errors.timeframe && <p className="text-sm text-destructive">{errors.timeframe.message}</p>}
                       </div>
-                    </div>
                     <div>
                       <Label htmlFor="currencyPair">Currency Pair</Label>
                       <Input id="currencyPair" placeholder="e.g., EUR/USD" {...register('currencyPair')} />
@@ -335,5 +350,3 @@ export default function JournalPage() {
     </div>
   );
 }
-
-    
