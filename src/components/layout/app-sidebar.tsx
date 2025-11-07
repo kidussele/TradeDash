@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical } from 'lucide-react';
+import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical, LogIn } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -36,7 +36,7 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { open, setOpenMobile } = useSidebar();
+  const { open, setOpenMobile, state } = useSidebar();
   const userAvatar = placeholderImages.find(p => p.id === 'user-avatar');
 
   return (
@@ -44,12 +44,12 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
            <Activity className="size-7 shrink-0 text-primary" />
-           <div className={cn("flex-1 overflow-hidden transition-all duration-200", !open ? "w-0" : "w-auto")}>
+           <div className={cn("flex-1 overflow-hidden transition-all duration-200", state === 'collapsed' ? "w-0" : "w-auto")}>
             <h1 className='text-lg font-semibold'>
               TradeDash
             </h1>
            </div>
-           <div className="ml-auto">
+           <div className={cn("ml-auto", state === 'collapsed' && "absolute -right-1.5 top-2")}>
              <SidebarTrigger />
           </div>
         </div>
@@ -80,14 +80,14 @@ export function AppSidebar() {
               variant="ghost"
               className={cn(
                 'w-full justify-start p-2 text-left',
-                !open && 'size-8 justify-center'
+                state === 'collapsed' && 'size-8 justify-center'
               )}
             >
               <Avatar className="size-7">
                 {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" />}
                 <AvatarFallback>U</AvatarFallback>
               </Avatar>
-              <span className={cn('ml-2 truncate', !open && 'hidden')}>
+              <span className={cn('ml-2 truncate', state === 'collapsed' && 'hidden')}>
                 User Name
               </span>
             </Button>
@@ -99,7 +99,12 @@ export function AppSidebar() {
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>Log out</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/auth">
+                <LogIn className="mr-2 h-4 w-4" />
+                Log out
+              </Link>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarFooter>

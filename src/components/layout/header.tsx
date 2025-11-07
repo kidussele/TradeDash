@@ -23,7 +23,9 @@ const pathToTitle: { [key: string]: string } = {
 
 export function Header() {
   const pathname = usePathname();
-  const title = pathToTitle[pathname] || 'Page';
+  // We need to remove the /app prefix from the pathname
+  const cleanPathname = pathname.replace(/^\/app/, '') || '/';
+  const title = pathToTitle[cleanPathname] || 'Page';
   
   if (pathname === '/image-preview') {
     return null;

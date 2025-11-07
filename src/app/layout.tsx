@@ -1,9 +1,5 @@
 import type {Metadata} from 'next';
 import './globals.css';
-import {SidebarProvider} from '@/components/ui/sidebar';
-import {AppSidebar} from '@/components/layout/app-sidebar';
-import {SidebarInset} from '@/components/ui/sidebar';
-import {Header} from '@/components/layout/header';
 import {Toaster} from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
@@ -24,14 +20,8 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
-            <Header />
-            <main className="p-4 lg:p-6">{children}</main>
-            <Toaster />
-          </SidebarInset>
-        </SidebarProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   );
