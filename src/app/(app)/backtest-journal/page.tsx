@@ -553,7 +553,3 @@ export default function BacktestJournalPage() {
     </Tabs>
   );
 }
-
-    
-
-    

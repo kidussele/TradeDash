@@ -284,5 +284,3 @@ function GoalCard({ goal, onEdit, isBigGoal = false }: GoalCardProps) {
         </Card>
     )
 }
-
-    

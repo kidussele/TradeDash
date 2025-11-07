@@ -469,5 +469,3 @@ export default function JournalPage() {
     </div>
   );
 }
-
-    
