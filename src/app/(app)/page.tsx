@@ -25,7 +25,13 @@ function getDayWithMostPnl(entries: JournalEntry[], type: 'win' | 'loss'): StatC
         }
     });
 
-    const sortedDays = Object.entries(dailyPnl).sort(([, pnlA], [, pnlB]) => type === 'win' ? pnlB - pnlA : pnlA - pnlB);
+    const sortedDays = Object.entries(dailyPnl).sort(([, pnlA], [, pnlB]) => {
+        if (type === 'win') {
+            return pnlB - pnlA; // Sort descending for best day
+        } else {
+            return pnlA - pnlB; // Sort ascending for worst day
+        }
+    });
 
     if (sortedDays.length === 0) {
         return {
@@ -40,7 +46,7 @@ function getDayWithMostPnl(entries: JournalEntry[], type: 'win' | 'loss'): StatC
     return {
         title: type === 'win' ? 'Best Day' : 'Worst Day',
         value: pnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-        change: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        change: new Date(date.replace(/-/g, '/')).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         changeType: pnl >= 0 ? 'positive' : 'negative',
     };
 }
@@ -72,8 +78,9 @@ export default function DashboardPage() {
       
       const totalPnl = closedTrades.reduce((acc, trade) => acc + (trade.pnl || 0), 0);
       
-      const wins = closedTrades.filter(trade => (trade.pnl || 0) > 0).length;
-      const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : 0;
+      const wins = closedTrades.filter(trade => trade.result === 'Win').length;
+      const tradesWithOutcome = closedTrades.filter(trade => trade.result === 'Win' || trade.result === 'Loss').length;
+      const winRate = tradesWithOutcome > 0 ? (wins / tradesWithOutcome) * 100 : 0;
       
       const totalReturn = closedTrades.reduce((acc, trade) => {
         const entry = trade.entryPrice;
@@ -149,5 +156,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

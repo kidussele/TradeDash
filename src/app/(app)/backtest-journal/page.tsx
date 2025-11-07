@@ -97,8 +97,9 @@ export default function BacktestJournalPage() {
       
       const totalPnl = closedTrades.reduce((acc, trade) => acc + (trade.pnl || 0), 0);
       
-      const wins = closedTrades.filter(trade => (trade.pnl || 0) > 0).length;
-      const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : 0;
+      const wins = closedTrades.filter(trade => trade.result === 'Win').length;
+      const tradesWithOutcome = closedTrades.filter(trade => trade.result === 'Win' || trade.result === 'Loss').length;
+      const winRate = tradesWithOutcome > 0 ? (wins / tradesWithOutcome) * 100 : 0;
       
       const totalReturn = closedTrades.reduce((acc, trade) => {
         const entry = trade.entryPrice;
