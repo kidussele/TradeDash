@@ -1,0 +1,64 @@
+/**
+ * @file Firebase Security Rules for TradeDash Application
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. Each user can only access their own data,
+ * as identified by their Firebase Auth UID. All data is nested under a user-specific path.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile information.
+ * - /users/{userId}/trades/{tradeId}: Stores individual trade records for a user.
+ *
+ * Key Security Decisions:
+ * - Users can only create, read, update, and delete their own profiles.
+ * - Users can only create, read, update, and delete their own trade records.
+ * - Listing all users or all trades across users is explicitly denied to prevent information leakage.
+ *
+ * Denormalization for Authorization:
+ *  - The `userProfileId` field is used within the `Trade` document to ensure that only the owner of the user profile can access the trade information.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Protects user profiles, allowing only the owner to manage their data.
+     * @path /users/{userId}
+     * @allow (create) - User with UID 'user_abc' can create their profile at /users/user_abc if request.auth.uid == 'user_abc'.
+     * @allow (get, update, delete) - User with UID 'user_abc' can read/update/delete their profile at /users/user_abc if request.auth.uid == 'user_abc'.
+     * @deny (create) - User with UID 'user_xyz' cannot create a profile at /users/user_abc.
+     * @deny (get, update, delete) - User with UID 'user_xyz' cannot read/update/delete the profile at /users/user_abc.
+     * @principle Enforces document ownership and validates relational integrity between the path and document data.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == request.auth.uid;
+      allow update: if isOwner(userId) && resource.data.id == request.resource.data.id;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Protects trade data, allowing only the owner of the user profile to manage their trade records.
+     * @path /users/{userId}/trades/{tradeId}
+     * @allow (create) - User with UID 'user_abc' can create a trade record at /users/user_abc/trades/trade_1 if request.auth.uid == 'user_abc'.
+     * @allow (get, update, delete) - User with UID 'user_abc' can read/update/delete a trade record at /users/user_abc/trades/trade_1 if request.auth.uid == 'user_abc'.
+     * @deny (create) - User with UID 'user_xyz' cannot create a trade record at /users/user_abc/trades/trade_1.
+     * @deny (get, update, delete) - User with UID 'user_xyz' cannot read/update/delete the trade record at /users/user_abc/trades/trade_1.
+     * @principle Enforces document ownership and validates relational integrity between the path and document data.
+     */
+    match /users/{userId}/trades/{tradeId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userProfileId == userId;
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+  }
+}

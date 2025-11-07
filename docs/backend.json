@@ -1,0 +1,160 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile in the TradeDash application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user profile."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "User's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "User's last name."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Trade": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Trade",
+      "type": "object",
+      "description": "Represents a single trade executed by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the trade."
+        },
+        "userProfileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Trade)"
+        },
+        "openDate": {
+          "type": "string",
+          "description": "Date and time when the trade was opened.",
+          "format": "date-time"
+        },
+        "closeDate": {
+          "type": "string",
+          "description": "Date and time when the trade was closed.",
+          "format": "date-time"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Trading symbol (e.g., AAPL, TSLA)."
+        },
+        "netPL": {
+          "type": "number",
+          "description": "Net profit or loss for the trade."
+        },
+        "positionSize": {
+          "type": "number",
+          "description": "The size of the trade position."
+        },
+        "orderType": {
+          "type": "string",
+          "description": "Type of order executed (e.g., Market, Limit)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any notes or comments about the trade."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the trade record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the trade record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userProfileId",
+        "openDate",
+        "closeDate",
+        "symbol",
+        "netPL",
+        "positionSize",
+        "orderType",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. The 'userId' parameter corresponds to the Firebase Auth UID, ensuring that only the authenticated user can access their profile data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/trades/{tradeId}",
+        "definition": {
+          "entityName": "Trade",
+          "schema": {
+            "$ref": "#/backend/entities/Trade"
+          },
+          "description": "Stores trade data for a specific user.  The 'userId' parameter corresponds to the Firebase Auth UID, ensuring that only the authenticated user can access their trade data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            },
+            {
+              "name": "tradeId",
+              "description": "Unique identifier for the trade."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure data isolation and ownership based on user accounts. Each user has their own dedicated space for storing their profile information and trade data. This approach provides excellent data isolation and simplifies security rules. The structure is designed to prevent unauthorized access. All data is stored under a user's document, ensuring that only the authenticated user can access their data.\n\nTrades are stored as a subcollection under the user's document (users/{userId}/trades/{tradeId}). This enforces clear ownership and simplifies querying and managing trades for a specific user.\n\nThis structure ensures authorization independence. The security rules can be written to allow each user to read and write only their own data, based on the `request.auth.uid` without needing to access other documents or collections.\n\nThe structure supports QAPs (Rules are not Filters). Since each user's data is stored in its own subcollection, listing trades is straightforward. Security rules can easily verify that the requesting user is the owner of the data, allowing only authenticated users to retrieve their own trade data."
+  }
+}
