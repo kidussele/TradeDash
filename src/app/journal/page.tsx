@@ -447,7 +447,7 @@ export default function JournalPage() {
                                     <div>
                                         <h4 className="font-semibold mb-2">Before</h4>
                                         <div className="relative aspect-video rounded-md overflow-hidden border">
-                                            <Image src={entry.beforeScreenshot} alt="Before screenshot" layout="fill" objectFit="cover" />
+                                            <Image src={entry.beforeScreenshot} alt="Before screenshot" fill className="object-cover" />
                                         </div>
                                     </div>
                                 )}
@@ -455,7 +455,7 @@ export default function JournalPage() {
                                     <div>
                                         <h4 className="font-semibold mb-2">After</h4>
                                         <div className="relative aspect-video rounded-md overflow-hidden border">
-                                            <Image src={entry.afterScreenshot} alt="After screenshot" layout="fill" objectFit="cover" />
+                                            <Image src={entry.afterScreenshot} alt="After screenshot" fill className="object-cover" />
                                         </div>
                                     </div>
                                 )}
