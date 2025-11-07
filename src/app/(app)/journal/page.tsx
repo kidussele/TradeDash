@@ -398,7 +398,7 @@ export default function JournalPage() {
       )}
        {previewImageUrl && (
         <div className="fixed bottom-4 right-4 z-50">
-            <Card className="w-[400px] max-w-lg">
+            <Card className="w-[600px] max-w-2xl">
                 <CardContent className="p-2 relative">
                     <Button
                         variant="ghost"
@@ -423,5 +423,7 @@ export default function JournalPage() {
     </div>
   );
 }
+
+    
 
     
