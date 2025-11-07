@@ -80,18 +80,18 @@ const NewsSection = ({ topic }: { topic: string }) => {
               <div className="flex items-start gap-2">
                 <Badge
                   variant={getImpactBadgeVariant(article.impact)}
-                  className="mt-1.5 h-3.5 w-3.5 flex-shrink-0 p-0"
+                  className="mt-1 flex-shrink-0"
                 >
-                    <span className="sr-only">{article.impact} impact</span>
+                    {article.impact}
                 </Badge>
                 <CardTitle className="text-lg">{article.headline}</CardTitle>
               </div>
-              <CardDescription className="flex items-center gap-2 text-xs ml-[22px]">
+              <CardDescription className="flex items-center gap-2 text-xs pt-2">
                 <span>{article.publishedAt}</span>
                 <Badge variant="secondary">{article.source}</Badge>
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow ml-[22px]">
+            <CardContent className="flex-grow">
               <p className="text-sm text-muted-foreground">{article.summary}</p>
             </CardContent>
           </Card>

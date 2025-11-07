@@ -25,6 +25,9 @@ body {
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --positive: 142.1 76.2% 36.3%;
+    --positive-foreground: 0 0% 98%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 48 96% 98%;
     --negative: 0 84.2% 60.2%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
@@ -62,6 +65,9 @@ body {
     --destructive: 0 72.2% 50.6%;
     --destructive-foreground: 0 0% 98%;
     --positive: 142.1 70.2% 46.3%;
+    --positive-foreground: 0 0% 98%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 48 96% 10%;
     --negative: 0 72.2% 50.6%;
     --border: 270 7% 20%;
     --input: 270 7% 20%;
