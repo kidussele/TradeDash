@@ -5,6 +5,7 @@ import {
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateProfile,
   // Assume getAuth and app are initialized elsewhere
 } from 'firebase/auth';
 import type { FirebaseError } from 'firebase/app';
@@ -20,8 +21,15 @@ export function initiateAnonymousSignIn(authInstance: Auth, onError?: ErrorCallb
 }
 
 /** Initiate email/password sign-up (non-blocking). */
-export function initiateEmailSignUp(authInstance: Auth, email: string, password: string, onError?: ErrorCallback): void {
-  createUserWithEmailAndPassword(authInstance, email, password).catch((error: FirebaseError) => {
+export function initiateEmailSignUp(authInstance: Auth, email: string, password: string, displayName: string, onError?: ErrorCallback): void {
+  createUserWithEmailAndPassword(authInstance, email, password)
+  .then((userCredential) => {
+    // After creating the user, update their profile with the display name
+    return updateProfile(userCredential.user, {
+      displayName: displayName,
+    });
+  })
+  .catch((error: FirebaseError) => {
     console.error('Email sign-up error:', error);
     onError?.(error);
   });

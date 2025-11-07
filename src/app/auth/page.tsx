@@ -100,15 +100,15 @@ export default function AuthPage() {
   };
 
   const handleSignup = () => {
-    if (!signupEmail || !signupPassword) {
+    if (!signupName || !signupEmail || !signupPassword) {
        toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: "Please enter both email and password.",
+        description: "Please enter your name, email, and password.",
       });
       return;
     }
-    initiateEmailSignUp(auth, signupEmail, signupPassword, handleAuthError);
+    initiateEmailSignUp(auth, signupEmail, signupPassword, signupName, handleAuthError);
   };
 
   const handleAnonymousLogin = () => {
