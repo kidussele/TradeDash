@@ -43,16 +43,16 @@ export default function DashboardPage() {
       const totalReturn = closedTrades.reduce((acc, trade) => {
         const entry = trade.entryPrice;
         const pnl = trade.pnl || 0;
-        if (entry > 0) {
+        if (entry > 0 && trade.positionSize > 0) {
           return acc + (pnl / (trade.positionSize * entry));
         }
         return acc;
       }, 0);
       const avgReturn = closedTrades.length > 0 ? (totalReturn / closedTrades.length) * 100 : 0;
 
-      const pnlValues = closedTrades.map(t => t.pnl || 0);
-      const meanPnl = totalPnl / closedTrades.length;
-      const stdDev = Math.sqrt(pnlValues.map(x => Math.pow(x - meanPnl, 2)).reduce((a, b) => a + b) / closedTrades.length);
+      const pnlValues = closedTrades.map(t => t.pnl || 0).filter(pnl => pnl !== 0);
+      const meanPnl = pnlValues.length > 0 ? pnlValues.reduce((a,b) => a + b, 0) / pnlValues.length : 0;
+      const stdDev = pnlValues.length > 0 ? Math.sqrt(pnlValues.map(x => Math.pow(x - meanPnl, 2)).reduce((a, b) => a + b) / pnlValues.length) : 0;
       const sharpeRatio = stdDev > 0 ? meanPnl / stdDev : 0;
 
 
@@ -73,13 +73,13 @@ export default function DashboardPage() {
           title: 'Avg. Return',
           value: `${avgReturn.toFixed(2)}%`,
           change: '+0.0%', // Placeholder
-          changeType: 'positive',
+          changeType: avgReturn >= 0 ? 'positive' : 'negative',
         },
         {
           title: 'Sharpe Ratio',
           value: sharpeRatio.toFixed(2),
           change: '+0.0', // Placeholder
-          changeType: 'positive',
+          changeType: sharpeRatio >= 0 ? 'positive' : 'negative',
         },
       ]);
     } else {
@@ -104,7 +104,7 @@ export default function DashboardPage() {
         <CumulativePnlChart entries={journalEntries} />
       </div>
       <div className="col-span-4 sm:col-span-2 lg:col-span-1">
-        <TradeDashScore />
+        <TradeDashScore entries={journalEntries} />
       </div>
       <div className="col-span-4 sm:col-span-2 lg:col-span-1">
         <DailyPnlChart entries={journalEntries} />
