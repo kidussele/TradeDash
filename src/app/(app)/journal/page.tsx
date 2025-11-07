@@ -37,6 +37,7 @@ import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 
 export type TradingSession = 'London' | 'New York' | 'Tokyo' | 'Sydney';
+export type Emotion = 'Greedy' | 'Fearful' | 'Confident' | 'Neutral' | 'Anxious' | 'Patient';
 
 export type JournalEntry = {
   id: number;
@@ -57,6 +58,7 @@ export type JournalEntry = {
   screenshotBefore?: string;
   screenshotAfter?: string;
   adherenceToPlan: 'Yes' | 'No' | 'Partial';
+  emotion?: Emotion;
 };
 
 
@@ -126,6 +128,7 @@ export default function JournalPage() {
       screenshotBefore: currentEntry.screenshotBefore,
       screenshotAfter: currentEntry.screenshotAfter,
       adherenceToPlan: currentEntry.adherenceToPlan || 'Yes',
+      emotion: currentEntry.emotion,
     };
 
     if (editIndex !== null) {
@@ -309,6 +312,25 @@ export default function JournalPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="emotion">Emotion</Label>
+                    <Select
+                        value={currentEntry.emotion}
+                        onValueChange={(value: Emotion) => setCurrentEntry({ ...currentEntry, emotion: value })}
+                    >
+                        <SelectTrigger id="emotion">
+                        <SelectValue placeholder="Select emotion" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Confident">Confident</SelectItem>
+                            <SelectItem value="Fearful">Fearful</SelectItem>
+                            <SelectItem value="Greedy">Greedy</SelectItem>
+                            <SelectItem value="Anxious">Anxious</SelectItem>
+                            <SelectItem value="Patient">Patient</SelectItem>
+                            <SelectItem value="Neutral">Neutral</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div className="space-y-2 col-span-2">
                   <Label htmlFor="pnl">Net P&L</Label>
                   <Input
@@ -379,6 +401,7 @@ export default function JournalPage() {
             <TableHead>Pair</TableHead>
             <TableHead>Direction</TableHead>
             <TableHead>P&L</TableHead>
+            <TableHead>Emotion</TableHead>
             <TableHead>Result</TableHead>
             <TableHead>Before</TableHead>
             <TableHead>After</TableHead>
@@ -394,6 +417,7 @@ export default function JournalPage() {
               <TableCell className={getResultColor(entry.result)}>
                 {entry.pnl?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) ?? 'N/A'}
               </TableCell>
+              <TableCell>{entry.emotion || 'N/A'}</TableCell>
               <TableCell>
                 <Badge variant={getResultBadgeVariant(entry.result)}>{entry.result}</Badge>
               </TableCell>
@@ -455,5 +479,3 @@ export default function JournalPage() {
     </div>
   );
 }
-
-    
