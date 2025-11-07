@@ -29,10 +29,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {Trash2, Edit, PlusCircle, Image as ImageIcon} from 'lucide-react';
+import {Trash2, Edit, PlusCircle, Image as ImageIcon, X} from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import { Card, CardContent } from '@/components/ui/card';
 
 export type JournalEntry = {
   id: number;
@@ -60,6 +62,8 @@ export default function JournalPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<Partial<JournalEntry>>({});
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+
 
   useEffect(() => {
     setIsClient(true);
@@ -164,6 +168,10 @@ export default function JournalPage() {
         case 'Breakeven': return 'secondary';
         default: return 'outline';
     }
+  };
+  
+  const handlePreviewImage = (url: string) => {
+    setPreviewImageUrl(url);
   };
 
 
@@ -359,16 +367,16 @@ export default function JournalPage() {
               </TableCell>
               <TableCell>
                 {entry.screenshotBefore ? (
-                  <Link href={`/image-preview?imageUrl=${encodeURIComponent(entry.screenshotBefore)}`} target="_blank">
+                  <Button variant="ghost" size="icon" onClick={() => handlePreviewImage(entry.screenshotBefore!)}>
                     <ImageIcon className="h-5 w-5 text-blue-500 hover:text-blue-700" />
-                  </Link>
+                  </Button>
                 ) : 'N/A'}
               </TableCell>
               <TableCell>
                 {entry.screenshotAfter ? (
-                  <Link href={`/image-preview?imageUrl=${encodeURIComponent(entry.screenshotAfter)}`} target="_blank">
+                  <Button variant="ghost" size="icon" onClick={() => handlePreviewImage(entry.screenshotAfter!)}>
                     <ImageIcon className="h-5 w-5 text-blue-500 hover:text-blue-700" />
-                  </Link>
+                  </Button>
                 ) : 'N/A'}
               </TableCell>
               <TableCell className="text-right">
@@ -388,6 +396,32 @@ export default function JournalPage() {
             No journal entries yet.
         </div>
       )}
+       {previewImageUrl && (
+        <div className="fixed bottom-4 right-4 z-50">
+            <Card className="w-[400px] max-w-lg">
+                <CardContent className="p-2 relative">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-6 w-6 bg-background/50 hover:bg-background/80"
+                        onClick={() => setPreviewImageUrl(null)}
+                    >
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Close preview</span>
+                    </Button>
+                    <Image
+                        src={previewImageUrl}
+                        alt="Screenshot preview"
+                        width={400}
+                        height={300}
+                        className="rounded-md object-cover"
+                    />
+                </CardContent>
+            </Card>
+        </div>
+      )}
     </div>
   );
 }
+
+    
