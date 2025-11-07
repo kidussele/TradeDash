@@ -313,7 +313,7 @@ export default function StrategyChecklistPage() {
                         <Button variant="outline" onClick={() => handleResetChecks(cl.id)}>Reset Checklist</Button>
                      )}
                      {allChecked && (
-                        <div className="text-center p-3 rounded-md bg-positive/10 text-sm font-semibold text-positive-foreground text-positive">
+                        <div className="text-center p-3 rounded-md bg-positive/10 text-sm font-semibold text-positive">
                             Cleared to trade!
                         </div>
                     )}
