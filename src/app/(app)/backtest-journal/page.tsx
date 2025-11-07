@@ -258,12 +258,12 @@ export default function BacktestJournalPage() {
     return <div>Loading...</div>;
   }
 
-  const chartEntries = entries.map(e => ({
+  const chartEntries = (entries || []).map(e => ({
     ...e,
     entryTime: new Date(e.date),
   }));
 
-  const sortedEntries = [...entries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedEntries = [...(entries || [])].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <Tabs defaultValue="journal">

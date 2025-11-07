@@ -173,7 +173,7 @@ export default function JournalPage() {
     return <div>Loading...</div>; 
   }
 
-  const sortedEntries = [...entries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedEntries = [...(entries || [])].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div>

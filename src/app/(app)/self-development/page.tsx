@@ -93,7 +93,7 @@ export default function SelfDevelopmentPage() {
     return <div>Loading...</div>;
   }
 
-  const sortedNotes = [...notes].sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+  const sortedNotes = [...(notes || [])].sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
 
   return (
     <div className="space-y-6">
