@@ -13,6 +13,7 @@ const pathToTitle: { [key: string]: string } = {
   '/news': 'News',
   '/notebook': 'Market Analysis',
   '/strategy-checklist': 'Strategy Checklist',
+  '/self-development': 'Self Development',
   '/image-preview': 'Image Preview',
 };
 
@@ -35,5 +36,3 @@ export function Header() {
     </header>
   );
 }
-
-    
