@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -11,12 +12,15 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, PlusCircle, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 const journalEntrySchema = z.object({
-  entryTime: z.string().min(1, 'Entry date is required.'),
-  exitTime: z.string().optional(),
+  entryTime: z.date({ required_error: 'Entry date is required.'}),
+  exitTime: z.date().optional(),
   timeframe: z.string().min(1, 'Timeframe is required.'),
   currencyPair: z.string().min(1, 'Currency pair is required.'),
   direction: z.enum(['Long', 'Short']),
@@ -91,10 +95,37 @@ export default function JournalPage() {
                 <AccordionItem value="item-1">
                   <AccordionTrigger className="text-base font-semibold">Trade Details</AccordionTrigger>
                   <AccordionContent className="grid gap-4 pt-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       <div>
                         <Label htmlFor="entryTime">Entry Date</Label>
-                        <Input id="entryTime" type="datetime-local" {...register('entryTime')} />
+                         <Controller
+                          control={control}
+                          name="entryTime"
+                          render={({ field }) => (
+                             <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        />
                         {errors.entryTime && <p className="text-sm text-destructive">{errors.entryTime.message}</p>}
                       </div>
                       <div>
@@ -265,7 +296,7 @@ export default function JournalPage() {
                         <div>
                            <CardTitle className='text-lg'>{entry.currencyPair} {entry.direction}</CardTitle>
                            <CardDescription>
-                            Entered: {new Date(entry.entryTime).toLocaleString()} | Result: {entry.result}
+                            Entered: {entry.entryTime ? entry.entryTime.toLocaleString() : 'N/A'} | Result: {entry.result}
                           </CardDescription>
                         </div>
                         <Button variant="ghost" size="icon" onClick={() => deleteEntry(entry.id)}>
@@ -304,3 +335,5 @@ export default function JournalPage() {
     </div>
   );
 }
+
+    
