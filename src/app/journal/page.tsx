@@ -17,6 +17,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 const journalEntrySchema = z.object({
   entryTime: z.date({ required_error: 'Entry date is required.'}),
@@ -46,6 +47,8 @@ const journalEntrySchema = z.object({
   whatWentRight: z.string().optional(),
   whatWentWrong: z.string().optional(),
   lessonLearned: z.string().min(1, 'Lesson learned is required.'),
+  beforeScreenshot: z.string().url('Must be a valid URL.').optional().or(z.literal('')),
+  afterScreenshot: z.string().url('Must be a valid URL.').optional().or(z.literal('')),
 });
 
 type JournalEntry = z.infer<typeof journalEntrySchema> & { id: number };
@@ -102,7 +105,7 @@ export default function JournalPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-              <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3']} className="w-full">
+              <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3', 'item-4']} className="w-full">
                 <AccordionItem value="item-1">
                   <AccordionTrigger className="text-base font-semibold">Trade Details</AccordionTrigger>
                   <AccordionContent className="grid gap-4 pt-4">
@@ -286,6 +289,21 @@ export default function JournalPage() {
                     </div>
                   </AccordionContent>
                 </AccordionItem>
+                <AccordionItem value="item-4">
+                  <AccordionTrigger className="text-base font-semibold">Screenshots</AccordionTrigger>
+                  <AccordionContent className="grid gap-4 pt-4">
+                    <div>
+                      <Label htmlFor="beforeScreenshot">Before Screenshot URL</Label>
+                      <Input id="beforeScreenshot" placeholder="https://..." {...register('beforeScreenshot')} />
+                      {errors.beforeScreenshot && <p className="text-sm text-destructive">{errors.beforeScreenshot.message}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="afterScreenshot">After Screenshot URL</Label>
+                      <Input id="afterScreenshot" placeholder="https://..." {...register('afterScreenshot')} />
+                      {errors.afterScreenshot && <p className="text-sm text-destructive">{errors.afterScreenshot.message}</p>}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
               <Button type="submit" className="mt-4">
                 <PlusCircle className="mr-2" />
@@ -334,6 +352,26 @@ export default function JournalPage() {
                          <h4 className="font-semibold mb-2">Rationale & Reflection</h4>
                         <p className="whitespace-pre-wrap text-sm text-muted-foreground"><strong className="text-foreground">Reason for Entry:</strong> {entry.reasonForEntry}</p>
                         <p className="whitespace-pre-wrap text-sm text-muted-foreground mt-2"><strong className="text-foreground">Lesson Learned:</strong> {entry.lessonLearned}</p>
+
+                        {(entry.beforeScreenshot || entry.afterScreenshot) && <Separator className="my-4" />}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {entry.beforeScreenshot && (
+                                <div>
+                                    <h4 className="font-semibold mb-2">Before</h4>
+                                    <div className="relative aspect-video rounded-md overflow-hidden border">
+                                        <Image src={entry.beforeScreenshot} alt="Before screenshot" layout="fill" objectFit="cover" />
+                                    </div>
+                                </div>
+                            )}
+                            {entry.afterScreenshot && (
+                                <div>
+                                    <h4 className="font-semibold mb-2">After</h4>
+                                    <div className="relative aspect-video rounded-md overflow-hidden border">
+                                        <Image src={entry.afterScreenshot} alt="After screenshot" layout="fill" objectFit="cover" />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -350,3 +388,5 @@ export default function JournalPage() {
     </div>
   );
 }
+
+    
