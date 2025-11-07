@@ -19,6 +19,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import Link from 'next/link';
 
 
 const journalEntrySchema = z.object({
@@ -483,17 +484,17 @@ export default function JournalPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {entry.beforeScreenshot && (
                                     <div>
-                                        <h4 className="font-semibold mb-2">Before</h4>
-                                        <div className="relative aspect-video rounded-md overflow-hidden border">
-                                            <Image src={entry.beforeScreenshot} alt="Before screenshot" fill className="object-cover" />
+                                        <Link href={`/image-preview?imageUrl=${encodeURIComponent(entry.beforeScreenshot)}`} target="_blank" className="font-semibold mb-2 hover:underline">Before</Link>
+                                        <div className="relative aspect-video rounded-md overflow-hidden border mt-1">
+                                            <Image src={entry.beforeScreenshot} alt="Before screenshot" fill className="object-cover" unoptimized/>
                                         </div>
                                     </div>
                                 )}
                                 {entry.afterScreenshot && (
                                     <div>
-                                        <h4 className="font-semibold mb-2">After</h4>
-                                        <div className="relative aspect-video rounded-md overflow-hidden border">
-                                            <Image src={entry.afterScreenshot} alt="After screenshot" fill className="object-cover" />
+                                       <Link href={`/image-preview?imageUrl=${encodeURIComponent(entry.afterScreenshot)}`} target="_blank" className="font-semibold mb-2 hover:underline">After</Link>
+                                        <div className="relative aspect-video rounded-md overflow-hidden border mt-1">
+                                            <Image src={entry.afterScreenshot} alt="After screenshot" fill className="object-cover" unoptimized/>
                                         </div>
                                     </div>
                                 )}

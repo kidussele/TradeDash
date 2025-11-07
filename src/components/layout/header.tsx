@@ -1,6 +1,6 @@
 'use client';
 
-import { FileUp } from 'lucide-react';
+import { FileUp, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,16 +18,20 @@ const pathToTitle: { [key: string]: string } = {
   '/insights': 'AI Insights',
   '/journal': 'Journal',
   '/backtest-journal': 'Backtest Journal',
+  '/image-preview': 'Image Preview',
 };
 
 export function Header() {
   const pathname = usePathname();
   const title = pathToTitle[pathname] || 'Page';
+  
+  if (pathname === '/image-preview') {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-      <SidebarTrigger className="h-5 w-5" />
-
+      <SidebarTrigger className="h-5 w-5 md:hidden" />
       <h1 className="text-xl font-semibold">{title}</h1>
       <div className="ml-auto flex items-center gap-2">
         <Dialog>
