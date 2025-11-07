@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,33 +16,28 @@ import { addDays, format, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+
 
 type AnyEntry = JournalEntry | BacktestJournalEntry;
 
 const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) => {
-  const [entries, setEntries] = useState<AnyEntry[]>([]);
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const collectionName = journalType === 'live' ? 'journalEntries' : 'backtestJournalEntries';
+  const entriesRef = useMemoFirebase(() =>
+    user ? collection(firestore, 'users', user.uid, collectionName) : null,
+  [user, firestore, collectionName]);
+
+  const { data: entries = [], isLoading } = useCollection<Omit<AnyEntry, 'id'>>(entriesRef);
+  
   const [filteredEntries, setFilteredEntries] = useState<AnyEntry[]>([]);
-  const [isClient, setIsClient] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  const storageKey = journalType === 'live' ? 'journalEntries' : 'backtestJournalEntries';
   const reportTitle = journalType === 'live' ? 'Live Trading Journal Report' : 'Backtest Trading Journal Report';
   const fileName = journalType === 'live' ? 'live_journal_report' : 'backtest_journal_report';
-
-  useEffect(() => {
-    setIsClient(true);
-    const storedEntries = localStorage.getItem(storageKey);
-    if (storedEntries) {
-      const parsed = JSON.parse(storedEntries).map((entry: any) => ({
-        ...entry,
-        date: entry.date ? new Date(entry.date) : new Date(),
-        entryTime: entry.entryTime ? new Date(entry.entryTime) : undefined,
-        exitTime: entry.exitTime ? new Date(entry.exitTime) : undefined,
-      }));
-      setEntries(parsed);
-      setFilteredEntries(parsed); // Initially, show all entries
-    }
-  }, [storageKey]);
 
   useEffect(() => {
     if (!dateRange?.from && !dateRange?.to) {
@@ -112,7 +108,7 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
         startY: (doc as any).lastAutoTable.finalY + 10,
         head: [['Date', 'Pair', 'Direction', 'P&L', 'Result', 'R-Multiple']],
         body: filteredEntries.map(entry => [
-            entry.date.toLocaleDateString(),
+            new Date(entry.date).toLocaleDateString(),
             entry.currencyPair,
             entry.direction,
             entry.pnl?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) ?? 'N/A',
@@ -137,7 +133,7 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
     ];
     
     const tradeData = filteredEntries.map(e => ({
-        Date: e.date.toLocaleDateString(),
+        Date: new Date(e.date).toLocaleDateString(),
         Session: e.session || 'N/A',
         'Currency Pair': e.currencyPair,
         Direction: e.direction,
@@ -162,7 +158,7 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
     XLSX.writeFile(workbook, `${fileName}.xlsx`);
   };
   
-  if (!isClient) return null;
+  if (isLoading) return <div>Loading reports...</div>;
 
   return (
     <Card>
@@ -258,3 +254,5 @@ export default function ReportPage() {
     </div>
   );
 }
+
+    

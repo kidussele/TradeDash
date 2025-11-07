@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
-import type { JournalEntry } from '@/app/journal/page';
+import type { JournalEntry } from '@/app/(app)/journal/page';
 
 type TradingCalendarProps = {
   entries: JournalEntry[];
@@ -35,7 +35,7 @@ export function TradingCalendar({ entries }: TradingCalendarProps) {
   const calendarData = entries
     .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && (entry.entryTime || entry.date))
     .reduce((acc, entry) => {
-        const dateStr = (entry.entryTime || entry.date)!.toISOString().split('T')[0];
+        const dateStr = new Date(entry.date).toISOString().split('T')[0];
         if (!acc[dateStr]) {
             acc[dateStr] = { pnl: 0 };
         }

@@ -10,7 +10,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { JournalEntry } from '@/app/journal/page';
+import type { JournalEntry } from '@/app/(app)/journal/page';
 
 type RecentTradesProps = {
     entries: JournalEntry[];
@@ -18,7 +18,7 @@ type RecentTradesProps = {
 
 export function RecentTrades({ entries }: RecentTradesProps) {
   const recentTradesData = entries
-    .sort((a, b) => ((b.entryTime || b.date)?.getTime() || 0) - ((a.entryTime || a.date)?.getTime() || 0))
+    .sort((a, b) => (new Date(b.date).getTime()) - (new Date(a.date).getTime()))
     .slice(0, 5)
     .map(entry => ({
         symbol: entry.currencyPair,

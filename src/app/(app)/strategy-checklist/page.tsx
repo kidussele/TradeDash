@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   CardFooter,
@@ -23,66 +22,53 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+
 
 export type ChecklistItem = {
-  id: number;
+  id: string;
   text: string;
   isChecked: boolean;
 };
 
 export type Checklist = {
-  id: number;
+  id: string;
   title: string;
   items: ChecklistItem[];
 };
 
 export default function StrategyChecklistPage() {
-  const [checklists, setChecklists] = useState<Checklist[]>([]);
-  const [isClient, setIsClient] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const checklistsRef = useMemoFirebase(() => 
+    user ? collection(firestore, 'users', user.uid, 'strategyChecklists') : null
+  , [user, firestore]);
+  
+  const { data: checklists = [], isLoading } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
 
   // For adding/editing a checklist (strategy)
   const [isChecklistDialog, setIsChecklistDialog] = useState(false);
   const [currentChecklistTitle, setCurrentChecklistTitle] = useState('');
-  const [editingChecklistId, setEditingChecklistId] = useState<number | null>(null);
+  const [editingChecklistId, setEditingChecklistId] = useState<string | null>(null);
 
   // For adding/editing an item within a checklist
   const [isItemDialog, setIsItemDialog] = useState(false);
   const [currentItemText, setCurrentItemText] = useState('');
-  const [activeChecklistId, setActiveChecklistId] = useState<number | null>(null);
-  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [activeChecklistId, setActiveChecklistId] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
-
-  useEffect(() => {
-    setIsClient(true);
-    const storedChecklists = localStorage.getItem('strategyChecklists');
-    if (storedChecklists) {
-      setChecklists(JSON.parse(storedChecklists));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isClient) {
-      localStorage.setItem('strategyChecklists', JSON.stringify(checklists));
-    }
-  }, [checklists, isClient]);
 
   // Checklist (Strategy) handlers
   const handleSaveChecklist = () => {
-    if (!currentChecklistTitle.trim()) return;
+    if (!currentChecklistTitle.trim() || !user || !checklistsRef) return;
 
-    if (editingChecklistId !== null) {
-      setChecklists(
-        checklists.map((cl) =>
-          cl.id === editingChecklistId ? { ...cl, title: currentChecklistTitle } : cl
-        )
-      );
+    if (editingChecklistId) {
+      const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', editingChecklistId);
+      setDocumentNonBlocking(docRef, { title: currentChecklistTitle }, { merge: true });
     } else {
-      const newChecklist: Checklist = {
-        id: Date.now(),
-        title: currentChecklistTitle,
-        items: [],
-      };
-      setChecklists([...checklists, newChecklist]);
+      addDocumentNonBlocking(checklistsRef, { title: currentChecklistTitle, items: [] });
     }
     setIsChecklistDialog(false);
     setCurrentChecklistTitle('');
@@ -95,8 +81,10 @@ export default function StrategyChecklistPage() {
     setIsChecklistDialog(true);
   };
 
-  const handleDeleteChecklist = (checklistId: number) => {
-    setChecklists(checklists.filter((cl) => cl.id !== checklistId));
+  const handleDeleteChecklist = (checklistId: string) => {
+    if (!user) return;
+    const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', checklistId);
+    deleteDocumentNonBlocking(docRef);
   };
   
   const handleAddNewChecklist = () => {
@@ -107,28 +95,28 @@ export default function StrategyChecklistPage() {
 
   // Item handlers
   const handleSaveItem = () => {
-    if (!currentItemText.trim() || activeChecklistId === null) return;
+    if (!currentItemText.trim() || !activeChecklistId || !user) return;
 
-    setChecklists(checklists.map(cl => {
-      if (cl.id === activeChecklistId) {
-        if (editingItemId !== null) { // Editing existing item
-          return {
-            ...cl,
-            items: cl.items.map(item =>
-              item.id === editingItemId ? { ...item, text: currentItemText } : item
-            ),
-          };
-        } else { // Adding new item
-          const newItem: ChecklistItem = {
-            id: Date.now(),
-            text: currentItemText,
-            isChecked: false,
-          };
-          return { ...cl, items: [...cl.items, newItem] };
-        }
-      }
-      return cl;
-    }));
+    const checklist = checklists.find(c => c.id === activeChecklistId);
+    if (!checklist) return;
+
+    let newItems: ChecklistItem[];
+
+    if (editingItemId) { // Editing existing item
+      newItems = checklist.items.map(item =>
+        item.id === editingItemId ? { ...item, text: currentItemText } : item
+      );
+    } else { // Adding new item
+      const newItem: ChecklistItem = {
+        id: String(Date.now()),
+        text: currentItemText,
+        isChecked: false,
+      };
+      newItems = [...checklist.items, newItem];
+    }
+    
+    const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', activeChecklistId);
+    setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
 
     setIsItemDialog(false);
     setCurrentItemText('');
@@ -136,51 +124,55 @@ export default function StrategyChecklistPage() {
     setActiveChecklistId(null);
   };
   
-  const handleAddNewItem = (checklistId: number) => {
+  const handleAddNewItem = (checklistId: string) => {
     setActiveChecklistId(checklistId);
     setEditingItemId(null);
     setCurrentItemText('');
     setIsItemDialog(true);
   };
   
-  const handleEditItem = (checklistId: number, item: ChecklistItem) => {
+  const handleEditItem = (checklistId: string, item: ChecklistItem) => {
     setActiveChecklistId(checklistId);
     setEditingItemId(item.id);
     setCurrentItemText(item.text);
     setIsItemDialog(true);
   };
 
-  const handleDeleteItem = (checklistId: number, itemId: number) => {
-    setChecklists(checklists.map(cl =>
-      cl.id === checklistId
-        ? { ...cl, items: cl.items.filter(item => item.id !== itemId) }
-        : cl
-    ));
+  const handleDeleteItem = (checklistId: string, itemId: string) => {
+    if (!user) return;
+    const checklist = checklists.find(c => c.id === checklistId);
+    if (!checklist) return;
+
+    const newItems = checklist.items.filter(item => item.id !== itemId);
+    const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', checklistId);
+    setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
   };
   
-  const handleCheckChange = (checklistId: number, itemId: number) => {
-    setChecklists(checklists.map(cl =>
-      cl.id === checklistId
-        ? {
-            ...cl,
-            items: cl.items.map(item =>
-              item.id === itemId ? { ...item, isChecked: !item.isChecked } : item
-            ),
-          }
-        : cl
-    ));
+  const handleCheckChange = (checklistId: string, itemId: string) => {
+    if (!user) return;
+    const checklist = checklists.find(c => c.id === checklistId);
+    if (!checklist) return;
+
+    const newItems = checklist.items.map(item =>
+        item.id === itemId ? { ...item, isChecked: !item.isChecked } : item
+      );
+    
+    const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', checklistId);
+    setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
   };
   
-  const handleResetChecks = (checklistId: number) => {
-    setChecklists(checklists.map(cl =>
-      cl.id === checklistId
-        ? { ...cl, items: cl.items.map(item => ({ ...item, isChecked: false })) }
-        : cl
-    ));
+  const handleResetChecks = (checklistId: string) => {
+    if (!user) return;
+    const checklist = checklists.find(c => c.id === checklistId);
+    if (!checklist) return;
+
+    const newItems = checklist.items.map(item => ({ ...item, isChecked: false }));
+    const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', checklistId);
+    setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
   };
 
-  if (!isClient) {
-    return null; // Or a loading spinner
+  if (isLoading) {
+    return <div>Loading...</div>; // Or a loading spinner
   }
 
   return (
@@ -250,7 +242,7 @@ export default function StrategyChecklistPage() {
             </DialogContent>
         </Dialog>
 
-      {checklists.length === 0 ? (
+      {checklists.length === 0 && !isLoading ? (
         <div className="text-center py-24 border-2 border-dashed rounded-lg">
           <h2 className="text-xl font-semibold text-muted-foreground">No checklists yet</h2>
           <p className="text-muted-foreground mt-2">Click "Add Strategy" to create your first checklist.</p>
@@ -326,3 +318,5 @@ export default function StrategyChecklistPage() {
     </div>
   );
 }
+
+    

@@ -7,8 +7,10 @@ import { DailyPnlChart } from '@/components/dashboard/daily-pnl-chart';
 import { TradeDashScore } from '@/components/dashboard/tradedash-score';
 import { RecentTrades } from '@/components/dashboard/recent-trades';
 import { TradingCalendar } from '@/components/dashboard/trading-calendar';
-import type { JournalEntry, Emotion } from '../journal/page';
+import type { JournalEntry } from '../journal/page';
 import { EmotionAnalysisChart } from '@/components/dashboard/emotion-analysis-chart';
+import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export type StatCardData = {
   title: string;
@@ -21,7 +23,7 @@ function getDayWithMostPnl(entries: JournalEntry[], type: 'win' | 'loss'): StatC
     const dailyPnl: Record<string, number> = {};
     entries.forEach(entry => {
         if (entry.result !== 'Ongoing' && entry.pnl !== undefined && entry.date) {
-            const dateStr = entry.date.toISOString().split('T')[0];
+            const dateStr = entry.date.split('T')[0];
             dailyPnl[dateStr] = (dailyPnl[dateStr] || 0) + entry.pnl;
         }
     });
@@ -62,24 +64,16 @@ function getDayWithMostPnl(entries: JournalEntry[], type: 'win' | 'loss'): StatC
 }
 
 export default function DashboardPage() {
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[] | null>(null);
-  const [statsData, setStatsData] = useState<StatCardData[]>([]);
+  const { user } = useUser();
+  const firestore = useFirestore();
+  
+  const entriesRef = useMemoFirebase(() => 
+    user ? collection(firestore, 'users', user.uid, 'journalEntries') : null
+  , [user, firestore]);
+  
+  const { data: journalEntries, isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
 
-  useEffect(() => {
-    // This effect now only runs on the client, preventing SSR issues with localStorage.
-    const storedEntries = localStorage.getItem('journalEntries');
-    if (storedEntries) {
-      const parsedEntries: JournalEntry[] = JSON.parse(storedEntries).map((entry: any) => ({
-        ...entry,
-        date: entry.date ? new Date(entry.date) : new Date(),
-        entryTime: entry.entryTime ? new Date(entry.entryTime) : undefined,
-        exitTime: entry.exitTime ? new Date(entry.exitTime) : undefined,
-      }));
-      setJournalEntries(parsedEntries);
-    } else {
-      setJournalEntries([]); // Ensure journalEntries is not null
-    }
-  }, []);
+  const [statsData, setStatsData] = useState<StatCardData[]>([]);
 
   useEffect(() => {
     if (journalEntries && journalEntries.length > 0) {
@@ -91,8 +85,8 @@ export default function DashboardPage() {
       const tradesWithOutcome = closedTrades.filter(trade => trade.result === 'Win' || trade.result === 'Loss' || trade.result === 'Breakeven').length;
       const winRate = tradesWithOutcome > 0 ? (wins / tradesWithOutcome) * 100 : 0;
       
-      const bestDay = getDayWithMostPnl(journalEntries, 'win');
-      const worstDay = getDayWithMostPnl(journalEntries, 'loss');
+      const bestDay = getDayWithMostPnl(journalEntries as JournalEntry[], 'win');
+      const worstDay = getDayWithMostPnl(journalEntries as JournalEntry[], 'loss');
 
       setStatsData([
         {
@@ -110,7 +104,7 @@ export default function DashboardPage() {
         bestDay,
         worstDay,
       ]);
-    } else if (journalEntries !== null) { // Only run if journalEntries has been initialized
+    } else if (journalEntries?.length === 0) {
         setStatsData([
             { title: 'Net P&L', value: '$0.00', change: '', changeType: 'positive' },
             { title: 'Win Rate', value: '0.0%', change: '', changeType: 'negative' },
@@ -120,8 +114,8 @@ export default function DashboardPage() {
     }
   }, [journalEntries]);
 
-  // Render a loading state or nothing until the journal entries are loaded from localStorage
-  if (journalEntries === null) {
+  // Render a loading state or nothing until the journal entries are loaded
+  if (isLoading || !journalEntries) {
       return null;
   }
 
@@ -133,23 +127,25 @@ export default function DashboardPage() {
         </div>
       ))}
       <div className="col-span-4 lg:col-span-2">
-        <CumulativePnlChart entries={journalEntries} />
+        <CumulativePnlChart entries={journalEntries as JournalEntry[]} />
       </div>
       <div className="col-span-4 sm:col-span-2 lg:col-span-1">
-        <TradeDashScore entries={journalEntries} />
+        <TradeDashScore entries={journalEntries as JournalEntry[]} />
       </div>
       <div className="col-span-4 sm:col-span-2 lg:col-span-1">
-        <DailyPnlChart entries={journalEntries} />
+        <DailyPnlChart entries={journalEntries as JournalEntry[]} />
       </div>
       <div className="col-span-4 lg:col-span-2">
-        <RecentTrades entries={journalEntries} />
+        <RecentTrades entries={journalEntries as JournalEntry[]} />
       </div>
       <div className="col-span-4 lg:col-span-2">
-        <EmotionAnalysisChart entries={journalEntries} />
+        <EmotionAnalysisChart entries={journalEntries as JournalEntry[]} />
       </div>
       <div className="col-span-4 lg:col-span-2">
-        <TradingCalendar entries={journalEntries} />
+        <TradingCalendar entries={journalEntries as JournalEntry[]} />
       </div>
     </div>
   );
 }
+
+    

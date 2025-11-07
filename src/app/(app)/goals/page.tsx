@@ -25,6 +25,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Edit, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc, writeBatch } from 'firebase/firestore';
+
 
 export type Goal = {
   id: string;
@@ -32,13 +35,12 @@ export type Goal = {
   title: string;
   description: string;
   imageUrl: string;
-  linkUrl: string;
-  imageHint: string;
+  linkUrl?: string;
+  imageHint?: string;
 };
 
-const initialGoals: Goal[] = [
+const initialGoals: Omit<Goal, 'id'>[] = [
   {
-    id: 'monthly',
     period: 'Monthly',
     title: 'Achieve 4% Account Growth',
     description: 'Consistently apply my strategy and aim for a 4% profit target for the month, focusing on high-probability setups and disciplined risk management.',
@@ -47,7 +49,6 @@ const initialGoals: Goal[] = [
     imageHint: 'financial growth',
   },
   {
-    id: 'quarterly',
     period: 'Quarterly',
     title: 'Master a New Trading Setup',
     description: 'Dedicate this quarter to backtesting and mastering one new trading setup, like the ICT Silver Bullet, until it becomes second nature.',
@@ -56,7 +57,6 @@ const initialGoals: Goal[] = [
     imageHint: 'learning strategy',
   },
   {
-    id: 'half-year',
     period: 'Half Year',
     title: 'Build a $10,000 Trading Account',
     description: 'Through consistent profits and periodic deposits, I will build my trading account to the $10,000 milestone within the next six months.',
@@ -65,7 +65,6 @@ const initialGoals: Goal[] = [
     imageHint: 'money milestone',
   },
   {
-    id: 'yearly',
     period: 'Yearly',
     title: 'Become a Full-Time Trader',
     description: 'Develop the skills, discipline, and capital base required to transition into full-time trading by the end of the year.',
@@ -74,7 +73,6 @@ const initialGoals: Goal[] = [
     imageHint: 'professional desk',
   },
   {
-    id: 'big-goal',
     period: 'Big Goal',
     title: 'Achieve Financial Freedom',
     description: 'My ultimate goal is to achieve complete financial freedom through trading, enabling me to live life on my own terms.',
@@ -85,26 +83,29 @@ const initialGoals: Goal[] = [
 ];
 
 export default function GoalsPage() {
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [isClient, setIsClient] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
+  
+  const goalsRef = useMemoFirebase(() => 
+    user ? collection(firestore, 'users', user.uid, 'goals') : null
+  , [user, firestore]);
+
+  const { data: goals = [], isLoading } = useCollection<Omit<Goal, 'id'>>(goalsRef);
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentGoal, setCurrentGoal] = useState<Partial<Goal>>({});
-  
-  useEffect(() => {
-    setIsClient(true);
-    const storedGoals = localStorage.getItem('userGoals');
-    if (storedGoals) {
-      setGoals(JSON.parse(storedGoals));
-    } else {
-      setGoals(initialGoals);
-    }
-  }, []);
 
   useEffect(() => {
-    if (isClient) {
-      localStorage.setItem('userGoals', JSON.stringify(goals));
+    if (user && !isLoading && goals.length === 0 && goalsRef) {
+      const batch = writeBatch(firestore);
+      initialGoals.forEach(goal => {
+        const docRef = doc(goalsRef);
+        batch.set(docRef, goal);
+      });
+      batch.commit().catch(console.error);
     }
-  }, [goals, isClient]);
+  }, [user, isLoading, goals, goalsRef, firestore]);
+  
 
   const handleEdit = (goal: Goal) => {
     setCurrentGoal(goal);
@@ -112,18 +113,31 @@ export default function GoalsPage() {
   };
 
   const handleSave = () => {
-    setGoals(goals.map(g => (g.id === currentGoal.id ? (currentGoal as Goal) : g)));
+    if (!user || !currentGoal.id) return;
+    
+    const { id, ...goalData } = currentGoal;
+    const docRef = doc(firestore, 'users', user.uid, 'goals', id);
+    setDocumentNonBlocking(docRef, goalData, { merge: true });
+
     setIsEditDialogOpen(false);
     setCurrentGoal({});
   };
 
-  if (!isClient) {
-    return null; // Or a loading spinner
+  if (isLoading) {
+    return <div>Loading...</div>; // Or a loading spinner
   }
+
+  const sortedGoals = [...goals].sort((a, b) => {
+    const order = ['Monthly', 'Quarterly', 'Half Year', 'Yearly', 'Big Goal'];
+    return order.indexOf(a.period) - order.indexOf(b.period);
+  });
 
   return (
     <div className="space-y-6">
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => {
+          setIsEditDialogOpen(isOpen);
+          if (!isOpen) setCurrentGoal({});
+        }}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Edit {currentGoal.period} Goal</DialogTitle>
@@ -175,13 +189,13 @@ export default function GoalsPage() {
       </Dialog>
       
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {goals.filter(g => g.period !== 'Big Goal').map((goal) => (
+          {sortedGoals.filter(g => g.period !== 'Big Goal').map((goal) => (
               <GoalCard key={goal.id} goal={goal} onEdit={handleEdit} />
           ))}
       </div>
       
        <div className="pt-6">
-         {goals.filter(g => g.period === 'Big Goal').map((goal) => (
+         {sortedGoals.filter(g => g.period === 'Big Goal').map((goal) => (
               <GoalCard key={goal.id} goal={goal} onEdit={handleEdit} isBigGoal />
           ))}
        </div>
@@ -270,3 +284,5 @@ function GoalCard({ goal, onEdit, isBigGoal = false }: GoalCardProps) {
         </Card>
     )
 }
+
+    

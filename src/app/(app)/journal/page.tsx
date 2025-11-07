@@ -30,18 +30,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {Trash2, Edit, PlusCircle, Image as ImageIcon, X} from 'lucide-react';
-import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
+import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 
 export type TradingSession = 'London' | 'New York' | 'Tokyo' | 'Sydney';
 export type Emotion = 'Greedy' | 'Fearful' | 'Confident' | 'Neutral' | 'Anxious' | 'Patient';
 
 export type JournalEntry = {
-  id: number;
-  date: Date;
+  id: string;
+  date: string; // Storing as ISO string
   session?: TradingSession;
   currencyPair: string;
   direction: 'Long' | 'Short';
@@ -49,8 +48,8 @@ export type JournalEntry = {
   stopLoss: number;
   takeProfit: number;
   positionSize: number;
-  entryTime?: Date;
-  exitTime?: Date;
+  entryTime?: string; // Storing as ISO string
+  exitTime?: string; // Storing as ISO string
   pnl?: number;
   rMultiple?: number;
   result: 'Win' | 'Loss' | 'Breakeven' | 'Ongoing';
@@ -63,32 +62,19 @@ export type JournalEntry = {
 
 
 export default function JournalPage() {
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [isClient, setIsClient] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const entriesRef = useMemoFirebase(() => 
+    user ? collection(firestore, 'users', user.uid, 'journalEntries') : null
+  , [user, firestore]);
+  
+  const { data: entries = [], isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<Partial<JournalEntry>>({});
-  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
-
-
-  useEffect(() => {
-    setIsClient(true);
-    const storedEntries = localStorage.getItem('journalEntries');
-    if (storedEntries) {
-        setEntries(JSON.parse(storedEntries).map((entry: any) => ({
-            ...entry,
-            date: entry.date ? new Date(entry.date) : new Date(),
-            entryTime: entry.entryTime ? new Date(entry.entryTime) : undefined,
-            exitTime: entry.exitTime ? new Date(entry.exitTime) : undefined,
-        })));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isClient) {
-      localStorage.setItem('journalEntries', JSON.stringify(entries));
-    }
-  }, [entries, isClient]);
 
   const rr = useMemo(() => {
     if (currentEntry.entryPrice && currentEntry.stopLoss && currentEntry.takeProfit) {
@@ -103,15 +89,16 @@ export default function JournalPage() {
 
 
   const handleSave = () => {
+    if (!user || !entriesRef) return;
+
     const risk = Math.abs((Number(currentEntry.entryPrice) || 0) - (Number(currentEntry.stopLoss) || 0));
     let rMultiple;
     if (risk > 0 && currentEntry.pnl) {
         rMultiple = currentEntry.pnl / (risk * (currentEntry.positionSize || 1));
     }
 
-    const finalEntry: JournalEntry = {
-      id: editIndex !== null ? entries[editIndex].id : Date.now(),
-      date: currentEntry.date || new Date(),
+    const finalEntry: Omit<JournalEntry, 'id'> = {
+      date: currentEntry.date || new Date().toISOString(),
       session: currentEntry.session,
       currencyPair: currentEntry.currencyPair || '',
       direction: currentEntry.direction || 'Long',
@@ -130,38 +117,35 @@ export default function JournalPage() {
       adherenceToPlan: currentEntry.adherenceToPlan || 'Yes',
       emotion: currentEntry.emotion,
     };
-
-    if (editIndex !== null) {
-      const updatedEntries = [...entries];
-      updatedEntries[editIndex] = finalEntry;
-      setEntries(updatedEntries);
+    
+    if (editId) {
+      const docRef = doc(firestore, 'users', user.uid, 'journalEntries', editId);
+      setDocumentNonBlocking(docRef, finalEntry, { merge: true });
     } else {
-      setEntries([...entries, finalEntry]);
+      addDocumentNonBlocking(entriesRef, finalEntry);
     }
+    
     setIsEditDialogOpen(false);
-    setEditIndex(null);
+    setEditId(null);
     setCurrentEntry({});
   };
 
-  const handleEdit = (index: number) => {
-    setEditIndex(index);
-    setCurrentEntry({
-        ...entries[index],
-        date: entries[index].date ? new Date(entries[index].date) : new Date(),
-        entryTime: entries[index].entryTime ? new Date(entries[index].entryTime!) : undefined,
-        exitTime: entries[index].exitTime ? new Date(entries[index].exitTime!) : undefined,
-    });
+  const handleEdit = (entry: JournalEntry) => {
+    setEditId(entry.id);
+    setCurrentEntry(entry);
     setIsEditDialogOpen(true);
   };
 
   const handleAddNew = () => {
-    setEditIndex(null);
-    setCurrentEntry({ result: 'Ongoing', direction: 'Long', date: new Date() });
+    setEditId(null);
+    setCurrentEntry({ result: 'Ongoing', direction: 'Long', date: new Date().toISOString().split('T')[0] });
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (index: number) => {
-    setEntries(entries.filter((_, i) => i !== index));
+  const handleDelete = (id: string) => {
+    if (!user) return;
+    const docRef = doc(firestore, 'users', user.uid, 'journalEntries', id);
+    deleteDocumentNonBlocking(docRef);
   };
   
   const getResultColor = (result: JournalEntry['result']) => {
@@ -185,15 +169,22 @@ export default function JournalPage() {
     setPreviewImageUrl(url);
   };
 
-
-  if (!isClient) {
-    return null; // Or a loading spinner
+  if (isLoading) {
+    return <div>Loading...</div>; 
   }
+
+  const sortedEntries = [...entries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => {
+          setIsEditDialogOpen(isOpen);
+          if (!isOpen) {
+            setEditId(null);
+            setCurrentEntry({});
+          }
+        }}>
           <DialogTrigger asChild>
             <Button onClick={handleAddNew}>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -202,7 +193,7 @@ export default function JournalPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px] grid-rows-[auto,minmax(0,1fr),auto] max-h-[90vh]">
             <DialogHeader>
-              <DialogTitle>{editIndex !== null ? 'Edit' : 'Add'} Journal Entry</DialogTitle>
+              <DialogTitle>{editId ? 'Edit' : 'Add'} Journal Entry</DialogTitle>
             </DialogHeader>
             <div className="overflow-y-auto pr-6">
               <div className="grid grid-cols-2 gap-4 py-4">
@@ -211,8 +202,8 @@ export default function JournalPage() {
                     <Input
                         id="date"
                         type="date"
-                        value={currentEntry.date ? currentEntry.date.toISOString().split('T')[0] : ''}
-                        onChange={(e) => setCurrentEntry({ ...currentEntry, date: new Date(e.target.value) })}
+                        value={currentEntry.date ? currentEntry.date.split('T')[0] : ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, date: e.target.value })}
                     />
                 </div>
                  <div className="space-y-2">
@@ -409,9 +400,9 @@ export default function JournalPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {entries.map((entry, index) => (
+          {sortedEntries.map((entry) => (
             <TableRow key={entry.id}>
-              <TableCell>{entry.date.toLocaleDateString()}</TableCell>
+              <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
               <TableCell className="font-medium">{entry.currencyPair}</TableCell>
               <TableCell>{entry.direction}</TableCell>
               <TableCell className={getResultColor(entry.result)}>
@@ -436,10 +427,10 @@ export default function JournalPage() {
                 ) : 'N/A'}
               </TableCell>
               <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={() => handleEdit(index)}>
+                <Button variant="ghost" size="icon" onClick={() => handleEdit(entry)}>
                   <Edit className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(index)}>
+                <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </TableCell>
@@ -447,7 +438,7 @@ export default function JournalPage() {
           ))}
         </TableBody>
       </Table>
-       {entries.length === 0 && (
+       {entries.length === 0 && !isLoading && (
         <div className="text-center py-12 text-muted-foreground">
             No journal entries yet.
         </div>
@@ -465,7 +456,6 @@ export default function JournalPage() {
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close preview</span>
                     </Button>
-                    {/* Using <img> directly as next/image needs width/height and remotePatterns for external URLs */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src={previewImageUrl}
@@ -479,3 +469,5 @@ export default function JournalPage() {
     </div>
   );
 }
+
+    

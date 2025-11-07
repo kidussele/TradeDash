@@ -4,7 +4,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import type { ChartConfig } from '@/components/ui/chart';
-import type { JournalEntry } from '@/app/journal/page';
+import type { JournalEntry } from '@/app/(app)/journal/page';
 
 const chartConfig = {
   cumulativePnl: {
@@ -20,11 +20,11 @@ type CumulativePnlChartProps = {
 export function CumulativePnlChart({ entries }: CumulativePnlChartProps) {
   const cumulativePnlData = entries
     .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && (entry.entryTime || entry.date))
-    .sort((a, b) => (a.entryTime || a.date)!.getTime() - (b.entryTime || b.date)!.getTime())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .reduce((acc, entry) => {
       const lastPnl = acc.length > 0 ? acc[acc.length - 1].cumulativePnl : 0;
       acc.push({
-        date: (entry.entryTime || entry.date)!.toISOString().split('T')[0],
+        date: new Date(entry.date).toISOString().split('T')[0],
         cumulativePnl: lastPnl + (entry.pnl || 0),
       });
       return acc;

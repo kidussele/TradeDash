@@ -22,90 +22,96 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Edit, Trash2, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
 
 export type Note = {
-  id: number;
+  id: string;
   title: string;
   content: string;
   currencyPair?: string;
   imageUrl?: string;
   linkUrl?: string;
-  createdAt: Date;
+  createdAt: any; // Firestore Timestamp
 };
 
 export default function NotebookPage() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [isClient, setIsClient] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const notesRef = useMemoFirebase(() => 
+    user ? collection(firestore, 'users', user.uid, 'notebookNotes') : null
+  , [user, firestore]);
+  
+  const { data: notes = [], isLoading } = useCollection<Omit<Note, 'id'>>(notesRef);
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentNote, setCurrentNote] = useState<Partial<Note>>({});
-  const [editIndex, setEditIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    setIsClient(true);
-    const storedNotes = localStorage.getItem('analysisNotebookEntries');
-    if (storedNotes) {
-      setNotes(JSON.parse(storedNotes).map((note: any) => ({
-        ...note,
-        createdAt: new Date(note.createdAt),
-      })));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isClient) {
-      localStorage.setItem('analysisNotebookEntries', JSON.stringify(notes));
-    }
-  }, [notes, isClient]);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const handleSave = () => {
-    const finalNote: Note = {
-      id: editIndex !== null ? notes[editIndex].id : Date.now(),
-      title: currentNote.title || 'Untitled Note',
-      content: currentNote.content || '',
-      currencyPair: currentNote.currencyPair,
-      imageUrl: currentNote.imageUrl,
-      linkUrl: currentNote.linkUrl,
-      createdAt: editIndex !== null ? notes[editIndex].createdAt : new Date(),
+    if (!user || !notesRef) return;
+
+    const { id, createdAt, ...noteData } = currentNote;
+
+    const finalNote: Omit<Note, 'id' | 'createdAt'> & { createdAt?: any } = {
+      title: noteData.title || 'Untitled Note',
+      content: noteData.content || '',
+      currencyPair: noteData.currencyPair,
+      imageUrl: noteData.imageUrl,
+      linkUrl: noteData.linkUrl,
     };
 
-    if (editIndex !== null) {
-      const updatedNotes = [...notes];
-      updatedNotes[editIndex] = finalNote;
-      setNotes(updatedNotes.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
+    if (editId) {
+      const docRef = doc(firestore, 'users', user.uid, 'notebookNotes', editId);
+      setDocumentNonBlocking(docRef, finalNote, { merge: true });
     } else {
-      setNotes([finalNote, ...notes].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
+      finalNote.createdAt = serverTimestamp();
+      addDocumentNonBlocking(notesRef, finalNote);
     }
+
     setIsEditDialogOpen(false);
-    setEditIndex(null);
+    setEditId(null);
     setCurrentNote({});
   };
 
-  const handleEdit = (index: number) => {
-    setEditIndex(index);
-    setCurrentNote(notes[index]);
+  const handleEdit = (note: Note) => {
+    setEditId(note.id);
+    setCurrentNote(note);
     setIsEditDialogOpen(true);
   };
   
   const handleAddNew = () => {
-    setEditIndex(null);
+    setEditId(null);
     setCurrentNote({});
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (index: number) => {
-    setNotes(notes.filter((_, i) => i !== index));
+  const handleDelete = (id: string) => {
+    if (!user) return;
+    const docRef = doc(firestore, 'users', user.uid, 'notebookNotes', id);
+    deleteDocumentNonBlocking(docRef);
   };
   
-  if (!isClient) {
-    return null; // Or a loading spinner
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
+
+  const sortedNotes = [...notes].sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
 
   return (
     <div className="space-y-6">
        <div className="flex justify-end items-center">
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => {
+              setIsEditDialogOpen(isOpen);
+              if (!isOpen) {
+                setEditId(null);
+                setCurrentNote({});
+              }
+            }}>
                 <DialogTrigger asChild>
                     <Button onClick={handleAddNew}>
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -114,7 +120,7 @@ export default function NotebookPage() {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px]">
                     <DialogHeader>
-                        <DialogTitle>{editIndex !== null ? 'Edit' : 'Add'} Analysis Note</DialogTitle>
+                        <DialogTitle>{editId ? 'Edit' : 'Add'} Analysis Note</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="space-y-2">
@@ -174,25 +180,25 @@ export default function NotebookPage() {
             </Dialog>
        </div>
        
-       {notes.length === 0 ? (
+       {notes.length === 0 && !isLoading ? (
          <div className="text-center py-24 border-2 border-dashed rounded-lg">
             <h2 className="text-xl font-semibold text-muted-foreground">No notes yet</h2>
             <p className="text-muted-foreground mt-2">Click "Add Note" to start your analysis notebook.</p>
          </div>
        ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {notes.map((note, index) => (
+          {sortedNotes.map((note) => (
             <Card key={note.id} className="flex flex-col">
               <CardHeader>
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle>{note.title}</CardTitle>
                         <CardDescription>
-                          {note.createdAt.toLocaleDateString('en-US', {
+                          {note.createdAt?.toDate().toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
-                          })}
+                          }) || 'No date'}
                         </CardDescription>
                     </div>
                     {note.currencyPair && <div className="text-sm font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">{note.currencyPair}</div>}
@@ -221,10 +227,10 @@ export default function NotebookPage() {
                     )}
                  </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(index)}>
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(note)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(index)}>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(note.id)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -236,4 +242,5 @@ export default function NotebookPage() {
     </div>
   );
 }
+
     

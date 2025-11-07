@@ -30,20 +30,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Trash2, Edit, PlusCircle, Image as ImageIcon, X } from 'lucide-react';
-import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { CumulativePnlChart } from '@/components/dashboard/cumulative-pnl-chart';
 import type { StatCardData } from '@/app/(app)/page';
-import type { JournalEntry, TradingSession } from '@/app/(app)/journal/page';
+import type { TradingSession } from '@/app/(app)/journal/page';
+import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 
 
 export type BacktestJournalEntry = {
-  id: number;
-  date: Date;
+  id: string;
+  date: string;
   session?: TradingSession;
   currencyPair: string;
   direction: 'Long' | 'Short';
@@ -51,8 +51,8 @@ export type BacktestJournalEntry = {
   stopLoss: number;
   takeProfit: number;
   positionSize: number;
-  entryTime?: Date;
-  exitTime?: Date;
+  entryTime?: string;
+  exitTime?: string;
   pnl?: number;
   rMultiple?: number;
   result: 'Win' | 'Loss' | 'Breakeven' | 'Ongoing';
@@ -63,7 +63,7 @@ export type BacktestJournalEntry = {
 };
 
 function getBestSession(entries: BacktestJournalEntry[]): StatCardData {
-    const sessionPnl: Record<TradingSession, number> = {
+    const sessionPnl: Record<string, number> = {
         'London': 0,
         'New York': 0,
         'Tokyo': 0,
@@ -99,32 +99,20 @@ function getBestSession(entries: BacktestJournalEntry[]): StatCardData {
 
 
 export default function BacktestJournalPage() {
-  const [entries, setEntries] = useState<BacktestJournalEntry[]>([]);
-  const [isClient, setIsClient] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const entriesRef = useMemoFirebase(() => 
+    user ? collection(firestore, 'users', user.uid, 'backtestJournalEntries') : null
+  , [user, firestore]);
+  
+  const { data: entries = [], isLoading } = useCollection<Omit<BacktestJournalEntry, 'id'>>(entriesRef);
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<Partial<BacktestJournalEntry>>({});
-  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [statsData, setStatsData] = useState<StatCardData[]>([]);
-
-  useEffect(() => {
-    setIsClient(true);
-    const storedEntries = localStorage.getItem('backtestJournalEntries');
-    if (storedEntries) {
-        setEntries(JSON.parse(storedEntries).map((entry: any) => ({
-            ...entry,
-            date: entry.date ? new Date(entry.date) : new Date(),
-            entryTime: entry.entryTime ? new Date(entry.entryTime) : undefined,
-            exitTime: entry.exitTime ? new Date(entry.exitTime) : undefined,
-        })));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isClient) {
-      localStorage.setItem('backtestJournalEntries', JSON.stringify(entries));
-    }
-  }, [entries, isClient]);
 
    useEffect(() => {
     if (entries && entries.length > 0) {
@@ -188,15 +176,16 @@ export default function BacktestJournalPage() {
 
 
   const handleSave = () => {
+    if (!user || !entriesRef) return;
+
     const risk = Math.abs((Number(currentEntry.entryPrice) || 0) - (Number(currentEntry.stopLoss) || 0));
     let rMultiple;
     if (risk > 0 && currentEntry.pnl) {
         rMultiple = currentEntry.pnl / (risk * (currentEntry.positionSize || 1));
     }
     
-    const finalEntry: BacktestJournalEntry = {
-      id: editIndex !== null ? entries[editIndex].id : Date.now(),
-      date: currentEntry.date || new Date(),
+    const finalEntry: Omit<BacktestJournalEntry, 'id'> = {
+      date: currentEntry.date || new Date().toISOString(),
       session: currentEntry.session,
       currencyPair: currentEntry.currencyPair || '',
       direction: currentEntry.direction || 'Long',
@@ -215,37 +204,33 @@ export default function BacktestJournalPage() {
       adherenceToPlan: currentEntry.adherenceToPlan || 'Yes',
     };
 
-    if (editIndex !== null) {
-      const updatedEntries = [...entries];
-      updatedEntries[editIndex] = finalEntry;
-      setEntries(updatedEntries);
+    if (editId) {
+      const docRef = doc(firestore, 'users', user.uid, 'backtestJournalEntries', editId);
+      setDocumentNonBlocking(docRef, finalEntry, { merge: true });
     } else {
-      setEntries([...entries, finalEntry]);
+      addDocumentNonBlocking(entriesRef, finalEntry);
     }
     setIsEditDialogOpen(false);
-    setEditIndex(null);
+    setEditId(null);
     setCurrentEntry({});
   };
 
-  const handleEdit = (index: number) => {
-    setEditIndex(index);
-    setCurrentEntry({
-        ...entries[index],
-        date: entries[index].date ? new Date(entries[index].date) : new Date(),
-        entryTime: entries[index].entryTime ? new Date(entries[index].entryTime!) : undefined,
-        exitTime: entries[index].exitTime ? new Date(entries[index].exitTime!) : undefined,
-    });
+  const handleEdit = (entry: BacktestJournalEntry) => {
+    setEditId(entry.id);
+    setCurrentEntry(entry);
     setIsEditDialogOpen(true);
   };
 
   const handleAddNew = () => {
-    setEditIndex(null);
-    setCurrentEntry({ result: 'Ongoing', direction: 'Long', date: new Date() });
+    setEditId(null);
+    setCurrentEntry({ result: 'Ongoing', direction: 'Long', date: new Date().toISOString().split('T')[0] });
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (index: number) => {
-    setEntries(entries.filter((_, i) => i !== index));
+  const handleDelete = (id: string) => {
+    if (!user) return;
+    const docRef = doc(firestore, 'users', user.uid, 'backtestJournalEntries', id);
+    deleteDocumentNonBlocking(docRef);
   };
   
   const getResultColor = (result: BacktestJournalEntry['result']) => {
@@ -269,14 +254,16 @@ export default function BacktestJournalPage() {
     setPreviewImageUrl(url);
   };
 
-  if (!isClient) {
-    return null; // Or a loading spinner
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
   const chartEntries = entries.map(e => ({
     ...e,
-    entryTime: e.date,
+    entryTime: new Date(e.date),
   }));
+
+  const sortedEntries = [...entries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <Tabs defaultValue="journal">
@@ -285,7 +272,13 @@ export default function BacktestJournalPage() {
                 <TabsTrigger value="journal">Journal</TabsTrigger>
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             </TabsList>
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => {
+              setIsEditDialogOpen(isOpen);
+              if (!isOpen) {
+                setEditId(null);
+                setCurrentEntry({});
+              }
+            }}>
             <DialogTrigger asChild>
                 <Button onClick={handleAddNew}>
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -294,7 +287,7 @@ export default function BacktestJournalPage() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] grid-rows-[auto,minmax(0,1fr),auto] max-h-[90vh]">
                 <DialogHeader>
-                <DialogTitle>{editIndex !== null ? 'Edit' : 'Add'} Backtest Entry</DialogTitle>
+                <DialogTitle>{editId !== null ? 'Edit' : 'Add'} Backtest Entry</DialogTitle>
                 </DialogHeader>
                 <div className="overflow-y-auto pr-6">
                 <div className="grid grid-cols-2 gap-4 py-4">
@@ -303,8 +296,8 @@ export default function BacktestJournalPage() {
                         <Input
                             id="date"
                             type="date"
-                            value={currentEntry.date ? currentEntry.date.toISOString().split('T')[0] : ''}
-                            onChange={(e) => setCurrentEntry({ ...currentEntry, date: new Date(e.target.value) })}
+                            value={currentEntry.date ? currentEntry.date.split('T')[0] : ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, date: e.target.value })}
                         />
                     </div>
                      <div className="space-y-2">
@@ -482,9 +475,9 @@ export default function BacktestJournalPage() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {entries.map((entry, index) => (
+                {sortedEntries.map((entry) => (
                     <TableRow key={entry.id}>
-                    <TableCell>{entry.date.toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
                     <TableCell className="font-medium">{entry.currencyPair}</TableCell>
                     <TableCell>{entry.direction}</TableCell>
                     <TableCell className={getResultColor(entry.result)}>
@@ -508,10 +501,10 @@ export default function BacktestJournalPage() {
                         ) : 'N/A'}
                     </TableCell>
                     <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(index)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(entry)}>
                         <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(index)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                     </TableCell>
@@ -519,7 +512,7 @@ export default function BacktestJournalPage() {
                 ))}
                 </TableBody>
             </Table>
-            {entries.length === 0 && (
+            {entries.length === 0 && !isLoading && (
                 <div className="text-center py-12 text-muted-foreground">
                     No backtest journal entries yet.
                 </div>
@@ -533,7 +526,7 @@ export default function BacktestJournalPage() {
                     </div>
                 ))}
                 <div className="col-span-4 lg:col-span-4">
-                    <CumulativePnlChart entries={chartEntries as JournalEntry[]} />
+                    <CumulativePnlChart entries={chartEntries as any[]} />
                 </div>
             </div>
         </TabsContent>
@@ -551,7 +544,6 @@ export default function BacktestJournalPage() {
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close preview</span>
                     </Button>
-                    {/* Using <img> directly as next/image needs width/height and remotePatterns for external URLs */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={previewImageUrl} alt="Screenshot preview" className="rounded-md object-cover aspect-video" />
                 </CardContent>
