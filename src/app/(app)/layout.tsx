@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -24,7 +25,7 @@ export default function AppLayout({
     }
   }, [user, isUserLoading, router]);
 
-  if (isUserLoading || !user) {
+  if (isUserLoading) {
     return (
        <div className="flex min-h-screen">
         <div className="hidden md:block">
@@ -38,6 +39,13 @@ export default function AppLayout({
         </div>
       </div>
     );
+  }
+
+  // If loading is finished and there's still no user, we do nothing.
+  // The useEffect above has already triggered the redirect.
+  // This prevents rendering the children for a brief moment before the redirect happens.
+  if (!user) {
+    return null;
   }
 
   return (

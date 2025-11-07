@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical, LogIn, Sun, Moon, Laptop, FileText, Newspaper, BookCopy, ClipboardCheck, Smile, Target } from 'lucide-react';
 import {
   Sidebar,
@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { useTheme } from 'next-themes';
+import { useUser } from '@/firebase';
 
 const menuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -52,8 +53,15 @@ const bottomMenuItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { open, setOpenMobile, state } = useSidebar();
+  const { user, signOut } = useUser();
   const userAvatar = placeholderImages.find(p => p.id === 'user-avatar');
   const { setTheme } = useTheme();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/auth');
+  };
 
   return (
     <Sidebar>
@@ -117,11 +125,11 @@ export function AppSidebar() {
               )}
             >
               <Avatar className="size-7">
-                {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" />}
-                <AvatarFallback>U</AvatarFallback>
+                {userAvatar && <AvatarImage src={user?.photoURL ?? userAvatar.imageUrl} alt="User Avatar" />}
+                <AvatarFallback>{user?.email?.[0]?.toUpperCase() ?? 'U'}</AvatarFallback>
               </Avatar>
               <span className={cn('ml-2 truncate', state === 'collapsed' && 'hidden')}>
-                User Name
+                {user?.displayName || user?.email || 'User'}
               </span>
             </Button>
           </DropdownMenuTrigger>
@@ -156,11 +164,9 @@ export function AppSidebar() {
               </DropdownMenuPortal>
             </DropdownMenuSub>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/auth">
-                <LogIn className="mr-2 h-4 w-4" />
-                Log out
-              </Link>
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogIn className="mr-2 h-4 w-4" />
+              Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
