@@ -6,16 +6,18 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  // Assume getAuth and app are initialized elsewhere
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import type { FirebaseError } from 'firebase/app';
 
 type ErrorCallback = (error: FirebaseError) => void;
 
-/** Initiate anonymous sign-in (non-blocking). */
-export function initiateAnonymousSignIn(authInstance: Auth, onError?: ErrorCallback): void {
-  signInAnonymously(authInstance).catch((error: FirebaseError) => {
-    console.error('Anonymous sign-in error:', error);
+/** Initiate Google sign-in (non-blocking). */
+export function initiateGoogleSignIn(authInstance: Auth, onError?: ErrorCallback): void {
+  const provider = new GoogleAuthProvider();
+  signInWithPopup(authInstance, provider).catch((error: FirebaseError) => {
+    console.error('Google sign-in error:', error);
     onError?.(error);
   });
 }
