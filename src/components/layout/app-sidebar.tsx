@@ -34,10 +34,10 @@ import { useTheme } from 'next-themes';
 
 const menuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/insights', label: 'AI Insights', icon: Sparkles },
   { href: '/journal', label: 'Journal', icon: BookText },
   { href: '/backtest-journal', label: 'Backtest Journal', icon: FlaskConical },
   { href: '/report', label: 'Reports', icon: FileText },
+  { href: '/insights', label: 'AI Insights', icon: Sparkles },
 ];
 
 export function AppSidebar() {
