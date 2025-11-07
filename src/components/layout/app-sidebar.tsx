@@ -42,17 +42,14 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className={cn("flex items-center gap-2 p-2", !open && "justify-center")}>
-          <Activity className="size-7 text-primary" />
-          <h1
-            className={cn(
-              'text-lg font-semibold transition-opacity duration-200',
-              !open && "opacity-0 pointer-events-none"
-            )}
-          >
-            TradeDash
-          </h1>
-          <div className={cn("ml-auto", open && "hidden md:flex")}>
+        <div className="flex items-center gap-2 p-2">
+           <Activity className="size-7 shrink-0 text-primary" />
+           <div className={cn("flex-1 overflow-hidden transition-all duration-200", !open ? "w-0" : "w-auto")}>
+            <h1 className='text-lg font-semibold'>
+              TradeDash
+            </h1>
+           </div>
+           <div className="ml-auto">
              <SidebarTrigger />
           </div>
         </div>
