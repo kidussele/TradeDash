@@ -8,6 +8,7 @@ const pathToTitle: { [key: string]: string } = {
   '/insights': 'AI Insights',
   '/journal': 'Journal',
   '/backtest-journal': 'Backtest Journal',
+  '/report': 'Reports',
   '/image-preview': 'Image Preview',
 };
 
