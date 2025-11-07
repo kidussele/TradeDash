@@ -31,9 +31,14 @@ import {
 } from '@/components/ui/select';
 import { Trash2, Edit, PlusCircle, Image as ImageIcon, X } from 'lucide-react';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { StatCard } from '@/components/dashboard/stat-card';
+import { CumulativePnlChart } from '@/components/dashboard/cumulative-pnl-chart';
+import type { StatCardData } from '@/app/(app)/page';
+import type { JournalEntry } from '@/app/(app)/journal/page';
 
 
 export type BacktestJournalEntry = {
@@ -63,6 +68,7 @@ export default function BacktestJournalPage() {
   const [currentEntry, setCurrentEntry] = useState<Partial<BacktestJournalEntry>>({});
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [statsData, setStatsData] = useState<StatCardData[]>([]);
 
   useEffect(() => {
     setIsClient(true);
@@ -82,6 +88,67 @@ export default function BacktestJournalPage() {
     }
   }, [entries, isClient]);
 
+   useEffect(() => {
+    if (entries && entries.length > 0) {
+      const closedTrades = entries.filter(e => e.result !== 'Ongoing' && e.pnl !== undefined);
+      
+      const totalPnl = closedTrades.reduce((acc, trade) => acc + (trade.pnl || 0), 0);
+      
+      const wins = closedTrades.filter(trade => (trade.pnl || 0) > 0).length;
+      const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : 0;
+      
+      const totalReturn = closedTrades.reduce((acc, trade) => {
+        const entry = trade.entryPrice;
+        const pnl = trade.pnl || 0;
+        if (entry > 0 && trade.positionSize > 0) {
+          return acc + (pnl / (trade.positionSize * entry));
+        }
+        return acc;
+      }, 0);
+      const avgReturn = closedTrades.length > 0 ? (totalReturn / closedTrades.length) * 100 : 0;
+
+      const pnlValues = closedTrades.map(t => t.pnl || 0).filter(pnl => pnl !== 0);
+      const meanPnl = pnlValues.length > 0 ? pnlValues.reduce((a,b) => a + b, 0) / pnlValues.length : 0;
+      const stdDev = pnlValues.length > 0 ? Math.sqrt(pnlValues.map(x => Math.pow(x - meanPnl, 2)).reduce((a, b) => a + b) / pnlValues.length) : 0;
+      const sharpeRatio = stdDev > 0 ? meanPnl / stdDev : 0;
+
+
+      setStatsData([
+        {
+          title: 'Net P&L',
+          value: totalPnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+          change: '+0.0%', // Placeholder
+          changeType: 'positive',
+        },
+        {
+          title: 'Win Rate',
+          value: `${winRate.toFixed(1)}%`,
+          change: '+0.0%', // Placeholder
+          changeType: winRate > 50 ? 'positive' : 'negative',
+        },
+        {
+          title: 'Avg. Return',
+          value: `${avgReturn.toFixed(2)}%`,
+          change: '+0.0%', // Placeholder
+          changeType: avgReturn >= 0 ? 'positive' : 'negative',
+        },
+        {
+          title: 'Sharpe Ratio',
+          value: sharpeRatio.toFixed(2),
+          change: '+0.0', // Placeholder
+          changeType: sharpeRatio >= 0 ? 'positive' : 'negative',
+        },
+      ]);
+    } else if (entries.length === 0) {
+        setStatsData([
+            { title: 'Net P&L', value: '$0.00', change: '0%', changeType: 'positive' },
+            { title: 'Win Rate', value: '0.0%', change: '0%', changeType: 'negative' },
+            { title: 'Avg. Return', value: '0.00%', change: '0%', changeType: 'positive' },
+            { title: 'Sharpe Ratio', value: '0.00', change: '0.0', changeType: 'positive' },
+        ]);
+    }
+  }, [entries]);
+
   const rr = useMemo(() => {
     if (currentEntry.entryPrice && currentEntry.stopLoss && currentEntry.takeProfit) {
       const risk = Math.abs(currentEntry.entryPrice - currentEntry.stopLoss);
@@ -95,6 +162,12 @@ export default function BacktestJournalPage() {
 
 
   const handleSave = () => {
+    const risk = Math.abs((Number(currentEntry.entryPrice) || 0) - (Number(currentEntry.stopLoss) || 0));
+    let rMultiple;
+    if (risk > 0 && currentEntry.pnl) {
+        rMultiple = currentEntry.pnl / (risk * (currentEntry.positionSize || 1));
+    }
+    
     const finalEntry: BacktestJournalEntry = {
       id: editIndex !== null ? entries[editIndex].id : Date.now(),
       currencyPair: currentEntry.currencyPair || '',
@@ -106,7 +179,7 @@ export default function BacktestJournalPage() {
       entryTime: currentEntry.entryTime,
       exitTime: currentEntry.exitTime,
       pnl: currentEntry.pnl,
-      rMultiple: currentEntry.rMultiple,
+      rMultiple: rMultiple,
       result: currentEntry.result || 'Ongoing',
       notes: currentEntry.notes || '',
       screenshotBefore: currentEntry.screenshotBefore,
@@ -172,224 +245,243 @@ export default function BacktestJournalPage() {
   }
 
   return (
-    <div>
-      <div className="flex justify-end mb-4">
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleAddNew}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Backtest Entry
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] grid-rows-[auto,minmax(0,1fr),auto] max-h-[90vh]">
-            <DialogHeader>
-              <DialogTitle>{editIndex !== null ? 'Edit' : 'Add'} Backtest Entry</DialogTitle>
-            </DialogHeader>
-            <div className="overflow-y-auto pr-6">
-              <div className="grid grid-cols-2 gap-4 py-4">
-              <div className="space-y-2">
-                  <Label htmlFor="currency-pair">Currency Pair</Label>
-                  <Input
-                    id="currency-pair"
-                    value={currentEntry.currencyPair || ''}
-                    onChange={(e) => setCurrentEntry({ ...currentEntry, currencyPair: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="direction">Direction</Label>
-                  <Select
-                    value={currentEntry.direction}
-                    onValueChange={(value: 'Long' | 'Short') => setCurrentEntry({ ...currentEntry, direction: value })}
-                  >
-                    <SelectTrigger id="direction">
-                      <SelectValue placeholder="Select direction" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Long">Long</SelectItem>
-                      <SelectItem value="Short">Short</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="entry-price">Entry Price</Label>
-                  <Input
-                    id="entry-price"
-                    type="number"
-                    value={currentEntry.entryPrice || ''}
-                    onChange={(e) => setCurrentEntry({ ...currentEntry, entryPrice: parseFloat(e.target.value) })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="stop-loss">Stop-Loss</Label>
-                  <Input
-                    id="stop-loss"
-                    type="number"
-                    value={currentEntry.stopLoss || ''}
-                    onChange={(e) => setCurrentEntry({ ...currentEntry, stopLoss: parseFloat(e.target.value) })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="take-profit">Take-Profit</Label>
-                  <Input
-                    id="take-profit"
-                    type="number"
-                    value={currentEntry.takeProfit || ''}
-                    onChange={(e) => setCurrentEntry({ ...currentEntry, takeProfit: parseFloat(e.target.value) })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Risk/Reward Ratio</Label>
-                  <Input value={rr} readOnly disabled />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="position-size">Position Size</Label>
-                  <Input
-                    id="position-size"
-                    type="number"
-                    value={currentEntry.positionSize || ''}
-                    onChange={(e) => setCurrentEntry({ ...currentEntry, positionSize: parseFloat(e.target.value) })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="result">Result</Label>
-                  <Select
-                    value={currentEntry.result}
-                    onValueChange={(value: BacktestJournalEntry['result']) => setCurrentEntry({ ...currentEntry, result: value })}
-                  >
-                    <SelectTrigger id="result">
-                      <SelectValue placeholder="Select result" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Win">Win</SelectItem>
-                      <SelectItem value="Loss">Loss</SelectItem>
-                      <SelectItem value="Breakeven">Breakeven</SelectItem>
-                      <SelectItem value="Ongoing">Ongoing</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2 col-span-2">
-                  <Label htmlFor="pnl">Net P&L</Label>
-                  <Input
-                    id="pnl"
-                    type="number"
-                    value={currentEntry.pnl ?? ''}
-                    onChange={(e) => setCurrentEntry({ ...currentEntry, pnl: parseFloat(e.target.value) || undefined })}
-                    placeholder="e.g. 150.50"
-                  />
-                </div>
-                <div className="space-y-2 col-span-2">
-                  <Label htmlFor="adherence">Adherence to Plan</Label>
-                  <Select
-                    value={currentEntry.adherenceToPlan}
-                    onValueChange={(value: 'Yes' | 'No' | 'Partial') => setCurrentEntry({ ...currentEntry, adherenceToPlan: value })}
-                  >
-                    <SelectTrigger id="adherence">
-                      <SelectValue placeholder="Select adherence" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                      <SelectItem value="Partial">Partial</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2 col-span-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={currentEntry.notes || ''}
-                    onChange={(e) => setCurrentEntry({ ...currentEntry, notes: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="screenshot-before">Screenshot Before</Label>
-                  <Input
-                    id="screenshot-before"
-                    value={currentEntry.screenshotBefore || ''}
-                    onChange={(e) => setCurrentEntry({ ...currentEntry, screenshotBefore: e.target.value })}
-                    placeholder="https://..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="screenshot-after">Screenshot After</Label>
-                  <Input
-                    id="screenshot-after"
-                    value={currentEntry.screenshotAfter || ''}
-                    onChange={(e) => setCurrentEntry({ ...currentEntry, screenshotAfter: e.target.value })}
-                    placeholder="https://..."
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-                <DialogClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                </DialogClose>
-              <Button onClick={handleSave}>Save</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Pair</TableHead>
-            <TableHead>Direction</TableHead>
-            <TableHead>Entry Price</TableHead>
-            <TableHead>Stop-Loss</TableHead>
-            <TableHead>Take-Profit</TableHead>
-            <TableHead>P&L</TableHead>
-            <TableHead>Result</TableHead>
-            <TableHead>Before</TableHead>
-            <TableHead>After</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {entries.map((entry, index) => (
-            <TableRow key={entry.id}>
-              <TableCell className="font-medium">{entry.currencyPair}</TableCell>
-              <TableCell>{entry.direction}</TableCell>
-              <TableCell>{entry.entryPrice}</TableCell>
-              <TableCell>{entry.stopLoss}</TableCell>
-              <TableCell>{entry.takeProfit}</TableCell>
-              <TableCell className={getResultColor(entry.result)}>
-                {entry.pnl?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) ?? 'N/A'}
-              </TableCell>
-              <TableCell>
-                <Badge variant={getResultBadgeVariant(entry.result)}>{entry.result}</Badge>
-              </TableCell>
-              <TableCell>
-                {entry.screenshotBefore ? (
-                  <Button variant="ghost" size="icon" onClick={() => handlePreviewImage(entry.screenshotBefore!)}>
-                    <ImageIcon className="h-5 w-5 text-blue-500 hover:text-blue-700" />
-                  </Button>
-                ) : 'N/A'}
-              </TableCell>
-              <TableCell>
-                {entry.screenshotAfter ? (
-                  <Button variant="ghost" size="icon" onClick={() => handlePreviewImage(entry.screenshotAfter!)}>
-                    <ImageIcon className="h-5 w-5 text-blue-500 hover:text-blue-700" />
-                  </Button>
-                ) : 'N/A'}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={() => handleEdit(index)}>
-                  <Edit className="h-4 w-4" />
+    <Tabs defaultValue="journal">
+        <div className="flex justify-between items-center mb-4">
+            <TabsList>
+                <TabsTrigger value="journal">Journal</TabsTrigger>
+                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            </TabsList>
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogTrigger asChild>
+                <Button onClick={handleAddNew}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Backtest Entry
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(index)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-       {entries.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-            No backtest journal entries yet.
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px] grid-rows-[auto,minmax(0,1fr),auto] max-h-[90vh]">
+                <DialogHeader>
+                <DialogTitle>{editIndex !== null ? 'Edit' : 'Add'} Backtest Entry</DialogTitle>
+                </DialogHeader>
+                <div className="overflow-y-auto pr-6">
+                <div className="grid grid-cols-2 gap-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="currency-pair">Currency Pair</Label>
+                    <Input
+                        id="currency-pair"
+                        value={currentEntry.currencyPair || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, currencyPair: e.target.value })}
+                    />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="direction">Direction</Label>
+                    <Select
+                        value={currentEntry.direction}
+                        onValueChange={(value: 'Long' | 'Short') => setCurrentEntry({ ...currentEntry, direction: value })}
+                    >
+                        <SelectTrigger id="direction">
+                        <SelectValue placeholder="Select direction" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="Long">Long</SelectItem>
+                        <SelectItem value="Short">Short</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="entry-price">Entry Price</Label>
+                    <Input
+                        id="entry-price"
+                        type="number"
+                        value={currentEntry.entryPrice || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, entryPrice: parseFloat(e.target.value) })}
+                    />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="stop-loss">Stop-Loss</Label>
+                    <Input
+                        id="stop-loss"
+                        type="number"
+                        value={currentEntry.stopLoss || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, stopLoss: parseFloat(e.target.value) })}
+                    />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="take-profit">Take-Profit</Label>
+                    <Input
+                        id="take-profit"
+                        type="number"
+                        value={currentEntry.takeProfit || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, takeProfit: parseFloat(e.target.value) })}
+                    />
+                    </div>
+                    <div className="space-y-2">
+                    <Label>Risk/Reward Ratio</Label>
+                    <Input value={rr} readOnly disabled />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="position-size">Position Size</Label>
+                    <Input
+                        id="position-size"
+                        type="number"
+                        value={currentEntry.positionSize || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, positionSize: parseFloat(e.target.value) })}
+                    />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="result">Result</Label>
+                    <Select
+                        value={currentEntry.result}
+                        onValueChange={(value: BacktestJournalEntry['result']) => setCurrentEntry({ ...currentEntry, result: value })}
+                    >
+                        <SelectTrigger id="result">
+                        <SelectValue placeholder="Select result" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="Win">Win</SelectItem>
+                        <SelectItem value="Loss">Loss</SelectItem>
+                        <SelectItem value="Breakeven">Breakeven</SelectItem>
+                        <SelectItem value="Ongoing">Ongoing</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                    <Label htmlFor="pnl">Net P&L</Label>
+                    <Input
+                        id="pnl"
+                        type="number"
+                        value={currentEntry.pnl ?? ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, pnl: parseFloat(e.target.value) || undefined })}
+                        placeholder="e.g. 150.50"
+                    />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                    <Label htmlFor="adherence">Adherence to Plan</Label>
+                    <Select
+                        value={currentEntry.adherenceToPlan}
+                        onValueChange={(value: 'Yes' | 'No' | 'Partial') => setCurrentEntry({ ...currentEntry, adherenceToPlan: value })}
+                    >
+                        <SelectTrigger id="adherence">
+                        <SelectValue placeholder="Select adherence" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                        <SelectItem value="Partial">Partial</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                        id="notes"
+                        value={currentEntry.notes || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, notes: e.target.value })}
+                    />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="screenshot-before">Screenshot Before</Label>
+                    <Input
+                        id="screenshot-before"
+                        value={currentEntry.screenshotBefore || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, screenshotBefore: e.target.value })}
+                        placeholder="https://..."
+                    />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="screenshot-after">Screenshot After</Label>
+                    <Input
+                        id="screenshot-after"
+                        value={currentEntry.screenshotAfter || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, screenshotAfter: e.target.value })}
+                        placeholder="https://..."
+                    />
+                    </div>
+                </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                <Button onClick={handleSave}>Save</Button>
+                </DialogFooter>
+            </DialogContent>
+            </Dialog>
         </div>
-      )}
+        <TabsContent value="journal">
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Pair</TableHead>
+                    <TableHead>Direction</TableHead>
+                    <TableHead>Entry Price</TableHead>
+                    <TableHead>Stop-Loss</TableHead>
+                    <TableHead>Take-Profit</TableHead>
+                    <TableHead>P&L</TableHead>
+                    <TableHead>Result</TableHead>
+                    <TableHead>Before</TableHead>
+                    <TableHead>After</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                {entries.map((entry, index) => (
+                    <TableRow key={entry.id}>
+                    <TableCell className="font-medium">{entry.currencyPair}</TableCell>
+                    <TableCell>{entry.direction}</TableCell>
+                    <TableCell>{entry.entryPrice}</TableCell>
+                    <TableCell>{entry.stopLoss}</TableCell>
+                    <TableCell>{entry.takeProfit}</TableCell>
+                    <TableCell className={getResultColor(entry.result)}>
+                        {entry.pnl?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) ?? 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                        <Badge variant={getResultBadgeVariant(entry.result)}>{entry.result}</Badge>
+                    </TableCell>
+                    <TableCell>
+                        {entry.screenshotBefore ? (
+                        <Button variant="ghost" size="icon" onClick={() => handlePreviewImage(entry.screenshotBefore!)}>
+                            <ImageIcon className="h-5 w-5 text-blue-500 hover:text-blue-700" />
+                        </Button>
+                        ) : 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                        {entry.screenshotAfter ? (
+                        <Button variant="ghost" size="icon" onClick={() => handlePreviewImage(entry.screenshotAfter!)}>
+                            <ImageIcon className="h-5 w-5 text-blue-500 hover:text-blue-700" />
+                        </Button>
+                        ) : 'N/A'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(index)}>
+                        <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+            {entries.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                    No backtest journal entries yet.
+                </div>
+            )}
+        </TabsContent>
+         <TabsContent value="dashboard">
+            <div className="grid grid-cols-4 gap-6">
+                {statsData.map((stat) => (
+                    <div key={stat.title} className="col-span-4 sm:col-span-2 lg:col-span-1">
+                    <StatCard {...stat} />
+                    </div>
+                ))}
+                <div className="col-span-4 lg:col-span-4">
+                    <CumulativePnlChart entries={entries as JournalEntry[]} />
+                </div>
+            </div>
+        </TabsContent>
+
        {previewImageUrl && (
         <div className="fixed bottom-4 right-4 z-50">
             <Card className="w-[600px] max-w-2xl">
@@ -410,6 +502,6 @@ export default function BacktestJournalPage() {
             </Card>
         </div>
       )}
-    </div>
+    </Tabs>
   );
 }
