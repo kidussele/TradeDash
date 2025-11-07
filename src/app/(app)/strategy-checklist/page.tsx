@@ -7,6 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,163 +30,298 @@ export type ChecklistItem = {
   isChecked: boolean;
 };
 
+export type Checklist = {
+  id: number;
+  title: string;
+  items: ChecklistItem[];
+};
+
 export default function StrategyChecklistPage() {
-  const [items, setItems] = useState<ChecklistItem[]>([]);
+  const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [isClient, setIsClient] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // For adding/editing a checklist (strategy)
+  const [isChecklistDialog, setIsChecklistDialog] = useState(false);
+  const [currentChecklistTitle, setCurrentChecklistTitle] = useState('');
+  const [editingChecklistId, setEditingChecklistId] = useState<number | null>(null);
+
+  // For adding/editing an item within a checklist
+  const [isItemDialog, setIsItemDialog] = useState(false);
   const [currentItemText, setCurrentItemText] = useState('');
-  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [activeChecklistId, setActiveChecklistId] = useState<number | null>(null);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+
 
   useEffect(() => {
     setIsClient(true);
-    const storedItems = localStorage.getItem('strategyChecklist');
-    if (storedItems) {
-      setItems(JSON.parse(storedItems));
+    const storedChecklists = localStorage.getItem('strategyChecklists');
+    if (storedChecklists) {
+      setChecklists(JSON.parse(storedChecklists));
     }
   }, []);
 
   useEffect(() => {
     if (isClient) {
-      localStorage.setItem('strategyChecklist', JSON.stringify(items));
+      localStorage.setItem('strategyChecklists', JSON.stringify(checklists));
     }
-  }, [items, isClient]);
+  }, [checklists, isClient]);
 
-  const handleSave = () => {
-    if (!currentItemText.trim()) return;
+  // Checklist (Strategy) handlers
+  const handleSaveChecklist = () => {
+    if (!currentChecklistTitle.trim()) return;
 
-    if (editIndex !== null) {
-      const updatedItems = [...items];
-      updatedItems[editIndex].text = currentItemText;
-      setItems(updatedItems);
+    if (editingChecklistId !== null) {
+      setChecklists(
+        checklists.map((cl) =>
+          cl.id === editingChecklistId ? { ...cl, title: currentChecklistTitle } : cl
+        )
+      );
     } else {
-      const newItem: ChecklistItem = {
+      const newChecklist: Checklist = {
         id: Date.now(),
-        text: currentItemText,
-        isChecked: false,
+        title: currentChecklistTitle,
+        items: [],
       };
-      setItems([...items, newItem]);
+      setChecklists([...checklists, newChecklist]);
     }
-    setIsEditDialogOpen(false);
-    setEditIndex(null);
-    setCurrentItemText('');
+    setIsChecklistDialog(false);
+    setCurrentChecklistTitle('');
+    setEditingChecklistId(null);
   };
 
-  const handleEdit = (index: number) => {
-    setEditIndex(index);
-    setCurrentItemText(items[index].text);
-    setIsEditDialogOpen(true);
+  const handleEditChecklist = (checklist: Checklist) => {
+    setEditingChecklistId(checklist.id);
+    setCurrentChecklistTitle(checklist.title);
+    setIsChecklistDialog(true);
+  };
+
+  const handleDeleteChecklist = (checklistId: number) => {
+    setChecklists(checklists.filter((cl) => cl.id !== checklistId));
   };
   
-  const handleAddNew = () => {
-    setEditIndex(null);
-    setCurrentItemText('');
-    setIsEditDialogOpen(true);
+  const handleAddNewChecklist = () => {
+    setEditingChecklistId(null);
+    setCurrentChecklistTitle('');
+    setIsChecklistDialog(true);
   };
 
-  const handleDelete = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
+  // Item handlers
+  const handleSaveItem = () => {
+    if (!currentItemText.trim() || activeChecklistId === null) return;
+
+    setChecklists(checklists.map(cl => {
+      if (cl.id === activeChecklistId) {
+        if (editingItemId !== null) { // Editing existing item
+          return {
+            ...cl,
+            items: cl.items.map(item =>
+              item.id === editingItemId ? { ...item, text: currentItemText } : item
+            ),
+          };
+        } else { // Adding new item
+          const newItem: ChecklistItem = {
+            id: Date.now(),
+            text: currentItemText,
+            isChecked: false,
+          };
+          return { ...cl, items: [...cl.items, newItem] };
+        }
+      }
+      return cl;
+    }));
+
+    setIsItemDialog(false);
+    setCurrentItemText('');
+    setEditingItemId(null);
+    setActiveChecklistId(null);
   };
   
-  const handleCheckChange = (index: number) => {
-    const updatedItems = [...items];
-    updatedItems[index].isChecked = !updatedItems[index].isChecked;
-    setItems(updatedItems);
+  const handleAddNewItem = (checklistId: number) => {
+    setActiveChecklistId(checklistId);
+    setEditingItemId(null);
+    setCurrentItemText('');
+    setIsItemDialog(true);
+  };
+  
+  const handleEditItem = (checklistId: number, item: ChecklistItem) => {
+    setActiveChecklistId(checklistId);
+    setEditingItemId(item.id);
+    setCurrentItemText(item.text);
+    setIsItemDialog(true);
   };
 
-  const handleResetChecks = () => {
-    setItems(items.map(item => ({ ...item, isChecked: false })));
+  const handleDeleteItem = (checklistId: number, itemId: number) => {
+    setChecklists(checklists.map(cl =>
+      cl.id === checklistId
+        ? { ...cl, items: cl.items.filter(item => item.id !== itemId) }
+        : cl
+    ));
+  };
+  
+  const handleCheckChange = (checklistId: number, itemId: number) => {
+    setChecklists(checklists.map(cl =>
+      cl.id === checklistId
+        ? {
+            ...cl,
+            items: cl.items.map(item =>
+              item.id === itemId ? { ...item, isChecked: !item.isChecked } : item
+            ),
+          }
+        : cl
+    ));
+  };
+  
+  const handleResetChecks = (checklistId: number) => {
+    setChecklists(checklists.map(cl =>
+      cl.id === checklistId
+        ? { ...cl, items: cl.items.map(item => ({ ...item, isChecked: false })) }
+        : cl
+    ));
   };
 
   if (!isClient) {
     return null; // Or a loading spinner
   }
 
-  const allChecked = items.length > 0 && items.every(item => item.isChecked);
-
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-                <CardTitle>Strategy Checklist</CardTitle>
-                <CardDescription>
-                    Your predefined rules to follow before entering a trade.
-                </CardDescription>
-            </div>
-             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button onClick={handleAddNew}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Rule
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                        <DialogTitle>{editIndex !== null ? 'Edit' : 'Add'} Rule</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="rule-text">Rule Description</Label>
-                            <Input
-                                id="rule-text"
-                                value={currentItemText}
-                                onChange={(e) => setCurrentItemText(e.target.value)}
-                                placeholder="e.g., Is the trade in line with the trend?"
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
-                        </DialogClose>
-                        <Button onClick={handleSave}>Save Rule</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </CardHeader>
-        <CardContent>
-            {items.length === 0 ? (
-                 <div className="text-center py-24 border-2 border-dashed rounded-lg">
-                    <h2 className="text-xl font-semibold text-muted-foreground">No rules yet</h2>
-                    <p className="text-muted-foreground mt-2">Click "Add Rule" to build your checklist.</p>
-                 </div>
-            ) : (
-                <div className="space-y-4">
-                    <div className="space-y-3">
-                        {items.map((item, index) => (
-                        <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
-                            <Checkbox
-                                id={`item-${item.id}`}
-                                checked={item.isChecked}
-                                onCheckedChange={() => handleCheckChange(index)}
-                                className="size-5"
-                            />
-                            <label
-                                htmlFor={`item-${item.id}`}
-                                className="flex-1 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                                {item.text}
-                            </label>
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(index)}>
-                                <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDelete(index)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                        </div>
-                        ))}
-                    </div>
-                    <div className="flex justify-end gap-2 pt-4">
-                        <Button variant="outline" onClick={handleResetChecks}>Reset Checklist</Button>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Strategy Checklists</h1>
+          <p className="text-muted-foreground">
+            Manage your predefined rules for different trading strategies.
+          </p>
+        </div>
+        <Dialog open={isChecklistDialog} onOpenChange={setIsChecklistDialog}>
+            <DialogTrigger asChild>
+                <Button onClick={handleAddNewChecklist}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Strategy
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                    <DialogTitle>{editingChecklistId !== null ? 'Edit' : 'Add'} Strategy</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="checklist-title">Strategy Name</Label>
+                        <Input
+                            id="checklist-title"
+                            value={currentChecklistTitle}
+                            onChange={(e) => setCurrentChecklistTitle(e.target.value)}
+                            placeholder="e.g., ICT Silver Bullet"
+                        />
                     </div>
                 </div>
-            )}
-        </CardContent>
-      </Card>
-      {allChecked && (
-          <div className="text-center p-6 rounded-lg bg-positive/10 text-positive-foreground">
-              <p className="font-semibold text-positive">All checks passed. You are cleared to trade!</p>
-          </div>
+                <DialogFooter>
+                     <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleSaveChecklist}>Save Strategy</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      </div>
+
+       {/* Item Dialog */}
+        <Dialog open={isItemDialog} onOpenChange={setIsItemDialog}>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                    <DialogTitle>{editingItemId !== null ? 'Edit' : 'Add'} Rule</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="rule-text">Rule Description</Label>
+                        <Input
+                            id="rule-text"
+                            value={currentItemText}
+                            onChange={(e) => setCurrentItemText(e.target.value)}
+                            placeholder="e.g., Is the trade in line with the trend?"
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                        <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleSaveItem}>Save Rule</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+      {checklists.length === 0 ? (
+        <div className="text-center py-24 border-2 border-dashed rounded-lg">
+          <h2 className="text-xl font-semibold text-muted-foreground">No checklists yet</h2>
+          <p className="text-muted-foreground mt-2">Click "Add Strategy" to create your first checklist.</p>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {checklists.map((cl) => {
+            const allChecked = cl.items.length > 0 && cl.items.every(item => item.isChecked);
+            return (
+              <Card key={cl.id} className="flex flex-col">
+                <CardHeader className="flex-row items-start justify-between">
+                  <div>
+                    <CardTitle>{cl.title}</CardTitle>
+                  </div>
+                  <div className="flex items-center gap-1">
+                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditChecklist(cl)}>
+                        <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteChecklist(cl.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-grow space-y-4">
+                  {cl.items.length === 0 ? (
+                     <div className="text-center py-10 text-muted-foreground">
+                        <p>No rules added yet.</p>
+                     </div>
+                  ) : (
+                    cl.items.map((item) => (
+                      <div key={item.id} className="flex items-center gap-3">
+                        <Checkbox
+                          id={`item-${item.id}`}
+                          checked={item.isChecked}
+                          onCheckedChange={() => handleCheckChange(cl.id, item.id)}
+                          className="size-5"
+                        />
+                        <label
+                          htmlFor={`item-${item.id}`}
+                          className="flex-1 text-sm font-medium leading-none"
+                        >
+                          {item.text}
+                        </label>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditItem(cl.id, item)}>
+                            <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteItem(cl.id, item.id)}>
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+                <CardFooter className="flex-col items-stretch gap-3 pt-6">
+                    <Button onClick={() => handleAddNewItem(cl.id)}>
+                        <PlusCircle className="mr-2 h-4 w-4"/>
+                        Add Rule
+                    </Button>
+                     {cl.items.length > 0 && (
+                        <Button variant="outline" onClick={() => handleResetChecks(cl.id)}>Reset Checklist</Button>
+                     )}
+                     {allChecked && (
+                        <div className="text-center p-3 rounded-md bg-positive/10 text-sm font-semibold text-positive-foreground text-positive">
+                            Cleared to trade!
+                        </div>
+                    )}
+                </CardFooter>
+              </Card>
+            );
+          })}
+        </div>
       )}
     </div>
   );
