@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 
 const journalEntrySchema = z.object({
@@ -416,6 +417,15 @@ export default function JournalPage() {
     setEditingId(entry.id);
   };
 
+  const getBadgeVariant = (result: JournalEntry['result']) => {
+    switch(result) {
+        case 'Win': return 'positive';
+        case 'Loss': return 'destructive';
+        case 'Breakeven': return 'secondary';
+        default: return 'outline';
+    }
+  }
+
   const editingEntry = editingId ? entries.find(e => e.id === editingId) : undefined;
 
   return (
@@ -441,16 +451,19 @@ export default function JournalPage() {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div className="flex-grow">
-                           <CardTitle className='text-lg flex items-center gap-2'>
+                           <div className='flex items-center gap-2'>
                             <CollapsibleTrigger asChild>
                                <Button variant="ghost" size="icon" className="group h-6 w-6">
                                   <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
                                </Button>
                             </CollapsibleTrigger>
-                             {entry.currencyPair} {entry.direction}
-                           </CardTitle>
-                           <CardDescription className="pl-8">
-                            Entered: {entry.entryTime ? entry.entryTime.toLocaleString() : 'N/A'} | Result: {entry.result}
+                             <CardTitle className='text-lg'>
+                                {entry.currencyPair} {entry.direction}
+                             </CardTitle>
+                             <Badge variant={getBadgeVariant(entry.result)}>{entry.result}</Badge>
+                           </div>
+                           <CardDescription className="pl-8 mt-1">
+                            Entered: {entry.entryTime ? entry.entryTime.toLocaleString() : 'N/A'}
                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-1">
