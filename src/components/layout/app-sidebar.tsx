@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, LayoutDashboard, Sparkles, Settings } from 'lucide-react';
+import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +29,8 @@ import { placeholderImages } from '@/lib/placeholder-images';
 const menuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/insights', label: 'AI Insights', icon: Sparkles },
+  { href: '/journal', label: 'Journal', icon: BookText },
+  { href: '/backtest-journal', label: 'Backtest Journal', icon: FlaskConical },
 ];
 
 export function AppSidebar() {

@@ -16,6 +16,8 @@ import { usePathname } from 'next/navigation';
 const pathToTitle: { [key: string]: string } = {
   '/': 'Dashboard',
   '/insights': 'AI Insights',
+  '/journal': 'Journal',
+  '/backtest-journal': 'Backtest Journal',
 };
 
 export function Header() {
