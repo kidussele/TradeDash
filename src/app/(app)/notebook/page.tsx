@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, Image as ImageIcon, BookCopy } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -36,10 +36,13 @@ export type Note = {
 };
 
 const CurrencyFlags = ({ currencyPair }: { currencyPair?: string }) => {
-    if (!currencyPair || currencyPair.length !== 6) return null;
+    if (!currencyPair || currencyPair.length < 6) return null;
 
-    const baseCurrency = currencyPair.substring(0, 3);
-    const quoteCurrency = currencyPair.substring(3, 6);
+    const sanitizedPair = currencyPair.replace(/[^A-Z]/g, '');
+    if (sanitizedPair.length !== 6) return null;
+
+    const baseCurrency = sanitizedPair.substring(0, 3);
+    const quoteCurrency = sanitizedPair.substring(3, 6);
 
     const getCountryCode = (currency: string) => {
         const customMap: Record<string, string> = {
@@ -183,7 +186,7 @@ export default function NotebookPage() {
                                 value={currentNote.currencyPair || ''}
                                 onChange={(e) => setCurrentNote({ ...currentNote, currencyPair: e.target.value })}
                                 placeholder="e.g., EURUSD"
-                                maxLength={6}
+                                maxLength={7}
                             />
                         </div>
                         <div className="space-y-2">
