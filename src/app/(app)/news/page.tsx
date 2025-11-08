@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -24,7 +25,7 @@ const getImpactBadgeVariant = (impact: 'low' | 'medium' | 'high') => {
   }
 };
 
-const NewsSection = ({ topic }: { topic: string }) => {
+function NewsSection({ topic }: { topic: string }) {
   const [news, setNews] = useState<NewsArticle[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,7 +110,6 @@ const NewsSection = ({ topic }: { topic: string }) => {
 
 
 export default function NewsPage() {
-  const topics = ['forex market', 'commodities', 'stock market'];
   const calendarUrl = "https://sslecal2.investing.com/?importance=2,3&timeframe=7";
 
   return (
@@ -126,14 +126,12 @@ export default function NewsPage() {
                   This week's economic calendar filtered for moderate and high impact events.
                   </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="w-full h-[800px]">
+              <CardContent style={{ height: '800px', width: '100%' }}>
                   <iframe
                       src={calendarUrl}
-                      className="w-full h-full border-0 rounded-lg"
+                      style={{ height: '100%', width: '100%', border: 'none' }}
                       title="Economic Calendar"
                   />
-                </div>
               </CardContent>
           </Card>
       </TabsContent>
@@ -143,9 +141,9 @@ export default function NewsPage() {
               <h2 className="text-3xl font-bold">AI Market News</h2>
               <p className="text-muted-foreground">AI-generated news summaries from around the financial world.</p>
           </div>
-          {topics.map(topic => (
-              <NewsSection key={topic} topic={topic} />
-          ))}
+          <NewsSection topic="forex market" />
+          <NewsSection topic="commodities" />
+          <NewsSection topic="stock market" />
         </div>
       </TabsContent>
     </Tabs>
