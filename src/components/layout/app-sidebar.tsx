@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -47,10 +46,7 @@ const menuItems = [
   { href: '/news', label: 'News', icon: Newspaper },
 ];
 
-const bottomMenuItems = [
-    { href: '/insights', label: 'AI Insights', icon: Sparkles },
-    { href: '/trade-ideas', label: 'Trade Ideas', icon: Lightbulb },
-];
+const bottomMenuItems: any[] = [];
 
 export function AppSidebar() {
   const pathname = usePathname();
