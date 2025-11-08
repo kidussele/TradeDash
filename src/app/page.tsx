@@ -95,7 +95,7 @@ export default function HomePage() {
         <section className="py-20 md:py-32">
           <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              Elevate Your Trading with AI
+              Elevate Your Trading with TradeDash
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
               TradeDash is an all-in-one AI-powered trading journal designed to help you analyze your performance, find your edge, and achieve your goals.
@@ -105,13 +105,29 @@ export default function HomePage() {
                 <Link href="/auth">Get Started for Free</Link>
               </Button>
             </div>
-             <div className="mt-16 mx-auto max-w-5xl">
-                <Card className="shadow-2xl shadow-primary/10">
-                    <CardContent className="p-2 bg-card/50">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="https://picsum.photos/seed/luxurydashboard/1200/600" alt="Dashboard preview" className="rounded-lg" data-ai-hint="trading chart dark" />
-                    </CardContent>
-                </Card>
+             <div className="mt-16 mx-auto max-w-6xl">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="shadow-2xl shadow-primary/10 md:col-span-2">
+                        <CardContent className="p-2 bg-card/50 h-full">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="https://picsum.photos/seed/chartmain/1200/600" alt="Main trading chart" className="rounded-lg object-cover w-full h-full" data-ai-hint="trading chart dark" />
+                        </CardContent>
+                    </Card>
+                    <div className="grid grid-rows-2 gap-4">
+                         <Card className="shadow-xl shadow-primary/5">
+                            <CardContent className="p-2 bg-card/50 h-full">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="https://picsum.photos/seed/chartside1/600/300" alt="Trading chart detail" className="rounded-lg object-cover w-full h-full" data-ai-hint="candlestick chart" />
+                            </CardContent>
+                        </Card>
+                         <Card className="shadow-xl shadow-primary/5">
+                            <CardContent className="p-2 bg-card/50 h-full">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="https://picsum.photos/seed/chartside2/600/300" alt="Trading analysis" className="rounded-lg object-cover w-full h-full" data-ai-hint="technical analysis" />
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
             </div>
           </div>
         </section>
