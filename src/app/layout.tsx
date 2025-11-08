@@ -5,8 +5,8 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'TradeDash',
-  description: 'AI-Powered Trading Journal',
+  title: 'TradeDash - AI-Powered Trading Journal',
+  description: 'Elevate your trading with an AI-powered journal. Analyze performance, find your edge, and achieve your goals.',
 };
 
 export default function RootLayout({

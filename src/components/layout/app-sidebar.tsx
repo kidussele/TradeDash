@@ -36,7 +36,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 
 const menuItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/journal', label: 'Journal', icon: BookText },
   { href: '/backtest-journal', label: 'Backtest Journal', icon: FlaskConical },
   { href: '/notebook', label: 'Market Analysis', icon: BookCopy },

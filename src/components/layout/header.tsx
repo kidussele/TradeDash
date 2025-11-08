@@ -5,7 +5,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
 
 const pathToTitle: { [key: string]: string } = {
-  '/': 'Dashboard',
+  '/dashboard': 'Dashboard',
   '/insights': 'AI Insights',
   '/trade-ideas': 'Trade Ideas',
   '/journal': 'Journal',
