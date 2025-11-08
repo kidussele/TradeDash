@@ -24,6 +24,10 @@ export default function AppLayout({
     if (!isUserLoading && !user && pathname !== '/auth') {
       router.push('/auth');
     }
+    // Redirect from the root of the app layout to the dashboard
+    if (pathname === '/') {
+        router.replace('/dashboard');
+    }
   }, [user, isUserLoading, router, pathname]);
 
   if (isUserLoading) {
@@ -45,7 +49,7 @@ export default function AppLayout({
   // If loading is finished and there's still no user, we do nothing.
   // The useEffect above has already triggered the redirect.
   // This prevents rendering the children for a brief moment before the redirect happens.
-  if (!user) {
+  if (!user || pathname === '/') {
     return null;
   }
 
