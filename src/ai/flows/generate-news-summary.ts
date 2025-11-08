@@ -30,7 +30,8 @@ const GenerateNewsSummaryOutputSchema = z.object({
 export type GenerateNewsSummaryOutput = z.infer<typeof GenerateNewsSummaryOutputSchema>;
 
 export async function generateNewsSummary(input: GenerateNewsSummaryInput): Promise<GenerateNewsSummaryOutput> {
-  return generateNewsSummaryFlow(input);
+  // Correctly call the defined flow object, not the wrapper function
+  return newsSummaryFlow(input);
 }
 
 const prompt = ai.definePrompt({
@@ -42,9 +43,9 @@ const prompt = ai.definePrompt({
   For each article, provide a realistic headline, a brief summary, a plausible source (like Reuters, Bloomberg, etc.), a relative publication time (e.g., "1 hour ago", "3 hours ago"), and its market impact ('low', 'medium', or 'high'). The news should be current and impactful for a trader.`,
 });
 
-const generateNewsSummaryFlow = ai.defineFlow(
+const newsSummaryFlow = ai.defineFlow(
   {
-    name: 'generateNewsSummaryFlow',
+    name: 'newsSummaryFlow', // Renamed for clarity
     inputSchema: GenerateNewsSummaryInputSchema,
     outputSchema: GenerateNewsSummaryOutputSchema,
   },
