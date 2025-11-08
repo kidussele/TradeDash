@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,6 +9,11 @@ import { getTradeIdeas } from './actions';
 import { useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { JournalEntry } from '@/app/(app)/journal/page';
+import type { BacktestJournalEntry } from '@/app/(app)/backtest-journal/page';
+import type { Goal } from '@/app/(app)/goals/page';
+import type { Note as NotebookNote } from '@/app/(app)/notebook/page';
+import type { Note as SelfDevNote } from '@/app/(app)/self-development/page';
+import type { Checklist } from '@/app/(app)/strategy-checklist/page';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 type Message = {
@@ -20,38 +25,62 @@ export default function TradeIdeasPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const entriesRef = useMemoFirebase(() => 
-    user ? collection(firestore, 'users', user.uid, 'journalEntries') : null
-  , [user, firestore]);
-  
-  const { data: journalEntries = [] } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
+  // Fetch all relevant data collections
+  const liveJournalRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'journalEntries') : null, [user, firestore]);
+  const backtestJournalRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'backtestJournalEntries') : null, [user, firestore]);
+  const goalsRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'goals') : null, [user, firestore]);
+  const marketNotesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'notebookNotes') : null, [user, firestore]);
+  const selfDevNotesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'selfDevelopmentNotes') : null, [user, firestore]);
+  const checklistsRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'strategyChecklists') : null, [user, firestore]);
+
+  const { data: liveJournalEntries = [] } = useCollection<Omit<JournalEntry, 'id'>>(liveJournalRef);
+  const { data: backtestJournalEntries = [] } = useCollection<Omit<BacktestJournalEntry, 'id'>>(backtestJournalRef);
+  const { data: goals = [] } = useCollection<Omit<Goal, 'id'>>(goalsRef);
+  const { data: marketNotes = [] } = useCollection<Omit<NotebookNote, 'id'>>(marketNotesRef);
+  const { data: selfDevNotes = [] } = useCollection<Omit<SelfDevNote, 'id'>>(selfDevNotesRef);
+  const { data: checklists = [] } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataReady, setIsDataReady] = useState(false);
+
+  useEffect(() => {
+    // Basic check to see if we have some data loaded.
+    if (liveJournalEntries && backtestJournalEntries && goals && marketNotes && selfDevNotes && checklists) {
+        setIsDataReady(true);
+    }
+  }, [liveJournalEntries, backtestJournalEntries, goals, marketNotes, selfDevNotes, checklists]);
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !isDataReady) return;
 
     const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
-    // Convert journal entries to CSV
-    const headers = 'Date,CurrencyPair,Direction,P&L,Result,Emotion,Notes';
-    const csvRows = journalEntries.map(e => {
-        const date = e.date ? new Date(e.date).toLocaleDateString() : 'N/A';
-        const pnl = e.pnl ?? 'N/A';
-        const emotion = e.emotion ?? 'N/A';
-        const notes = `"${(e.notes || '').replace(/"/g, '""')}"`; // Handle quotes in notes
-        return [date, e.currencyPair, e.direction, pnl, e.result, emotion, notes].join(',');
-    });
-    const historyCsv = [headers, ...csvRows].join('\\n');
+    const allData = {
+        liveJournalEntries,
+        backtestJournalEntries,
+        goals,
+        marketNotes,
+        selfDevNotes,
+        strategyChecklists: checklists,
+    };
+
+    // Sanitize data for the AI
+    const dataString = JSON.stringify(allData, (key, value) => {
+        if (key === 'createdAt' && value && typeof value.toDate === 'function') {
+            return value.toDate().toISOString();
+        }
+        return value;
+    }, 2);
+
 
     const result = await getTradeIdeas({
       question: input,
-      history: historyCsv,
+      allData: dataString,
     });
     
     if ('error' in result) {
@@ -107,7 +136,7 @@ export default function TradeIdeasPage() {
            )}
            {messages.length === 0 && !isLoading && (
              <div className="text-center text-muted-foreground pt-16">
-                No conversation started yet.
+                {!isDataReady ? 'Loading your data...' : 'No conversation started yet.'}
              </div>
            )}
         </CardContent>
@@ -117,10 +146,10 @@ export default function TradeIdeasPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
-              placeholder="Ask a question about your trades..."
-              disabled={isLoading}
+              placeholder={!isDataReady ? "Please wait, loading data..." : "Ask a question about your data..."}
+              disabled={isLoading || !isDataReady}
             />
-            <Button onClick={handleSendMessage} disabled={isLoading || !input.trim()}>
+            <Button onClick={handleSendMessage} disabled={isLoading || !input.trim() || !isDataReady}>
               Send
             </Button>
           </div>
