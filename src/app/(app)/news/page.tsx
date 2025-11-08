@@ -119,20 +119,22 @@ export default function NewsPage() {
         <TabsTrigger value="calendar">Economic Calendar</TabsTrigger>
         <TabsTrigger value="ai-news">AI Market News</TabsTrigger>
       </TabsList>
-      <TabsContent value="calendar" className="h-[calc(100vh-12rem)] mt-4">
-          <Card className="h-full flex flex-col">
+      <TabsContent value="calendar" className="mt-4">
+          <Card>
               <CardHeader>
                   <CardTitle>Economic Calendar</CardTitle>
                   <CardDescription>
                   This week's economic calendar filtered for moderate and high impact events.
                   </CardDescription>
               </CardHeader>
-              <CardContent className="flex-grow">
+              <CardContent>
+                <div className="relative overflow-hidden w-full pt-[75%]">
                   <iframe 
                       src={calendarUrl}
-                      className="w-full h-full border-0 rounded-lg"
+                      className="absolute top-0 left-0 bottom-0 right-0 w-full h-full border-0 rounded-lg"
                       title="Economic Calendar"
                   />
+                </div>
               </CardContent>
           </Card>
       </TabsContent>
