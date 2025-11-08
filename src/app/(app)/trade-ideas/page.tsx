@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Lightbulb, User } from 'lucide-react';
-import { getTradeIdeas } from './actions';
 import { useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { JournalEntry } from '@/app/(app)/journal/page';
@@ -24,7 +23,6 @@ export default function TradeIdeasPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  // Fetch all relevant data collections
   const liveJournalRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'journalEntries') : null, [user, firestore]);
   const backtestJournalRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'backtestJournalEntries') : null, [user, firestore]);
   const goalsRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'goals') : null, [user, firestore]);
@@ -32,27 +30,21 @@ export default function TradeIdeasPage() {
   const selfDevNotesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'selfDevelopmentNotes') : null, [user, firestore]);
   const checklistsRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'strategyChecklists') : null, [user, firestore]);
 
-  const { data: liveJournalEntries = [] } = useCollection<Omit<JournalEntry, 'id'>>(liveJournalRef);
-  const { data: backtestJournalEntries = [] } = useCollection<Omit<BacktestJournalEntry, 'id'>>(backtestJournalRef);
-  const { data: goals = [] } = useCollection<Omit<Goal, 'id'>>(goalsRef);
-  const { data: marketNotes = [] } = useCollection<Omit<NotebookNote, 'id'>>(marketNotesRef);
-  const { data: selfDevNotes = [] } = useCollection<Omit<SelfDevNote, 'id'>>(selfDevNotesRef);
-  const { data: checklists = [] } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
+  const { data: liveJournalEntries = [], isLoading: l1 } = useCollection<Omit<JournalEntry, 'id'>>(liveJournalRef);
+  const { data: backtestJournalEntries = [], isLoading: l2 } = useCollection<Omit<BacktestJournalEntry, 'id'>>(backtestJournalRef);
+  const { data: goals = [], isLoading: l3 } = useCollection<Omit<Goal, 'id'>>(goalsRef);
+  const { data: marketNotes = [], isLoading: l4 } = useCollection<Omit<NotebookNote, 'id'>>(marketNotesRef);
+  const { data: selfDevNotes = [], isLoading: l5 } = useCollection<Omit<SelfDevNote, 'id'>>(selfDevNotesRef);
+  const { data: checklists = [], isLoading: l6 } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isDataReady, setIsDataReady] = useState(false);
-
-  useEffect(() => {
-    // Basic check to see if we have some data loaded.
-    if (liveJournalEntries && backtestJournalEntries && goals && marketNotes && selfDevNotes && checklists) {
-        setIsDataReady(true);
-    }
-  }, [liveJournalEntries, backtestJournalEntries, goals, marketNotes, selfDevNotes, checklists]);
+  
+  const isDataLoading = l1 || l2 || l3 || l4 || l5 || l6;
 
   const handleSendMessage = async () => {
-    if (!input.trim() || !isDataReady) return;
+    if (!input.trim() || isDataLoading) return;
 
     const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
@@ -68,26 +60,31 @@ export default function TradeIdeasPage() {
         strategyChecklists: checklists,
     };
 
-    // Sanitize data for the AI
     const dataString = JSON.stringify(allData, (key, value) => {
-        if (key === 'createdAt' && value && typeof value.toDate === 'function') {
+        if (value && typeof value.toDate === 'function') {
             return value.toDate().toISOString();
         }
         return value;
     }, 2);
 
+    try {
+      const response = await fetch('/api/trade-ideas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: input, allData: dataString }),
+      });
 
-    const result = await getTradeIdeas({
-      question: input,
-      allData: dataString,
-    });
-    
-    if ('error' in result) {
-      const assistantMessage: Message = { role: 'assistant', content: `Error: ${result.error}` };
-      setMessages(prev => [...prev, assistantMessage]);
-    } else {
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'The AI assistant failed to respond.');
+      }
+
+      const result = await response.json();
       const assistantMessage: Message = { role: 'assistant', content: result.answer };
       setMessages(prev => [...prev, assistantMessage]);
+    } catch (e: any) {
+        const assistantMessage: Message = { role: 'assistant', content: `Error: ${e.message}` };
+        setMessages(prev => [...prev, assistantMessage]);
     }
 
     setIsLoading(false);
@@ -135,7 +132,7 @@ export default function TradeIdeasPage() {
            )}
            {messages.length === 0 && !isLoading && (
              <div className="text-center text-muted-foreground pt-16">
-                {!isDataReady ? 'Loading your data...' : 'No conversation started yet.'}
+                {isDataLoading ? 'Loading your data...' : 'No conversation started yet.'}
              </div>
            )}
         </CardContent>
@@ -145,10 +142,10 @@ export default function TradeIdeasPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
-              placeholder={!isDataReady ? "Please wait, loading data..." : "Ask a question about your data..."}
-              disabled={isLoading || !isDataReady}
+              placeholder={isDataLoading ? "Please wait, loading data..." : "Ask a question about your data..."}
+              disabled={isLoading || isDataLoading}
             />
-            <Button onClick={handleSendMessage} disabled={isLoading || !input.trim() || !isDataReady}>
+            <Button onClick={handleSendMessage} disabled={isLoading || !input.trim() || isDataLoading}>
               Send
             </Button>
           </div>
