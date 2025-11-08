@@ -43,8 +43,9 @@ function NewsSection({ topic }: { topic: string }) {
     <div>
       <h2 className="text-2xl font-bold mb-4 capitalize">{topic.replace(' market', '')} News</h2>
       {error && (
-        <div className="text-destructive">
-          Could not load news for {topic}: {error}
+        <div className="text-destructive p-4 border border-destructive/50 rounded-md">
+          <p className="font-semibold">Could not load news for {topic}:</p>
+          <p className="text-sm">{error}</p>
         </div>
       )}
       {!summary && !error && (

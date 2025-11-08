@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Switch to gemini-pro-vision which is more broadly available.
+    // Use gemini-pro-vision as it's more broadly available and handles text-only just fine.
     const model = genAI.getGenerativeModel({ model: 'gemini-pro-vision', safetySettings });
 
     const prompt = `As a financial news summarizer, provide a concise, single-paragraph, news-style summary of recent events and trends for the ${topic}. Focus on factual information relevant to a trader, not financial advice.`;
@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('Error in /api/news:', error);
+    // Pass the specific error message from the AI service to the client for better debugging.
     const errorMessage = error.message || 'Failed to generate news. Please try again.';
-    // Return the specific error from the AI service for better debugging.
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
