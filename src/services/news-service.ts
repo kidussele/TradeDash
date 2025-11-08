@@ -24,8 +24,25 @@ export async function getNewsSummary(topic: string): Promise<string> {
     const prompt = `As a financial news summarizer, provide a concise, single-paragraph, news-style summary of recent events and trends for the ${topic}. Focus on factual information relevant to a trader, not financial advice.`;
 
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const response = result.response;
+
+    // More robust response handling
+    if (
+      !response ||
+      !response.candidates ||
+      response.candidates.length === 0 ||
+      !response.candidates[0].content ||
+      !response.candidates[0].content.parts ||
+      response.candidates[0].content.parts.length === 0
+    ) {
+        throw new Error('Invalid response structure from AI service.');
+    }
+    
+    if (response.candidates[0].finishReason !== 'STOP') {
+        throw new Error(`AI generation stopped for reason: ${response.candidates[0].finishReason}`);
+    }
+
+    const text = response.candidates[0].content.parts.map(part => part.text).join('');
     
     return text;
   } catch (error) {

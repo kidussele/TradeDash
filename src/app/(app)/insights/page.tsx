@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
-import { getTradingInsights } from '@/app/insights/actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function InsightsPage() {
@@ -19,13 +18,10 @@ export default function InsightsPage() {
     setError(null);
     setInsights('');
 
-    const result = await getTradingInsights({ historicalTradeData: tradeData });
+    // Placeholder for when getTradingInsights is implemented
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setError("This feature is not yet implemented.");
 
-    if ('error' in result) {
-      setError(result.error);
-    } else {
-      setInsights(result.insights);
-    }
 
     setIsLoading(false);
   };
