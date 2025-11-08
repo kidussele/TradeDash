@@ -98,7 +98,7 @@ export default function HomePage() {
               Elevate Your Trading with TradeDash
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-              TradeDash is an all-in-one AI-powered trading journal designed to help you analyze your performance, find your edge, and achieve your goals.
+              TradeDash is an amazing trading journal designed to help you analyze your performance, find your edge, and achieve your goals.
             </p>
             <div className="mt-8 flex justify-center gap-4">
               <Button size="lg" asChild>
