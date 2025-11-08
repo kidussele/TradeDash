@@ -24,7 +24,7 @@ export default function AiInsightsPage() {
     setIdea('');
 
     try {
-      const response = await fetch('/api/trade-ideas', {
+      const response = await fetch('/ai-insights/api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic, context }),
