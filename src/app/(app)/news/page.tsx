@@ -142,19 +142,16 @@ export default function NewsPage() {
             </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>AI Market News</CardTitle>
-          <CardDescription>
-            AI-generated news summaries from around the financial world.
-          </CardDescription>
-        </CardHeader>
-      </Card>
       
-      {topics.map(topic => (
-        <NewsSection key={topic} topic={topic} />
-      ))}
+      <div className="space-y-8">
+        <div>
+            <h2 className="text-3xl font-bold">AI Market News</h2>
+            <p className="text-muted-foreground">AI-generated news summaries from around the financial world.</p>
+        </div>
+        {topics.map(topic => (
+            <NewsSection key={topic} topic={topic} />
+        ))}
+      </div>
     </div>
   );
 }
