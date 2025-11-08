@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -29,10 +30,6 @@ const GenerateNewsSummaryOutputSchema = z.object({
 });
 export type GenerateNewsSummaryOutput = z.infer<typeof GenerateNewsSummaryOutputSchema>;
 
-export async function generateNewsSummary(input: GenerateNewsSummaryInput): Promise<GenerateNewsSummaryOutput> {
-  // Correctly call the defined flow object, not the wrapper function
-  return newsSummaryFlow(input);
-}
 
 const prompt = ai.definePrompt({
   name: 'generateNewsSummaryPrompt',
@@ -45,7 +42,7 @@ const prompt = ai.definePrompt({
 
 const newsSummaryFlow = ai.defineFlow(
   {
-    name: 'newsSummaryFlow', // Renamed for clarity
+    name: 'newsSummaryFlow',
     inputSchema: GenerateNewsSummaryInputSchema,
     outputSchema: GenerateNewsSummaryOutputSchema,
   },
@@ -54,3 +51,7 @@ const newsSummaryFlow = ai.defineFlow(
     return output!;
   }
 );
+
+export async function generateNewsSummary(input: GenerateNewsSummaryInput): Promise<GenerateNewsSummaryOutput> {
+  return newsSummaryFlow(input);
+}

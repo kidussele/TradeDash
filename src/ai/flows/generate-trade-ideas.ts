@@ -25,9 +25,6 @@ const GenerateTradeIdeasOutputSchema = z.object({
 
 export type GenerateTradeIdeasOutput = z.infer<typeof GenerateTradeIdeasOutputSchema>;
 
-export async function generateTradeIdeas(input: GenerateTradeIdeasInput): Promise<GenerateTradeIdeasOutput> {
-  return generateTradeideasFlow(input);
-}
 
 const prompt = ai.definePrompt({
   name: 'generateTradeIdeasPrompt',
@@ -48,7 +45,7 @@ User's Data (JSON format):
 `,
 });
 
-const generateTradeideasFlow = ai.defineFlow(
+const generateTradeIdeasFlow = ai.defineFlow(
   {
     name: 'generateTradeIdeasFlow',
     inputSchema: GenerateTradeIdeasInputSchema,
@@ -59,3 +56,7 @@ const generateTradeideasFlow = ai.defineFlow(
     return output!;
   }
 );
+
+export async function generateTradeIdeas(input: GenerateTradeIdeasInput): Promise<GenerateTradeIdeasOutput> {
+  return generateTradeIdeasFlow(input);
+}
