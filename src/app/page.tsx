@@ -110,20 +110,20 @@ export default function HomePage() {
                     <Card className="shadow-2xl shadow-primary/10 md:col-span-2">
                         <CardContent className="p-2 bg-card/50 h-full">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src="https://picsum.photos/seed/chartmain/1200/600" alt="Main trading chart" className="rounded-lg object-cover w-full h-full" data-ai-hint="trading chart dark" />
+                            <img src="https://picsum.photos/seed/tradingview/1200/600" alt="Main trading chart" className="rounded-lg object-cover w-full h-full" data-ai-hint="trading chart" />
                         </CardContent>
                     </Card>
                     <div className="grid grid-rows-2 gap-4">
                          <Card className="shadow-xl shadow-primary/5">
                             <CardContent className="p-2 bg-card/50 h-full">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src="https://picsum.photos/seed/chartside1/600/300" alt="Trading chart detail" className="rounded-lg object-cover w-full h-full" data-ai-hint="candlestick chart" />
+                                <img src="https://picsum.photos/seed/forexchart/600/300" alt="Forex chart detail" className="rounded-lg object-cover w-full h-full" data-ai-hint="forex chart" />
                             </CardContent>
                         </Card>
                          <Card className="shadow-xl shadow-primary/5">
                             <CardContent className="p-2 bg-card/50 h-full">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src="https://picsum.photos/seed/chartside2/600/300" alt="Trading analysis" className="rounded-lg object-cover w-full h-full" data-ai-hint="technical analysis" />
+                                <img src="https://picsum.photos/seed/stockmarket/600/300" alt="Stock market analysis" className="rounded-lg object-cover w-full h-full" data-ai-hint="stock analysis" />
                             </CardContent>
                         </Card>
                     </div>
