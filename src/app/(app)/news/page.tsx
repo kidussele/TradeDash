@@ -115,7 +115,7 @@ export default function NewsPage() {
   const topics = ['forex market', 'commodities', 'stock market'];
   const [calendarTimeframe, setCalendarTimeframe] = useState<'week' | 'today'>('week');
 
-  const calendarUrl = `https://sslecal2.investing.com/?importance=2,3&timeframe=${calendarTimeframe === 'today' ? 'today' : '7'}`;
+  const calendarUrl = `https://sslecal2.investing.com/?importance=2,3&timeframe=${calendarTimeframe === 'today' ? '1' : '7'}`;
 
   return (
     <Tabs defaultValue="calendar">
@@ -131,7 +131,7 @@ export default function NewsPage() {
                   <div>
                       <CardTitle>Economic Calendar</CardTitle>
                       <CardDescription>
-                      Live economic calendar provided by Investing.com, filtered for moderate and high impact events.
+                      Live economic calendar filtered for moderate and high impact events.
                       </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
