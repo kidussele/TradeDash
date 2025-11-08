@@ -129,7 +129,7 @@ export default function NewsPage() {
               </CardHeader>
               <CardContent>
                 <div className="relative overflow-hidden w-full pt-[75%]">
-                  <iframe 
+                  <iframe
                       src={calendarUrl}
                       className="absolute top-0 left-0 bottom-0 right-0 w-full h-full border-0 rounded-lg"
                       title="Economic Calendar"
@@ -138,8 +138,8 @@ export default function NewsPage() {
               </CardContent>
           </Card>
       </TabsContent>
-      <TabsContent value="ai-news">
-        <div className="space-y-8 mt-4">
+      <TabsContent value="ai-news" className="mt-4">
+        <div className="space-y-8">
           <div>
               <h2 className="text-3xl font-bold">AI Market News</h2>
               <p className="text-muted-foreground">AI-generated news summaries from around the financial world.</p>
