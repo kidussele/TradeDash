@@ -174,7 +174,7 @@ export default function SettingsPage() {
               />
               <Button type="submit" disabled={form.formState.isSubmitting || isLoading || !form.formState.isDirty}>
                 {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
-              </button>
+              </Button>
             </form>
           </Form>
         </CardContent>
