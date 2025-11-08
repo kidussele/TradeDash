@@ -9,6 +9,7 @@ import type { GenerateNewsSummaryOutput } from '@/ai/flows/generate-news-summary
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type NewsArticle = GenerateNewsSummaryOutput['articles'][0];
 
@@ -113,18 +114,33 @@ export default function NewsPage() {
   const topics = ['forex market', 'commodities', 'stock market'];
 
   return (
-    <div className="space-y-8">
-       <Card>
-        <CardHeader>
-          <CardTitle>Market News</CardTitle>
-          <CardDescription>
-            AI-generated news summaries from around the financial world.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-      {topics.map(topic => (
-        <NewsSection key={topic} topic={topic} />
-      ))}
-    </div>
+    <Tabs defaultValue="summary" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="summary">AI News Summary</TabsTrigger>
+        <TabsTrigger value="forex-factory">Forex Factory</TabsTrigger>
+      </TabsList>
+      <TabsContent value="summary" className="mt-6">
+        <div className="space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Market News</CardTitle>
+              <CardDescription>
+                AI-generated news summaries from around the financial world.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          {topics.map(topic => (
+            <NewsSection key={topic} topic={topic} />
+          ))}
+        </div>
+      </TabsContent>
+      <TabsContent value="forex-factory" className="h-[calc(100vh-10rem)] mt-6">
+         <iframe 
+            src="https://www.forexfactory.com/calendar"
+            className="w-full h-full border-0 rounded-lg"
+            title="Forex Factory Economic Calendar"
+        />
+      </TabsContent>
+    </Tabs>
   );
 }
