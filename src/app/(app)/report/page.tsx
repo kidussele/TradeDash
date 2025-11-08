@@ -82,6 +82,7 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const summary = generateSummary(filteredEntries);
+    const generationDate = new Date();
 
     doc.setFontSize(22);
     doc.text(reportTitle, 14, 22);
@@ -89,7 +90,7 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
     doc.setFontSize(12);
     const dateRangeStr = dateRange?.from ? `${format(dateRange.from, "LLL dd, y")} to ${dateRange.to ? format(dateRange.to, "LLL dd, y") : 'present'}` : 'All time';
     doc.text(`Date Range: ${dateRangeStr}`, 14, 32);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 40);
+    doc.text(`Generated on: ${generationDate.toLocaleString()}`, 14, 40);
     
     (doc as any).autoTable({
       startY: 50,
@@ -124,7 +125,14 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
 
   const handleExportExcel = () => {
     const summary = generateSummary(filteredEntries);
+    const generationDate = new Date();
+    const dateRangeStr = dateRange?.from ? `${format(dateRange.from, "LLL dd, y")} to ${dateRange.to ? format(dateRange.to, "LLL dd, y") : 'present'}` : 'All time';
+
     const summaryData = [
+        { Metric: 'Report Title', Value: reportTitle },
+        { Metric: 'Date Range', Value: dateRangeStr },
+        { Metric: 'Generated On', Value: generationDate.toLocaleString() },
+        {}, // Spacer row
         { Metric: 'Total Trades', Value: summary.totalTrades },
         { Metric: 'Net P&L', Value: summary.totalPnl },
         { Metric: 'Win Rate (%)', Value: summary.winRate.toFixed(2) },
