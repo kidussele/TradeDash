@@ -40,18 +40,14 @@ export default function TradeIdeasPage() {
 
     // Convert journal entries to CSV
     const headers = 'Date,CurrencyPair,Direction,P&L,Result,Emotion,Notes';
-    const csvData = journalEntries.map(e => 
-      [
-        e.date,
-        e.currencyPair,
-        e.direction,
-        e.pnl ?? 'N/A',
-        e.result,
-        e.emotion ?? 'N/A',
-        `"${e.notes.replace(/"/g, '""')}"`
-      ].join(',')
-    ).join('\\n');
-    const historyCsv = [headers, csvData].join('\\n');
+    const csvRows = journalEntries.map(e => {
+        const date = e.date ? new Date(e.date).toLocaleDateString() : 'N/A';
+        const pnl = e.pnl ?? 'N/A';
+        const emotion = e.emotion ?? 'N/A';
+        const notes = `"${(e.notes || '').replace(/"/g, '""')}"`; // Handle quotes in notes
+        return [date, e.currencyPair, e.direction, pnl, e.result, emotion, notes].join(',');
+    });
+    const historyCsv = [headers, ...csvRows].join('\\n');
 
     const result = await getTradeIdeas({
       question: input,
