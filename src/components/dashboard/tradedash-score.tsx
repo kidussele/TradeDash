@@ -2,7 +2,7 @@
 'use client';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import React, { useState, useEffect } from 'react';
-import type { JournalEntry } from '@/app/journal/page';
+import type { JournalEntry } from '@/app/(app)/journal/page';
 
 type TradeDashScoreProps = {
     entries: JournalEntry[];
@@ -55,7 +55,7 @@ export function TradeDashScore({ entries }: TradeDashScoreProps) {
   }, [score, circumference]);
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>TradeDash Score</CardTitle>
         <CardDescription>Overall trading performance</CardDescription>

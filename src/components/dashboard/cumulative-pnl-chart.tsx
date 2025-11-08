@@ -46,10 +46,10 @@ export function CumulativePnlChart({ entries }: CumulativePnlChartProps) {
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                tickFormatter={(value) => new Date(value.replace(/-/g, '/')).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               />
               <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `$${value}`} />
-              <Tooltip cursor={false} content={<ChartTooltipContent indicator="line" labelFormatter={(value, payload) => payload[0] ? new Date(payload[0].payload.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''} />} />
+              <Tooltip cursor={false} content={<ChartTooltipContent indicator="line" labelFormatter={(value, payload) => payload[0] ? new Date(payload[0].payload.date.replace(/-/g, '/')).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''} />} />
               <Area
                 dataKey="cumulativePnl"
                 type="natural"

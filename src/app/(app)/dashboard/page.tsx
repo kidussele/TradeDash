@@ -125,17 +125,17 @@ export default function DashboardPage() {
            <StatCard {...stat} />
         </div>
       ))}
-      <div className="col-span-4 lg:col-span-2">
+      <div className="col-span-4 lg:col-span-3">
         <CumulativePnlChart entries={journalEntries as JournalEntry[]} />
       </div>
-      <div className="col-span-4 sm:col-span-2 lg:col-span-1">
+      <div className="col-span-4 lg:col-span-1">
         <TradeDashScore entries={journalEntries as JournalEntry[]} />
-      </div>
-      <div className="col-span-4 sm:col-span-2 lg:col-span-1">
-        <DailyPnlChart entries={journalEntries as JournalEntry[]} />
       </div>
       <div className="col-span-4 lg:col-span-2">
         <RecentTrades entries={journalEntries as JournalEntry[]} />
+      </div>
+       <div className="col-span-4 lg:col-span-2">
+        <DailyPnlChart entries={journalEntries as JournalEntry[]} />
       </div>
       <div className="col-span-4 lg:col-span-2">
         <EmotionAnalysisChart entries={journalEntries as JournalEntry[]} />

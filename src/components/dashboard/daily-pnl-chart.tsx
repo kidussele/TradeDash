@@ -36,13 +36,13 @@ export function DailyPnlChart({ entries }: DailyPnlChartProps) {
         }, {} as Record<string, number>);
 
     const chartData = Object.entries(dailyPnlData).map(([date, pnl]) => ({
-        date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+        date: new Date(date.replace(/-/g, '/')).toLocaleDateString('en-US', { weekday: 'short' }),
         pnl,
         fill: pnl >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
     })).slice(-7); // Get last 7 days
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Daily P&L</CardTitle>
         <CardDescription>Your daily profit and loss for the last week.</CardDescription>
@@ -59,9 +59,9 @@ export function DailyPnlChart({ entries }: DailyPnlChartProps) {
                 content={
                     <ChartTooltipContent 
                         indicator="dot"
-                        formatter={(value, name) => (
+                        formatter={(value, name, item) => (
                              <div className="flex flex-col">
-                                <span className="font-medium">{name}</span>
+                                <span className="font-medium">{item.payload.date}</span>
                                 <span className={Number(value) >= 0 ? 'text-positive' : 'text-negative'}>
                                     {Number(value).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
                                 </span>

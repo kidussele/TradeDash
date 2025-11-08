@@ -39,13 +39,13 @@ export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
     const chartData = Object.values(emotionData);
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Emotion Analysis</CardTitle>
         <CardDescription>Breakdown of trades by emotion.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[200px] w-full">
+        <ChartContainer config={chartConfig} className="h-[250px] w-full">
            {chartData.length > 0 ? (
             <PieChart>
                 <Tooltip 
@@ -85,7 +85,7 @@ export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
                   />
             </PieChart>
            ) : (
-            <div className="flex h-[200px] w-full items-center justify-center text-muted-foreground">
+            <div className="flex h-[250px] w-full items-center justify-center text-muted-foreground">
                 No emotion data to display.
             </div>
            )}

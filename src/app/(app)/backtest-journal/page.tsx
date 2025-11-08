@@ -35,7 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { CumulativePnlChart } from '@/components/dashboard/cumulative-pnl-chart';
-import type { StatCardData } from '@/app/(app)/page';
+import type { StatCardData } from '@/app/(app)/dashboard/page';
 import type { TradingSession } from '@/app/(app)/journal/page';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
@@ -130,7 +130,16 @@ export default function BacktestJournalPage() {
       const sharpeRatio = stdDev > 0 ? meanPnl / stdDev : 0;
 
       const bestSession = getBestSession(entries);
+      
+      const rrRatios = entries
+        .map(trade => {
+            const risk = Math.abs(trade.entryPrice - trade.stopLoss);
+            const reward = Math.abs(trade.takeProfit - trade.entryPrice);
+            return risk > 0 ? reward / risk : 0;
+        })
+        .filter(ratio => ratio > 0);
 
+      const avgRR = rrRatios.length > 0 ? rrRatios.reduce((acc, ratio) => acc + ratio, 0) / rrRatios.length : 0;
 
       setStatsData([
         {
@@ -145,20 +154,20 @@ export default function BacktestJournalPage() {
           change: '',
           changeType: winRate > 50 ? 'positive' : 'negative',
         },
-        bestSession,
         {
-          title: 'Sharpe Ratio',
-          value: sharpeRatio.toFixed(2),
-          change: '',
-          changeType: sharpeRatio >= 0 ? 'positive' : 'negative',
+            title: 'Average R:R',
+            value: `${avgRR.toFixed(2)} : 1`,
+            change: '',
+            changeType: avgRR >= 1 ? 'positive' : 'negative',
         },
+        bestSession,
       ]);
     } else if (entries?.length === 0) {
         setStatsData([
             { title: 'Net P&L', value: '$0.00', change: '', changeType: 'positive' },
             { title: 'Win Rate', value: '0.0%', change: '', changeType: 'negative' },
+            { title: 'Average R:R', value: '0.00 : 1', change: '', changeType: 'negative' },
             { title: 'Best Session', value: 'N/A', change: '', changeType: 'positive' },
-            { title: 'Sharpe Ratio', value: '0.00', change: '', changeType: 'positive' },
         ]);
     }
   }, [entries]);
@@ -536,7 +545,7 @@ export default function BacktestJournalPage() {
                     <StatCard {...stat} />
                     </div>
                 ))}
-                <div className="col-span-4 lg:col-span-4">
+                <div className="col-span-4">
                     <CumulativePnlChart entries={chartEntries as any[]} />
                 </div>
             </div>
