@@ -23,10 +23,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { Edit, ExternalLink, Image as ImageIcon, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 export type Goal = {
@@ -94,6 +95,7 @@ export default function GoalsPage() {
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentGoal, setCurrentGoal] = useState<Partial<Goal>>({});
+  const [editId, setEditId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && !isLoading && goals?.length === 0 && goalsRef) {
@@ -108,19 +110,32 @@ export default function GoalsPage() {
   
 
   const handleEdit = (goal: Goal) => {
+    setEditId(goal.id);
     setCurrentGoal(goal);
     setIsEditDialogOpen(true);
   };
 
+  const handleAddNew = () => {
+    setEditId(null);
+    setCurrentGoal({ period: 'Monthly', title: '', description: '', imageUrl: '' });
+    setIsEditDialogOpen(true);
+  };
+
   const handleSave = () => {
-    if (!user || !currentGoal.id) return;
+    if (!user || !goalsRef) return;
     
     const { id, ...goalData } = currentGoal;
-    const docRef = doc(firestore, 'users', user.uid, 'goals', id);
-    setDocumentNonBlocking(docRef, goalData, { merge: true });
+
+    if (editId) {
+        const docRef = doc(firestore, 'users', user.uid, 'goals', editId);
+        setDocumentNonBlocking(docRef, goalData, { merge: true });
+    } else {
+        addDocumentNonBlocking(goalsRef, goalData);
+    }
 
     setIsEditDialogOpen(false);
     setCurrentGoal({});
+    setEditId(null);
   };
 
   if (isLoading) {
@@ -134,15 +149,47 @@ export default function GoalsPage() {
 
   return (
     <div className="space-y-6">
+       <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Goals</h1>
+          <p className="text-muted-foreground">Set and track what you want to achieve.</p>
+        </div>
+        <Button onClick={handleAddNew}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add New Goal
+        </Button>
+      </div>
+
       <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => {
           setIsEditDialogOpen(isOpen);
-          if (!isOpen) setCurrentGoal({});
+          if (!isOpen) {
+            setCurrentGoal({});
+            setEditId(null);
+          }
         }}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Edit {currentGoal.period} Goal</DialogTitle>
+            <DialogTitle>{editId ? 'Edit' : 'Add'} Goal</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+                <Label htmlFor="period">Period</Label>
+                <Select
+                    value={currentGoal.period}
+                    onValueChange={(value: Goal['period']) => setCurrentGoal({ ...currentGoal, period: value })}
+                >
+                    <SelectTrigger id="period">
+                        <SelectValue placeholder="Select a period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Monthly">Monthly</SelectItem>
+                        <SelectItem value="Quarterly">Quarterly</SelectItem>
+                        <SelectItem value="Half Year">Half Year</SelectItem>
+                        <SelectItem value="Yearly">Yearly</SelectItem>
+                        <SelectItem value="Big Goal">Big Goal</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
               <Input
