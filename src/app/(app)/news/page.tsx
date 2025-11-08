@@ -9,9 +9,6 @@ import type { GenerateNewsSummaryOutput } from '@/ai/flows/generate-news-summary
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { Calendar } from 'lucide-react';
 
 type NewsArticle = GenerateNewsSummaryOutput['articles'][0];
 
@@ -121,21 +118,14 @@ export default function NewsPage() {
         <TabsTrigger value="ai-news">AI Market News</TabsTrigger>
       </TabsList>
       <TabsContent value="calendar" className="mt-4">
-        <Card>
-            <CardHeader>
-                <CardTitle>Economic Calendar</CardTitle>
-                <CardDescription>
-                  Click the button below to view the Forex Factory economic calendar.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Button asChild>
-                    <Link href="https://www.forexfactory.com/calendar">
-                       <Calendar className="mr-2 h-4 w-4" />
-                        View Calendar
-                    </Link>
-                </Button>
-            </CardContent>
+        <Card className="h-[calc(100vh-12rem)]">
+          <CardContent className="h-full p-0">
+            <iframe
+              src="https://sslecal2.investing.com/"
+              className="w-full h-full border-0"
+              title="Economic Calendar"
+            ></iframe>
+          </CardContent>
         </Card>
       </TabsContent>
       <TabsContent value="ai-news" className="mt-4">
