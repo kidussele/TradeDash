@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 
 type NewsArticle = GenerateNewsSummaryOutput['articles'][0];
 
@@ -112,6 +113,10 @@ const NewsSection = ({ topic }: { topic: string }) => {
 
 export default function NewsPage() {
   const topics = ['forex market', 'commodities', 'stock market'];
+  const [calendarTimeframe, setCalendarTimeframe] = useState<'week' | 'today'>('week');
+
+  const calendarUrl = `https://sslecal2.investing.com/?importance=2,3&timeframe=${calendarTimeframe === 'today' ? 'today' : '7'}`;
+
 
   return (
     <Tabs defaultValue="economic-calendar" className="w-full">
@@ -136,16 +141,24 @@ export default function NewsPage() {
         </div>
       </TabsContent>
       <TabsContent value="economic-calendar" className="h-[calc(100vh-10rem)] mt-6">
-        <Card className="h-full">
+        <Card className="h-full flex flex-col">
           <CardHeader>
-            <CardTitle>Economic Calendar</CardTitle>
-            <CardDescription>
-              Live economic calendar provided by Investing.com.
-            </CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Economic Calendar</CardTitle>
+                <CardDescription>
+                  Live economic calendar provided by Investing.com.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant={calendarTimeframe === 'today' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('today')}>Today</Button>
+                <Button variant={calendarTimeframe === 'week' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('week')}>This Week</Button>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="h-[calc(100%-80px)]">
+          <CardContent className="flex-grow">
             <iframe 
-                src="https://sslecal2.investing.com/?importance=2,3"
+                src={calendarUrl}
                 className="w-full h-full border-0 rounded-lg"
                 title="Economic Calendar"
             />
