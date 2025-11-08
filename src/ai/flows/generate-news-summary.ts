@@ -2,9 +2,9 @@
 'use server';
 
 /**
- * @fileOverview Generates news summaries for financial markets.
+ * @fileOverview Generates a concise summary for a given financial market topic.
  *
- * - generateNewsSummary - A function that generates news summaries.
+ * - generateNewsSummary - A function that generates a market summary.
  * - GenerateNewsSummaryInput - The input type for the generateNewsSummary function.
  * - GenerateNewsSummaryOutput - The return type for the generateNewsSummary function.
  */
@@ -13,20 +13,12 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateNewsSummaryInputSchema = z.object({
-  topic: z.string().describe('The financial topic to generate news for (e.g., forex market, stock market).'),
+  topic: z.string().describe('The financial topic to generate a summary for (e.g., forex market, stock market).'),
 });
 export type GenerateNewsSummaryInput = z.infer<typeof GenerateNewsSummaryInputSchema>;
 
 const GenerateNewsSummaryOutputSchema = z.object({
-  articles: z.array(
-    z.object({
-      headline: z.string().describe('A compelling headline for the news article.'),
-      summary: z.string().describe('A concise summary of the news article.'),
-      source: z.string().describe('The mock source of the news (e.g., Reuters, Bloomberg).'),
-      publishedAt: z.string().describe('The publication date and time in a friendly format (e.g., "2 hours ago").'),
-      impact: z.enum(['low', 'medium', 'high']).describe('The market impact of the news: low, medium, or high.'),
-    })
-  ).describe('A list of generated news articles.'),
+  summary: z.string().describe('A concise, single-paragraph summary of the current state of the given market topic.'),
 });
 export type GenerateNewsSummaryOutput = z.infer<typeof GenerateNewsSummaryOutputSchema>;
 
@@ -34,9 +26,7 @@ const prompt = ai.definePrompt({
   name: 'generateNewsSummaryPrompt',
   input: {schema: GenerateNewsSummaryInputSchema},
   output: {schema: GenerateNewsSummaryOutputSchema},
-  prompt: `You are a financial news generator. Create a list of 5 recent and relevant news articles about the following topic: {{{topic}}}.
-
-  For each article, provide a realistic headline, a brief summary, a plausible source (like Reuters, Bloomberg, etc.), a relative publication time (e.g., "1 hour ago", "3 hours ago"), and its market impact ('low', 'medium', or 'high'). The news should be current and impactful for a trader.`,
+  prompt: `You are a financial analyst. Write a concise, single-paragraph summary of the current state of the {{{topic}}}. Focus on the most important trends and news relevant to a trader. The summary should be current and impactful.`,
 });
 
 const newsSummaryFlow = ai.defineFlow(
