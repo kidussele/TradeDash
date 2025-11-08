@@ -42,11 +42,11 @@ Analyze the user's trading history and answer their question concisely. Be brief
 User's Question: {{{question}}}
 
 Trading History:
-"{{history}}"
+{{{history}}}
 `,
 });
 
-const generateTradeIdeasFlow = ai.defineFlow(
+const generateTradeideasFlow = ai.defineFlow(
   {
     name: 'generateTradeIdeasFlow',
     inputSchema: GenerateTradeIdeasInputSchema,
