@@ -46,9 +46,7 @@ const menuItems = [
   { href: '/news', label: 'News', icon: Newspaper },
 ];
 
-const bottomMenuItems = [
-    { href: '/trade-ideas', label: 'AI Insights', icon: Lightbulb },
-];
+const bottomMenuItems: { href: string; label: string; icon: React.ElementType }[] = [];
 
 export function AppSidebar() {
   const pathname = usePathname();
