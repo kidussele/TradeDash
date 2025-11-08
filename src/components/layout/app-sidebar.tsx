@@ -46,7 +46,9 @@ const menuItems = [
   { href: '/news', label: 'News', icon: Newspaper },
 ];
 
-const bottomMenuItems: any[] = [];
+const bottomMenuItems = [
+    { href: '/trade-ideas', label: 'AI Insights', icon: Lightbulb },
+];
 
 export function AppSidebar() {
   const pathname = usePathname();
