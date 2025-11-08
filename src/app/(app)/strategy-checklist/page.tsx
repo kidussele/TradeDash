@@ -242,7 +242,7 @@ export default function StrategyChecklistPage() {
             </DialogContent>
         </Dialog>
 
-      {checklists.length === 0 && !isLoading ? (
+      {(!checklists || checklists.length === 0) && !isLoading ? (
         <div className="text-center py-24 border-2 border-dashed rounded-lg">
           <h2 className="text-xl font-semibold text-muted-foreground">No checklists yet</h2>
           <p className="text-muted-foreground mt-2">Click "Add Strategy" to create your first checklist.</p>

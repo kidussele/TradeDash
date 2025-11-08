@@ -150,7 +150,7 @@ export default function SelfDevelopmentPage() {
             </Dialog>
        </div>
        
-       {notes.length === 0 && !isLoading ? (
+       {(!notes || notes.length === 0) && !isLoading ? (
          <div className="text-center py-24 border-2 border-dashed rounded-lg">
             <h2 className="text-xl font-semibold text-muted-foreground">No notes yet</h2>
             <p className="text-muted-foreground mt-2">Click "Add Note" to start your self-development journal.</p>

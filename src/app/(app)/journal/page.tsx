@@ -438,7 +438,7 @@ export default function JournalPage() {
           ))}
         </TableBody>
       </Table>
-       {entries.length === 0 && !isLoading && (
+       {(!entries || entries.length === 0) && !isLoading && (
         <div className="text-center py-12 text-muted-foreground">
             No journal entries yet.
         </div>

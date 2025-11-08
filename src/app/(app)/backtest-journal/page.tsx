@@ -153,7 +153,7 @@ export default function BacktestJournalPage() {
           changeType: sharpeRatio >= 0 ? 'positive' : 'negative',
         },
       ]);
-    } else if (entries.length === 0) {
+    } else if (entries?.length === 0) {
         setStatsData([
             { title: 'Net P&L', value: '$0.00', change: '', changeType: 'positive' },
             { title: 'Win Rate', value: '0.0%', change: '', changeType: 'negative' },
@@ -512,7 +512,7 @@ export default function BacktestJournalPage() {
                 ))}
                 </TableBody>
             </Table>
-            {entries.length === 0 && !isLoading && (
+            {(!entries || entries.length === 0) && !isLoading && (
                 <div className="text-center py-12 text-muted-foreground">
                     No backtest journal entries yet.
                 </div>

@@ -96,7 +96,7 @@ export default function GoalsPage() {
   const [currentGoal, setCurrentGoal] = useState<Partial<Goal>>({});
 
   useEffect(() => {
-    if (user && !isLoading && goals.length === 0 && goalsRef) {
+    if (user && !isLoading && goals?.length === 0 && goalsRef) {
       const batch = writeBatch(firestore);
       initialGoals.forEach(goal => {
         const docRef = doc(goalsRef);
@@ -127,7 +127,7 @@ export default function GoalsPage() {
     return <div>Loading...</div>; // Or a loading spinner
   }
 
-  const sortedGoals = [...goals].sort((a, b) => {
+  const sortedGoals = [...(goals || [])].sort((a, b) => {
     const order = ['Monthly', 'Quarterly', 'Half Year', 'Yearly', 'Big Goal'];
     return order.indexOf(a.period) - order.indexOf(b.period);
   });
