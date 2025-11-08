@@ -69,7 +69,7 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     await signOut();
-    router.push('/auth');
+    router.push('/');
   };
 
   const displayName = userProfile?.displayName || user?.displayName || user?.email || 'User';

@@ -107,9 +107,9 @@ export default function HomePage() {
             </div>
              <div className="mt-16 mx-auto max-w-5xl">
                 <Card className="shadow-2xl shadow-primary/10">
-                    <CardContent className="p-2">
+                    <CardContent className="p-2 bg-card/50">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="https://picsum.photos/seed/dashboard/1200/600" alt="Dashboard preview" className="rounded-lg" data-ai-hint="app dashboard" />
+                        <img src="https://picsum.photos/seed/luxurydashboard/1200/600" alt="Dashboard preview" className="rounded-lg" data-ai-hint="trading chart dark" />
                     </CardContent>
                 </Card>
             </div>
