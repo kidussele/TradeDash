@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -128,10 +127,10 @@ export default function NewsPage() {
                   </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="relative overflow-hidden w-full pt-[75%]">
+                <div className="w-full h-[800px]">
                   <iframe
                       src={calendarUrl}
-                      className="absolute top-0 left-0 bottom-0 right-0 w-full h-full border-0 rounded-lg"
+                      className="w-full h-full border-0 rounded-lg"
                       title="Economic Calendar"
                   />
                 </div>
