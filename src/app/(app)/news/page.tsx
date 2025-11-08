@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ExternalLink } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 type NewsArticle = GenerateNewsSummaryOutput['articles'][0];
 
@@ -125,14 +125,14 @@ export default function NewsPage() {
             <CardHeader>
                 <CardTitle>Economic Calendar</CardTitle>
                 <CardDescription>
-                  The calendar cannot be embedded directly. Please open it in a new tab.
+                  Click the button below to view the Forex Factory economic calendar.
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <Button asChild>
-                    <Link href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener noreferrer">
-                       <ExternalLink className="mr-2 h-4 w-4" />
-                        Open Forex Factory Calendar
+                    <Link href="https://www.forexfactory.com/calendar">
+                       <Calendar className="mr-2 h-4 w-4" />
+                        View Calendar
                     </Link>
                 </Button>
             </CardContent>
