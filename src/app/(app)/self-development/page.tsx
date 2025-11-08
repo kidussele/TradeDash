@@ -22,15 +22,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, ExternalLink } from 'lucide-react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import Link from 'next/link';
 
 
 export type Note = {
   id: string;
   title: string;
   content: string;
+  imageUrl?: string;
+  linkUrl?: string;
   createdAt: any; // Firestore Timestamp
 };
 
@@ -56,6 +59,8 @@ export default function SelfDevelopmentPage() {
     const finalNote: Omit<Note, 'id' | 'createdAt'> & { createdAt?: any } = {
       title: noteData.title || 'Untitled Note',
       content: noteData.content || '',
+      imageUrl: noteData.imageUrl,
+      linkUrl: noteData.linkUrl,
     };
     
     if (editId) {
@@ -139,6 +144,24 @@ export default function SelfDevelopmentPage() {
                                 className="min-h-[200px]"
                             />
                         </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="image-url">Image URL</Label>
+                            <Input
+                                id="image-url"
+                                value={currentNote.imageUrl || ''}
+                                onChange={(e) => setCurrentNote({ ...currentNote, imageUrl: e.target.value })}
+                                placeholder="https://..."
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="link-url">Link URL</Label>
+                            <Input
+                                id="link-url"
+                                value={currentNote.linkUrl || ''}
+                                onChange={(e) => setCurrentNote({ ...currentNote, linkUrl: e.target.value })}
+                                placeholder="https://..."
+                            />
+                        </div>
                     </div>
                     <DialogFooter>
                          <DialogClose asChild>
@@ -177,8 +200,24 @@ export default function SelfDevelopmentPage() {
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                   {note.content}
                 </p>
+                 {note.imageUrl && (
+                     <div className="mt-4">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={note.imageUrl} alt="Note attachment" className="rounded-md object-cover aspect-video" />
+                     </div>
+                )}
               </CardContent>
-              <CardFooter className="flex justify-end items-center">
+              <CardFooter className="flex justify-between items-center">
+                 <div>
+                    {note.linkUrl && (
+                        <Button variant="link" asChild className="p-0 h-auto">
+                            <Link href={note.linkUrl} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                View Resource
+                            </Link>
+                        </Button>
+                    )}
+                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(note)}>
                     <Edit className="h-4 w-4" />
