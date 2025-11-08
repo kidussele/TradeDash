@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -27,12 +28,6 @@ const GenerateTradingInsightsOutputSchema = z.object({
 });
 export type GenerateTradingInsightsOutput = z.infer<typeof GenerateTradingInsightsOutputSchema>;
 
-export async function generateTradingInsights(
-  input: GenerateTradingInsightsInput
-): Promise<GenerateTradingInsightsOutput> {
-  return generateTradingInsightsFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'generateTradingInsightsPrompt',
   input: {schema: GenerateTradingInsightsInputSchema},
@@ -56,3 +51,9 @@ const generateTradingInsightsFlow = ai.defineFlow(
     return output!;
   }
 );
+
+export async function generateTradingInsights(
+  input: GenerateTradingInsightsInput
+): Promise<GenerateTradingInsightsOutput> {
+  return generateTradingInsightsFlow(input);
+}

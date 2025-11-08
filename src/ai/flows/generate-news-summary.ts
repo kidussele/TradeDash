@@ -30,7 +30,6 @@ const GenerateNewsSummaryOutputSchema = z.object({
 });
 export type GenerateNewsSummaryOutput = z.infer<typeof GenerateNewsSummaryOutputSchema>;
 
-
 const prompt = ai.definePrompt({
   name: 'generateNewsSummaryPrompt',
   input: {schema: GenerateNewsSummaryInputSchema},
