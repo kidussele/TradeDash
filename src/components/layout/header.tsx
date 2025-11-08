@@ -2,6 +2,7 @@
 
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
+import { Clock } from './clock';
 
 const pathToTitle: { [key: string]: string } = {
   '/dashboard': 'Dashboard',
@@ -34,6 +35,7 @@ export function Header() {
       <SidebarTrigger className="h-5 w-5 md:hidden" />
       <h1 className="text-xl font-semibold">{title}</h1>
       <div className="ml-auto flex items-center gap-2">
+        <Clock />
       </div>
     </header>
   );
