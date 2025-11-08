@@ -7,9 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { getNews } from './actions';
 import type { GenerateNewsSummaryOutput } from '@/ai/flows/generate-news-summary';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 
 type NewsArticle = GenerateNewsSummaryOutput['articles'][0];
@@ -117,71 +115,46 @@ export default function NewsPage() {
 
   const calendarUrl = `https://sslecal2.investing.com/?importance=2,3&timeframe=${calendarTimeframe === 'today' ? 'today' : '7'}`;
 
-
   return (
-    <Tabs defaultValue="economic-calendar" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="summary">AI News Summary</TabsTrigger>
-        <TabsTrigger value="economic-calendar">Economic Calendar</TabsTrigger>
-        <TabsTrigger value="forex-factory">Forex Factory</TabsTrigger>
-      </TabsList>
-      <TabsContent value="summary" className="mt-6">
-        <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Market News</CardTitle>
-              <CardDescription>
-                AI-generated news summaries from around the financial world.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          {topics.map(topic => (
-            <NewsSection key={topic} topic={topic} />
-          ))}
-        </div>
-      </TabsContent>
-      <TabsContent value="economic-calendar" className="h-[calc(100vh-10rem)] mt-6">
+    <div className="space-y-8">
+      <div className="h-[calc(100vh-14rem)]">
         <Card className="h-full flex flex-col">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Economic Calendar</CardTitle>
-                <CardDescription>
-                  Live economic calendar provided by Investing.com.
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant={calendarTimeframe === 'today' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('today')}>Today</Button>
-                <Button variant={calendarTimeframe === 'week' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('week')}>This Week</Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex-grow">
-            <iframe 
-                src={calendarUrl}
-                className="w-full h-full border-0 rounded-lg"
-                title="Economic Calendar"
-            />
-          </CardContent>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                <div>
+                    <CardTitle>Economic Calendar</CardTitle>
+                    <CardDescription>
+                    Live economic calendar provided by Investing.com.
+                    </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant={calendarTimeframe === 'today' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('today')}>Today</Button>
+                    <Button variant={calendarTimeframe === 'week' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('week')}>This Week</Button>
+                </div>
+                </div>
+            </CardHeader>
+            <CardContent className="flex-grow">
+                <iframe 
+                    src={calendarUrl}
+                    className="w-full h-full border-0 rounded-lg"
+                    title="Economic Calendar"
+                />
+            </CardContent>
         </Card>
-      </TabsContent>
-       <TabsContent value="forex-factory" className="h-[calc(100vh-10rem)] mt-6">
-        <Card className="h-full">
-          <CardHeader>
-            <CardTitle>Forex Factory</CardTitle>
-            <CardDescription>
-              Live economic news from Forex Factory.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="h-[calc(100%-80px)]">
-            <iframe 
-                src="https://www.forexfactory.com/calendar"
-                className="w-full h-full border-0 rounded-lg"
-                title="Forex Factory Calendar"
-            />
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>AI Market News</CardTitle>
+          <CardDescription>
+            AI-generated news summaries from around the financial world.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+      
+      {topics.map(topic => (
+        <NewsSection key={topic} topic={topic} />
+      ))}
+    </div>
   );
 }
