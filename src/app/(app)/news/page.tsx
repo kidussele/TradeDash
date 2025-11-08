@@ -3,8 +3,6 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { getNews } from './actions';
-import type { GenerateNewsSummaryOutput } from '@/ai/flows/generate-news-summary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -17,11 +15,25 @@ function NewsSection({ topic }: { topic: string }) {
     const fetchNews = async () => {
       setError(null);
       setSummary(null);
-      const result = await getNews({ topic });
-      if ('error' in result) {
-        setError(result.error);
-      } else {
+      try {
+        const response = await fetch('/api/news', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ topic }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch news summary.');
+        }
+
+        const result = await response.json();
         setSummary(result.summary);
+      } catch (e: any) {
+        console.error(`Error fetching news for ${topic}:`, e);
+        setError(e.message || 'An unknown error occurred.');
       }
     };
     fetchNews();
