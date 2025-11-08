@@ -40,12 +40,13 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
   const fileName = journalType === 'live' ? 'live_journal_report' : 'backtest_journal_report';
 
   useEffect(() => {
+    const safeEntries = entries || [];
     if (!dateRange?.from && !dateRange?.to) {
-        setFilteredEntries(entries);
+        setFilteredEntries(safeEntries);
         return;
     }
 
-    const filtered = entries.filter(entry => {
+    const filtered = safeEntries.filter(entry => {
         const entryDate = startOfDay(new Date(entry.date));
         const from = dateRange.from ? startOfDay(dateRange.from) : null;
         const to = dateRange.to ? startOfDay(dateRange.to) : null;
