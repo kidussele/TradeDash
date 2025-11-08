@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import {SidebarProvider} from '@/components/ui/sidebar';
 import {AppSidebar} from '@/components/layout/app-sidebar';
@@ -18,12 +18,13 @@ export default function AppLayout({
 }>) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isUserLoading && !user && pathname !== '/auth') {
       router.push('/auth');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, pathname]);
 
   if (isUserLoading) {
     return (

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', safetySettings });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro', safetySettings });
 
     const prompt = `You are an expert trading analyst. Your role is to answer questions about a user's trading-related data.
 The user's data is provided below as a JSON string. It contains live journal entries, backtest entries, goals, market analysis notes, self-development notes, and strategy checklists.
