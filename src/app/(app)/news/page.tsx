@@ -118,10 +118,10 @@ export default function NewsPage() {
         <TabsTrigger value="ai-news">AI Market News</TabsTrigger>
       </TabsList>
       <TabsContent value="calendar" className="mt-4">
-        <Card className="h-[calc(100vh-12rem)]">
-          <CardContent className="h-full p-0">
+        <Card>
+           <CardContent className="p-0 h-[800px]">
             <iframe
-              src="https://sslecal2.investing.com/"
+              src="https://sslecal2.investing.com/?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&importance=2,3"
               className="w-full h-full border-0"
               title="Economic Calendar"
             ></iframe>
