@@ -26,7 +26,7 @@ const GenerateTradeIdeasOutputSchema = z.object({
 export type GenerateTradeIdeasOutput = z.infer<typeof GenerateTradeIdeasOutputSchema>;
 
 export async function generateTradeIdeas(input: GenerateTradeIdeasInput): Promise<GenerateTradeIdeasOutput> {
-  return generateTradeIdeasFlow(input);
+  return generateTradeideasFlow(input);
 }
 
 const prompt = ai.definePrompt({
@@ -38,6 +38,8 @@ The user's trade history is provided below in CSV format.
 Today's date is ${new Date().toDateString()}.
 
 Analyze the user's trading history and answer their question concisely. Be brief and to the point.
+
+If you cannot answer the question from the provided history, just say "I could not find any relevant trades in your history."
 
 User's Question: {{{question}}}
 
