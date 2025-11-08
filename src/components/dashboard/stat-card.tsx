@@ -1,7 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ArrowUp, ArrowDown } from 'lucide-react';
-import type { StatCardData } from '@/app/(app)/page';
+import type { StatCardData } from '@/app/(app)/dashboard/page';
 import { cn } from '@/lib/utils';
 
 export function StatCard({ title, value, change, changeType }: StatCardData) {

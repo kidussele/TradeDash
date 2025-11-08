@@ -11,6 +11,7 @@ import type { JournalEntry } from '../journal/page';
 import { EmotionAnalysisChart } from '@/components/dashboard/emotion-analysis-chart';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
+import { WinRateRRCard } from '@/components/dashboard/win-rate-rr-card';
 
 export type StatCardData = {
   title: string;
@@ -18,6 +19,14 @@ export type StatCardData = {
   change: string;
   changeType: 'positive' | 'negative';
 };
+
+type DashboardStats = {
+    pnl: StatCardData;
+    bestDay: StatCardData;
+    worstDay: StatCardData;
+    winRate: number;
+    avgRR: number;
+}
 
 function getDayWithMostPnl(entries: JournalEntry[], type: 'win' | 'loss'): StatCardData {
     const dailyPnl: Record<string, number> = {};
@@ -73,7 +82,7 @@ export default function DashboardPage() {
   
   const { data: journalEntries = [], isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
 
-  const [statsData, setStatsData] = useState<StatCardData[]>([]);
+  const [statsData, setStatsData] = useState<DashboardStats | null>(null);
 
   useEffect(() => {
     if (journalEntries && journalEntries.length > 0) {
@@ -85,46 +94,57 @@ export default function DashboardPage() {
       const tradesWithOutcome = closedTrades.filter(trade => trade.result === 'Win' || trade.result === 'Loss' || trade.result === 'Breakeven').length;
       const winRate = tradesWithOutcome > 0 ? (wins / tradesWithOutcome) * 100 : 0;
       
-      const bestDay = getDayWithMostPnl(journalEntries as JournalEntry[], 'win');
-      const worstDay = getDayWithMostPnl(journalEntries as JournalEntry[], 'loss');
+      const rrRatios = journalEntries
+        .map(trade => {
+            const risk = Math.abs(trade.entryPrice - trade.stopLoss);
+            const reward = Math.abs(trade.takeProfit - trade.entryPrice);
+            return risk > 0 ? reward / risk : 0;
+        })
+        .filter(ratio => ratio > 0);
 
-      setStatsData([
-        {
+      const avgRR = rrRatios.length > 0 ? rrRatios.reduce((acc, ratio) => acc + ratio, 0) / rrRatios.length : 0;
+
+      setStatsData({
+        pnl: {
           title: 'Net P&L',
           value: totalPnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
           change: '',
           changeType: totalPnl >= 0 ? 'positive' : 'negative',
         },
-        {
-          title: 'Win Rate',
-          value: `${winRate.toFixed(1)}%`,
-          change: '',
-          changeType: winRate > 50 ? 'positive' : 'negative',
-        },
-        bestDay,
-        worstDay,
-      ]);
+        winRate: winRate,
+        avgRR: avgRR,
+        bestDay: getDayWithMostPnl(journalEntries as JournalEntry[], 'win'),
+        worstDay: getDayWithMostPnl(journalEntries as JournalEntry[], 'loss'),
+      });
     } else if (journalEntries?.length === 0) {
-        setStatsData([
-            { title: 'Net P&L', value: '$0.00', change: '', changeType: 'positive' },
-            { title: 'Win Rate', value: '0.0%', change: '', changeType: 'negative' },
-            { title: 'Best Day', value: 'N/A', change: '', changeType: 'positive' },
-            { title: 'Worst Day', value: 'N/A', change: '', changeType: 'positive' },
-        ]);
+        setStatsData({
+            pnl: { title: 'Net P&L', value: '$0.00', change: '', changeType: 'positive' },
+            winRate: 0,
+            avgRR: 0,
+            bestDay: { title: 'Best Day', value: 'N/A', change: '', changeType: 'positive' },
+            worstDay: { title: 'Worst Day', value: 'N/A', change: '', changeType: 'positive' },
+        });
     }
   }, [journalEntries]);
 
-  if (isLoading) {
+  if (isLoading || !statsData) {
       return null;
   }
 
   return (
     <div className="grid grid-cols-4 gap-6">
-      {statsData.map((stat) => (
-        <div key={stat.title} className="col-span-4 sm:col-span-2 lg:col-span-1">
-           <StatCard {...stat} />
-        </div>
-      ))}
+      <div className="col-span-4 sm:col-span-2 lg:col-span-1">
+        <StatCard {...statsData.pnl} />
+      </div>
+       <div className="col-span-4 sm:col-span-2 lg:col-span-1">
+        <WinRateRRCard winRate={statsData.winRate} avgRR={statsData.avgRR} />
+      </div>
+      <div className="col-span-4 sm:col-span-2 lg:col-span-1">
+        <StatCard {...statsData.bestDay} />
+      </div>
+      <div className="col-span-4 sm:col-span-2 lg:col-span-1">
+        <StatCard {...statsData.worstDay} />
+      </div>
       <div className="col-span-4 lg:col-span-3">
         <CumulativePnlChart entries={journalEntries as JournalEntry[]} />
       </div>
