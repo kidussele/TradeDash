@@ -42,11 +42,7 @@ ${allData}
 
     const result = await model.generateContent(prompt);
     const response = result.response;
-    
-    if (!response || !response.candidates || response.candidates.length === 0) {
-      throw new Error('AI service returned an empty response.');
-    }
-    const text = response.candidates[0].content.parts.map(part => part.text).join('');
+    const text = response.text();
 
     return NextResponse.json({ answer: text });
 
