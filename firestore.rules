@@ -13,10 +13,10 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // User profiles can be read by anyone but only written by the owner.
+    // User profiles can be read by anyone but only created and updated by the owner.
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isOwner(userId);
+      allow create, update: if isOwner(userId);
     }
     
     // All user-specific subcollections are only accessible by the owner.

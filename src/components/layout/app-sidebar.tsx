@@ -32,7 +32,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { useTheme } from 'next-themes';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 const menuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -52,16 +53,27 @@ const bottomMenuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { open, setOpenMobile, state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const { user, signOut } = useUser();
+  const firestore = useFirestore();
   const userAvatar = placeholderImages.find(p => p.id === 'user-avatar');
   const { setTheme } = useTheme();
   const router = useRouter();
+
+  const userProfileRef = useMemoFirebase(() => 
+    user ? doc(firestore, 'users', user.uid) : null
+  , [user, firestore]);
+  
+  const { data: userProfile } = useDoc(userProfileRef);
 
   const handleLogout = async () => {
     await signOut();
     router.push('/auth');
   };
+
+  const displayName = userProfile?.displayName || user?.displayName || user?.email || 'User';
+  const displayAvatar = userProfile?.photoURL || user?.photoURL || userAvatar?.imageUrl;
+  const displayFallback = displayName[0]?.toUpperCase() ?? 'U';
 
   return (
     <Sidebar>
@@ -125,11 +137,11 @@ export function AppSidebar() {
               )}
             >
               <Avatar className="size-7">
-                {userAvatar && <AvatarImage src={user?.photoURL ?? userAvatar.imageUrl} alt="User Avatar" />}
-                <AvatarFallback>{user?.email?.[0]?.toUpperCase() ?? 'U'}</AvatarFallback>
+                <AvatarImage src={displayAvatar} alt="User Avatar" />
+                <AvatarFallback>{displayFallback}</AvatarFallback>
               </Avatar>
               <span className={cn('ml-2 truncate', state === 'collapsed' && 'hidden')}>
-                {user?.displayName || user?.email || 'User'}
+                {displayName}
               </span>
             </Button>
           </DropdownMenuTrigger>

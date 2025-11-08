@@ -8,6 +8,8 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import type { FirebaseError } from 'firebase/app';
+import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { setDocumentNonBlocking } from './non-blocking-updates';
 
 type ErrorCallback = (error: FirebaseError) => void;
 
@@ -23,9 +25,20 @@ export function initiateAnonymousSignIn(authInstance: Auth, onError?: ErrorCallb
 export function initiateEmailSignUp(authInstance: Auth, email: string, password: string, displayName: string, onError?: ErrorCallback): void {
   createUserWithEmailAndPassword(authInstance, email, password)
   .then((userCredential) => {
+    const user = userCredential.user;
     // After creating the user, update their profile with the display name
-    return updateProfile(userCredential.user, {
+    return updateProfile(user, {
       displayName: displayName,
+    }).then(() => {
+        // Also create a user profile document in Firestore
+        const firestore = getFirestore(user.auth.app);
+        const userProfileRef = doc(firestore, 'users', user.uid);
+        setDocumentNonBlocking(userProfileRef, {
+            displayName: displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+            createdAt: serverTimestamp(),
+        }, { merge: true });
     });
   })
   .catch((error: FirebaseError) => {
