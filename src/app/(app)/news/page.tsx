@@ -119,8 +119,7 @@ export default function NewsPage() {
         <TabsTrigger value="calendar">Economic Calendar</TabsTrigger>
         <TabsTrigger value="ai-news">AI Market News</TabsTrigger>
       </TabsList>
-      <TabsContent value="calendar">
-        <div className="h-[calc(100vh-12rem)] mt-4">
+      <TabsContent value="calendar" className="h-[calc(100vh-12rem)] mt-4">
           <Card className="h-full flex flex-col">
               <CardHeader>
                   <CardTitle>Economic Calendar</CardTitle>
@@ -136,7 +135,6 @@ export default function NewsPage() {
                   />
               </CardContent>
           </Card>
-        </div>
       </TabsContent>
       <TabsContent value="ai-news">
         <div className="space-y-8 mt-4">
