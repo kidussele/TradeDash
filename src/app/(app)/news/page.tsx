@@ -9,6 +9,8 @@ import type { GenerateNewsSummaryOutput } from '@/ai/flows/generate-news-summary
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 type NewsArticle = GenerateNewsSummaryOutput['articles'][0];
 
@@ -116,42 +118,49 @@ export default function NewsPage() {
   const calendarUrl = `https://sslecal2.investing.com/?importance=2,3&timeframe=${calendarTimeframe === 'today' ? 'today' : '7'}`;
 
   return (
-    <div className="space-y-8">
-      <div className="h-[calc(100vh-14rem)]">
-        <Card className="h-full flex flex-col">
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                <div>
-                    <CardTitle>Economic Calendar</CardTitle>
-                    <CardDescription>
-                    Live economic calendar provided by Investing.com.
-                    </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant={calendarTimeframe === 'today' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('today')}>Today</Button>
-                    <Button variant={calendarTimeframe === 'week' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('week')}>This Week</Button>
-                </div>
-                </div>
-            </CardHeader>
-            <CardContent className="flex-grow">
-                <iframe 
-                    src={calendarUrl}
-                    className="w-full h-full border-0 rounded-lg"
-                    title="Economic Calendar"
-                />
-            </CardContent>
-        </Card>
-      </div>
-      
-      <div className="space-y-8">
-        <div>
-            <h2 className="text-3xl font-bold">AI Market News</h2>
-            <p className="text-muted-foreground">AI-generated news summaries from around the financial world.</p>
+    <Tabs defaultValue="calendar">
+      <TabsList>
+        <TabsTrigger value="calendar">Economic Calendar</TabsTrigger>
+        <TabsTrigger value="ai-news">AI Market News</TabsTrigger>
+      </TabsList>
+      <TabsContent value="calendar">
+        <div className="h-[calc(100vh-12rem)] mt-4">
+          <Card className="h-full flex flex-col">
+              <CardHeader>
+                  <div className="flex justify-between items-center">
+                  <div>
+                      <CardTitle>Economic Calendar</CardTitle>
+                      <CardDescription>
+                      Live economic calendar provided by Investing.com, filtered for moderate and high impact events.
+                      </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                      <Button variant={calendarTimeframe === 'today' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('today')}>Today</Button>
+                      <Button variant={calendarTimeframe === 'week' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('week')}>This Week</Button>
+                  </div>
+                  </div>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                  <iframe 
+                      src={calendarUrl}
+                      className="w-full h-full border-0 rounded-lg"
+                      title="Economic Calendar"
+                  />
+              </CardContent>
+          </Card>
         </div>
-        {topics.map(topic => (
-            <NewsSection key={topic} topic={topic} />
-        ))}
-      </div>
-    </div>
+      </TabsContent>
+      <TabsContent value="ai-news">
+        <div className="space-y-8 mt-4">
+          <div>
+              <h2 className="text-3xl font-bold">AI Market News</h2>
+              <p className="text-muted-foreground">AI-generated news summaries from around the financial world.</p>
+          </div>
+          {topics.map(topic => (
+              <NewsSection key={topic} topic={topic} />
+          ))}
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 }
