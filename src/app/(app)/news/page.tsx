@@ -114,10 +114,11 @@ export default function NewsPage() {
   const topics = ['forex market', 'commodities', 'stock market'];
 
   return (
-    <Tabs defaultValue="summary" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
+    <Tabs defaultValue="economic-calendar" className="w-full">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="summary">AI News Summary</TabsTrigger>
         <TabsTrigger value="economic-calendar">Economic Calendar</TabsTrigger>
+        <TabsTrigger value="forex-factory">Forex Factory</TabsTrigger>
       </TabsList>
       <TabsContent value="summary" className="mt-6">
         <div className="space-y-8">
@@ -144,9 +145,26 @@ export default function NewsPage() {
           </CardHeader>
           <CardContent className="h-[calc(100%-80px)]">
             <iframe 
-                src="https://sslecal2.investing.com/"
+                src="https://sslecal2.investing.com/?importance=2,3"
                 className="w-full h-full border-0 rounded-lg"
                 title="Economic Calendar"
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+       <TabsContent value="forex-factory" className="h-[calc(100vh-10rem)] mt-6">
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle>Forex Factory</CardTitle>
+            <CardDescription>
+              Live economic news from Forex Factory.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-[calc(100%-80px)]">
+            <iframe 
+                src="https://www.forexfactory.com/calendar"
+                className="w-full h-full border-0 rounded-lg"
+                title="Forex Factory Calendar"
             />
           </CardContent>
         </Card>
