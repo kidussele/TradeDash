@@ -9,6 +9,9 @@ import type { GenerateNewsSummaryOutput } from '@/ai/flows/generate-news-summary
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
 
 type NewsArticle = GenerateNewsSummaryOutput['articles'][0];
 
@@ -110,7 +113,6 @@ function NewsSection({ topic }: { topic: string }) {
 
 
 export default function NewsPage() {
-  const calendarUrl = "https://www.tradingview.com/markets/economic-calendar/widget/";
 
   return (
     <Tabs defaultValue="calendar">
@@ -119,22 +121,22 @@ export default function NewsPage() {
         <TabsTrigger value="ai-news">AI Market News</TabsTrigger>
       </TabsList>
       <TabsContent value="calendar" className="mt-4">
-          <Card className="h-[calc(100vh-12rem)] flex flex-col">
-              <CardHeader>
-                  <CardTitle>Economic Calendar</CardTitle>
-                  <CardDescription>
-                    Economic calendar widget by TradingView.
-                  </CardDescription>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                  <iframe
-                      src={calendarUrl}
-                      className="h-full w-full"
-                      style={{ border: 'none' }}
-                      title="Economic Calendar"
-                  />
-              </CardContent>
-          </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Economic Calendar</CardTitle>
+                <CardDescription>
+                  The calendar cannot be embedded directly. Please open it in a new tab.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button asChild>
+                    <Link href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener noreferrer">
+                       <ExternalLink className="mr-2 h-4 w-4" />
+                        Open Forex Factory Calendar
+                    </Link>
+                </Button>
+            </CardContent>
+        </Card>
       </TabsContent>
       <TabsContent value="ai-news" className="mt-4">
         <div className="space-y-8">
