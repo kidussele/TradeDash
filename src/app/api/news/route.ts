@@ -20,12 +20,10 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      console.error('GEMINI_API_KEY is not set in the environment.');
       return NextResponse.json({ error: 'Server configuration error: Missing API Key.' }, { status: 500 });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use gemini-pro-vision as it's more broadly available and handles text-only just fine.
     const model = genAI.getGenerativeModel({ model: 'gemini-pro-vision', safetySettings });
 
     const prompt = `As a financial news summarizer, provide a concise, single-paragraph, news-style summary of recent events and trends for the ${topic}. Focus on factual information relevant to a trader, not financial advice.`;

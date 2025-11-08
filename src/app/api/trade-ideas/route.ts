@@ -19,12 +19,10 @@ export async function POST(req: NextRequest) {
     
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error('GEMINI_API_KEY is not set in the environment.');
       return NextResponse.json({ error: 'Server configuration error: Missing API Key.' }, { status: 500 });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Switch to gemini-pro-vision which is more broadly available.
     const model = genAI.getGenerativeModel({ model: 'gemini-pro-vision', safetySettings });
 
     const prompt = `You are an expert trading analyst. Your role is to answer questions about a user's trading-related data.
