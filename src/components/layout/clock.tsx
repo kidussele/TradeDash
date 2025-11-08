@@ -11,13 +11,13 @@ type Session = 'Sydney' | 'Tokyo' | 'London' | 'New York';
 
 const sessions: { name: Session; startUTC: number; endUTC: number; label: string }[] = [
     { name: 'Sydney', startUTC: 22, endUTC: 7, label: 'Sydney' },
-    { name: 'Tokyo', startUTC: 0, endUTC: 9, label: 'Asian' },
+    { name: 'Tokyo', startUTC: 0, endUTC: 9, label: 'Tokyo' },
     { name: 'London', startUTC: 8, endUTC: 17, label: 'London' },
     { name: 'New York', startUTC: 13, endUTC: 22, label: 'New York' },
 ];
 
 function getCurrentSessions(utcHour: number): { name: Session, label: string }[] {
-    const activeSessions = sessions.filter(session => {
+    return sessions.filter(session => {
         // Handle overnight sessions like Sydney
         if (session.startUTC > session.endUTC) { 
             return utcHour >= session.startUTC || utcHour < session.endUTC;
@@ -25,16 +25,6 @@ function getCurrentSessions(utcHour: number): { name: Session, label: string }[]
         // Handle normal same-day sessions
         return utcHour >= session.startUTC && utcHour < session.endUTC;
     });
-
-    const hasTokyo = activeSessions.some(s => s.name === 'Tokyo');
-    const hasSydney = activeSessions.some(s => s.name === 'Sydney');
-
-    // If both Tokyo and Sydney are active, only show the "Asian" label from Tokyo.
-    if (hasTokyo && hasSydney) {
-        return activeSessions.filter(s => s.name !== 'Sydney');
-    }
-    
-    return activeSessions;
 }
 
 
