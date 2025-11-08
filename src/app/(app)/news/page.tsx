@@ -10,8 +10,20 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-
 type NewsArticle = GenerateNewsSummaryOutput['articles'][0];
+
+const getImpactBadgeVariant = (impact: 'low' | 'medium' | 'high') => {
+  switch (impact) {
+    case 'high':
+      return 'impact-high';
+    case 'medium':
+      return 'impact-medium';
+    case 'low':
+      return 'impact-low';
+    default:
+      return 'secondary';
+  }
+};
 
 const NewsSection = ({ topic }: { topic: string }) => {
   const [news, setNews] = useState<NewsArticle[] | null>(null);
@@ -28,20 +40,6 @@ const NewsSection = ({ topic }: { topic: string }) => {
     };
     fetchNews();
   }, [topic]);
-
-  const getImpactBadgeVariant = (impact: 'low' | 'medium' | 'high') => {
-    switch (impact) {
-      case 'high':
-        return 'impact-high';
-      case 'medium':
-        return 'impact-medium';
-      case 'low':
-        return 'impact-low';
-      default:
-        return 'secondary';
-    }
-  };
-
 
   if (error) {
     return (
@@ -109,6 +107,7 @@ const NewsSection = ({ topic }: { topic: string }) => {
     </TooltipProvider>
   );
 };
+
 
 export default function NewsPage() {
   const topics = ['forex market', 'commodities', 'stock market'];
