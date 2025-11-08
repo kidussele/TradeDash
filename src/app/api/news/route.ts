@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `You are a financial analyst. Write a concise, single-paragraph summary of the current state of the ${topic}. Focus on the most important trends and news relevant to a trader. The summary should be current and impactful.`;
 
