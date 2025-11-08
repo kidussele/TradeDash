@@ -6,6 +6,8 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { cookies } from 'next/headers';
 import { initializeFirebaseAdmin } from '@/firebase/firebase-admin';
 
+// Initialize the admin app right away in the server action file.
+// This will only be executed when the server action is called.
 initializeFirebaseAdmin();
 
 export async function updateProfile(data: {
