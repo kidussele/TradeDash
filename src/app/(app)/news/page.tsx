@@ -8,7 +8,6 @@ import { getNews } from './actions';
 import type { GenerateNewsSummaryOutput } from '@/ai/flows/generate-news-summary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
@@ -55,7 +54,7 @@ const NewsSection = ({ topic }: { topic: string }) => {
   if (!news) {
     return (
       <div>
-        <h2 className="text-2xl font-bold mb-4 capitalize">{topic}</h2>
+        <h2 className="text-2xl font-bold mb-4 capitalize">{topic.replace(' market', '')} News</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
             <Card key={i}>
@@ -113,9 +112,7 @@ const NewsSection = ({ topic }: { topic: string }) => {
 
 export default function NewsPage() {
   const topics = ['forex market', 'commodities', 'stock market'];
-  const [calendarTimeframe, setCalendarTimeframe] = useState<'week' | 'today'>('week');
-
-  const calendarUrl = `https://sslecal2.investing.com/?importance=2,3&timeframe=${calendarTimeframe === 'today' ? '1' : '7'}`;
+  const calendarUrl = "https://sslecal2.investing.com/?importance=2,3&timeframe=7";
 
   return (
     <Tabs defaultValue="calendar">
@@ -127,22 +124,13 @@ export default function NewsPage() {
         <div className="h-[calc(100vh-12rem)] mt-4">
           <Card className="h-full flex flex-col">
               <CardHeader>
-                  <div className="flex justify-between items-center">
-                  <div>
-                      <CardTitle>Economic Calendar</CardTitle>
-                      <CardDescription>
-                      Live economic calendar filtered for moderate and high impact events.
-                      </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                      <Button variant={calendarTimeframe === 'today' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('today')}>Today</Button>
-                      <Button variant={calendarTimeframe === 'week' ? 'default' : 'outline'} onClick={() => setCalendarTimeframe('week')}>This Week</Button>
-                  </div>
-                  </div>
+                  <CardTitle>Economic Calendar</CardTitle>
+                  <CardDescription>
+                  This week's economic calendar filtered for moderate and high impact events.
+                  </CardDescription>
               </CardHeader>
               <CardContent className="flex-grow">
                   <iframe 
-                      key={calendarUrl}
                       src={calendarUrl}
                       className="w-full h-full border-0 rounded-lg"
                       title="Economic Calendar"
