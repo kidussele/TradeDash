@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,15 +18,19 @@ const sessions: { name: Session; startUTC: number; endUTC: number; label: string
 
 function getCurrentSessions(utcHour: number): { name: Session, label: string }[] {
     const activeSessions = sessions.filter(session => {
-        if (session.startUTC > session.endUTC) { // Overnight session (e.g., Sydney)
+        // Handle overnight sessions like Sydney
+        if (session.startUTC > session.endUTC) { 
             return utcHour >= session.startUTC || utcHour < session.endUTC;
         }
+        // Handle normal same-day sessions
         return utcHour >= session.startUTC && utcHour < session.endUTC;
     });
 
-    // Tokyo and Sydney are both part of the "Asian" session. If both are active, just show Tokyo's label.
     const hasTokyo = activeSessions.some(s => s.name === 'Tokyo');
-    if (hasTokyo) {
+    const hasSydney = activeSessions.some(s => s.name === 'Sydney');
+
+    // If both Tokyo and Sydney are active, only show the "Asian" label from Tokyo.
+    if (hasTokyo && hasSydney) {
         return activeSessions.filter(s => s.name !== 'Sydney');
     }
     
