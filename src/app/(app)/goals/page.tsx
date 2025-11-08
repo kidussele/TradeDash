@@ -20,14 +20,27 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit, ExternalLink, Image as ImageIcon, PlusCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Edit, ExternalLink, Image as ImageIcon, PlusCircle, Trash2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
-import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 
 export type Goal = {
@@ -38,6 +51,7 @@ export type Goal = {
   imageUrl: string;
   linkUrl?: string;
   imageHint?: string;
+  status: 'In Progress' | 'Completed';
 };
 
 const initialGoals: Omit<Goal, 'id'>[] = [
@@ -48,6 +62,7 @@ const initialGoals: Omit<Goal, 'id'>[] = [
     imageUrl: 'https://picsum.photos/seed/goal1/600/400',
     linkUrl: 'https://www.google.com/search?q=how+to+grow+trading+account',
     imageHint: 'financial growth',
+    status: 'In Progress',
   },
   {
     period: 'Quarterly',
@@ -56,6 +71,7 @@ const initialGoals: Omit<Goal, 'id'>[] = [
     imageUrl: 'https://picsum.photos/seed/goal2/600/400',
     linkUrl: 'https://www.google.com/search?q=learn+new+trading+strategy',
     imageHint: 'learning strategy',
+    status: 'In Progress',
   },
   {
     period: 'Half Year',
@@ -64,6 +80,7 @@ const initialGoals: Omit<Goal, 'id'>[] = [
     imageUrl: 'https://picsum.photos/seed/goal3/600/400',
     linkUrl: 'https://www.google.com/search?q=how+to+build+trading+capital',
     imageHint: 'money milestone',
+    status: 'In Progress',
   },
   {
     period: 'Yearly',
@@ -72,6 +89,7 @@ const initialGoals: Omit<Goal, 'id'>[] = [
     imageUrl: 'https://picsum.photos/seed/goal4/600/400',
     linkUrl: 'https://www.google.com/search?q=how+to+become+a+full-time+trader',
     imageHint: 'professional desk',
+    status: 'In Progress',
   },
   {
     period: 'Big Goal',
@@ -80,6 +98,7 @@ const initialGoals: Omit<Goal, 'id'>[] = [
     imageUrl: 'https://picsum.photos/seed/goal5/600/400',
     linkUrl: 'https://www.google.com/search?q=achieve+financial+freedom',
     imageHint: 'financial freedom',
+    status: 'In Progress',
   },
 ];
 
@@ -117,7 +136,7 @@ export default function GoalsPage() {
 
   const handleAddNew = () => {
     setEditId(null);
-    setCurrentGoal({ period: 'Monthly', title: '', description: '', imageUrl: '' });
+    setCurrentGoal({ period: 'Monthly', title: '', description: '', imageUrl: '', status: 'In Progress' });
     setIsEditDialogOpen(true);
   };
 
@@ -126,16 +145,33 @@ export default function GoalsPage() {
     
     const { id, ...goalData } = currentGoal;
 
+    const finalGoal = {
+        ...goalData,
+        status: goalData.status || 'In Progress',
+    };
+
     if (editId) {
         const docRef = doc(firestore, 'users', user.uid, 'goals', editId);
-        setDocumentNonBlocking(docRef, goalData, { merge: true });
+        setDocumentNonBlocking(docRef, finalGoal, { merge: true });
     } else {
-        addDocumentNonBlocking(goalsRef, goalData);
+        addDocumentNonBlocking(goalsRef, finalGoal);
     }
 
     setIsEditDialogOpen(false);
     setCurrentGoal({});
     setEditId(null);
+  };
+
+  const handleDelete = (goalId: string) => {
+    if (!user) return;
+    const docRef = doc(firestore, 'users', user.uid, 'goals', goalId);
+    deleteDocumentNonBlocking(docRef);
+  };
+  
+  const handleStatusChange = (goal: Goal, isChecked: boolean) => {
+    if (!user) return;
+    const docRef = doc(firestore, 'users', user.uid, 'goals', goal.id);
+    setDocumentNonBlocking(docRef, { status: isChecked ? 'Completed' : 'In Progress' }, { merge: true });
   };
 
   if (isLoading) {
@@ -237,13 +273,13 @@ export default function GoalsPage() {
       
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {sortedGoals.filter(g => g.period !== 'Big Goal').map((goal) => (
-              <GoalCard key={goal.id} goal={goal} onEdit={handleEdit} />
+              <GoalCard key={goal.id} goal={goal} onEdit={handleEdit} onDelete={handleDelete} onStatusChange={handleStatusChange}/>
           ))}
       </div>
       
        <div className="pt-6">
          {sortedGoals.filter(g => g.period === 'Big Goal').map((goal) => (
-              <GoalCard key={goal.id} goal={goal} onEdit={handleEdit} isBigGoal />
+              <GoalCard key={goal.id} goal={goal} onEdit={handleEdit} onDelete={handleDelete} onStatusChange={handleStatusChange} isBigGoal />
           ))}
        </div>
     </div>
@@ -253,27 +289,64 @@ export default function GoalsPage() {
 type GoalCardProps = {
     goal: Goal;
     onEdit: (goal: Goal) => void;
+    onDelete: (goalId: string) => void;
+    onStatusChange: (goal: Goal, isChecked: boolean) => void;
     isBigGoal?: boolean;
 }
 
-function GoalCard({ goal, onEdit, isBigGoal = false }: GoalCardProps) {
+function GoalCard({ goal, onEdit, onDelete, onStatusChange, isBigGoal = false }: GoalCardProps) {
+    const isCompleted = goal.status === 'Completed';
+
     if (isBigGoal) {
         return (
-            <Card className="overflow-hidden">
+            <Card className={cn("overflow-hidden transition-all", isCompleted && "bg-positive/5 border-positive")}>
                 <div className="grid md:grid-cols-2">
                     <div className="p-6 flex flex-col">
                          <CardHeader className="p-0">
-                            <CardDescription>{goal.period}</CardDescription>
-                            <CardTitle className="text-3xl">{goal.title}</CardTitle>
+                             <div className="flex justify-between items-start">
+                                <div>
+                                    <CardDescription>{goal.period}</CardDescription>
+                                    <CardTitle className="text-3xl">{goal.title}</CardTitle>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox 
+                                        id={`check-${goal.id}`} 
+                                        checked={isCompleted}
+                                        onCheckedChange={(checked) => onStatusChange(goal, Boolean(checked))}
+                                    />
+                                     <label htmlFor={`check-${goal.id}`} className="text-sm font-medium">Completed</label>
+                                </div>
+                             </div>
                         </CardHeader>
                         <CardContent className="p-0 flex-grow pt-4">
                             <p className="text-muted-foreground">{goal.description}</p>
                         </CardContent>
                         <CardFooter className="p-0 pt-6 flex justify-between items-center">
-                             <Button variant="outline" onClick={() => onEdit(goal)}>
-                                <Edit className="mr-2" />
-                                Edit Goal
-                            </Button>
+                             <div className="flex items-center gap-2">
+                                <Button variant="outline" onClick={() => onEdit(goal)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit
+                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" size="icon">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete this goal.
+                                        </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => onDelete(goal.id)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
                             {goal.linkUrl && (
                                 <Button variant="link" asChild>
                                     <Link href={goal.linkUrl} target="_blank" rel="noopener noreferrer">
@@ -287,8 +360,8 @@ function GoalCard({ goal, onEdit, isBigGoal = false }: GoalCardProps) {
                      <Link href={`/image-preview?imageUrl=${encodeURIComponent(goal.imageUrl)}`} target="_blank" className="relative group min-h-[250px]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={goal.imageUrl} alt={goal.title} data-ai-hint={goal.imageHint} className="absolute inset-0 w-full h-full object-cover"/>
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                             <ImageIcon className="size-12 text-white/50 group-hover:text-white/80 transition-colors" />
+                        <div className={cn("absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center", isCompleted && "bg-positive/20")}>
+                             {isCompleted ? <CheckCircle2 className="size-16 text-white/80" /> : <ImageIcon className="size-12 text-white/50 group-hover:text-white/80 transition-colors" />}
                         </div>
                     </Link>
                 </div>
@@ -297,27 +370,59 @@ function GoalCard({ goal, onEdit, isBigGoal = false }: GoalCardProps) {
     }
 
     return (
-        <Card className="flex flex-col overflow-hidden">
+        <Card className={cn("flex flex-col overflow-hidden transition-all", isCompleted && "bg-positive/5 border-positive")}>
             <Link href={`/image-preview?imageUrl=${encodeURIComponent(goal.imageUrl)}`} target="_blank" className="relative group aspect-video">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={goal.imageUrl} alt={goal.title} data-ai-hint={goal.imageHint} className="absolute inset-0 w-full h-full object-cover"/>
-                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                    <ImageIcon className="size-8 text-white/50 group-hover:text-white/80 transition-colors" />
+                 <div className={cn("absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center", isCompleted && "bg-positive/20")}>
+                    {isCompleted ? <CheckCircle2 className="size-12 text-white/80" /> : <ImageIcon className="size-8 text-white/50 group-hover:text-white/80 transition-colors" />}
                 </div>
             </Link>
             <div className="flex flex-col flex-grow p-6">
                 <CardHeader className="p-0">
-                    <CardDescription>{goal.period}</CardDescription>
-                    <CardTitle>{goal.title}</CardTitle>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardDescription>{goal.period}</CardDescription>
+                            <CardTitle>{goal.title}</CardTitle>
+                        </div>
+                         <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id={`check-${goal.id}`} 
+                                checked={isCompleted}
+                                onCheckedChange={(checked) => onStatusChange(goal, Boolean(checked))}
+                            />
+                            <label htmlFor={`check-${goal.id}`} className="text-sm font-medium">Done</label>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent className="p-0 flex-grow pt-4">
                     <p className="text-sm text-muted-foreground">{goal.description}</p>
                 </CardContent>
                 <CardFooter className="p-0 pt-6 flex justify-between items-center">
-                    <Button variant="ghost" onClick={() => onEdit(goal)}>
-                        <Edit className="mr-2" />
-                        Edit
-                    </Button>
+                    <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => onEdit(goal)}>
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete this goal.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(goal.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                     {goal.linkUrl && (
                         <Button variant="link" asChild>
                             <Link href={goal.linkUrl} target="_blank" rel="noopener noreferrer">

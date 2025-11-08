@@ -76,9 +76,10 @@
             "description": { "type": "string" },
             "imageUrl": { "type": "string", "format": "uri" },
             "linkUrl": { "type": "string", "format": "uri" },
-            "imageHint": { "type": "string" }
+            "imageHint": { "type": "string" },
+            "status": { "type": "string", "enum": ["In Progress", "Completed"] }
         },
-        "required": ["id", "period", "title", "description", "imageUrl"]
+        "required": ["id", "period", "title", "description", "imageUrl", "status"]
     },
     "Note": {
         "title": "Note",
