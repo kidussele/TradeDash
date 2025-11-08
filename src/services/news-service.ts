@@ -1,5 +1,24 @@
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+const safetySettings = [
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+];
+
 
 /**
  * Generates a news summary for a given topic using the Google Generative AI.
@@ -19,7 +38,7 @@ export async function getNewsSummary(topic: string): Promise<string> {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', safetySettings });
 
     const prompt = `As a financial news summarizer, provide a concise, single-paragraph, news-style summary of recent events and trends for the ${topic}. Focus on factual information relevant to a trader, not financial advice.`;
 
@@ -35,10 +54,15 @@ export async function getNewsSummary(topic: string): Promise<string> {
       !response.candidates[0].content.parts ||
       response.candidates[0].content.parts.length === 0
     ) {
+        // Check for a safety-related block reason
+        if (response?.promptFeedback?.blockReason) {
+             throw new Error(`AI generation blocked for reason: ${response.promptFeedback.blockReason}`);
+        }
         throw new Error('Invalid response structure from AI service.');
     }
     
-    if (response.candidates[0].finishReason !== 'STOP') {
+    // Even if there's a candidate, it might have been stopped for safety reasons.
+    if (response.candidates[0].finishReason && response.candidates[0].finishReason !== 'STOP') {
         throw new Error(`AI generation stopped for reason: ${response.candidates[0].finishReason}`);
     }
 
@@ -47,7 +71,7 @@ export async function getNewsSummary(topic: string): Promise<string> {
     return text;
   } catch (error) {
     console.error(`AI generation failed for topic "${topic}":`, error);
-    // Re-throw the error to be handled by the calling API route.
+    // Re-throw a generic error to be handled by the calling API route.
     throw new Error('AI content generation failed.');
   }
 }

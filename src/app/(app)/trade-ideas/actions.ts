@@ -6,11 +6,6 @@ import {
   HarmBlockThreshold,
 } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
-});
-
 export type GenerateTradeIdeasInput = {
   allData: string;
   question: string;
@@ -23,7 +18,18 @@ export type GenerateTradeIdeasOutput = {
 export async function getTradeIdeas(
   input: GenerateTradeIdeasInput
 ): Promise<GenerateTradeIdeasOutput | { error: string }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.error('GEMINI_API_KEY is not set in the environment.');
+    return { error: 'Server configuration error: Missing API Key.' };
+  }
+
   try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+    });
+
     const prompt = `You are an expert trading analyst. Your role is to answer questions about a user's trading-related data.
 The user's data is provided below as a JSON string. It contains live journal entries, backtest entries, goals, market analysis notes, self-development notes, and strategy checklists.
 Today's date is ${new Date().toDateString()}.
