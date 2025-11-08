@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CheckCircle2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -305,8 +305,9 @@ export default function StrategyChecklistPage() {
                         <Button variant="outline" onClick={() => handleResetChecks(cl.id)}>Reset Checklist</Button>
                      )}
                      {allChecked && (
-                        <div className="text-center p-3 rounded-md bg-positive/10 text-sm font-semibold text-positive">
-                            Cleared to trade!
+                        <div className="flex items-center justify-center gap-2 text-center p-3 rounded-md bg-positive/10 text-base font-semibold text-positive">
+                            <CheckCircle2 className="h-5 w-5" />
+                            <span>Cleared to trade!</span>
                         </div>
                     )}
                 </CardFooter>
