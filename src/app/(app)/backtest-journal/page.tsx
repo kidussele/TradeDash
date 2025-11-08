@@ -78,7 +78,7 @@ function getBestSession(entries: BacktestJournalEntry[]): StatCardData {
 
     const bestSession = Object.entries(sessionPnl).sort(([, pnlA], [, pnlB]) => pnlB - pnlA)[0];
 
-    if (!bestSession || bestSession[1] === 0) {
+    if (!bestSession || bestSession[1] <= 0) {
         return {
             title: 'Best Session',
             value: 'N/A',
@@ -139,6 +139,8 @@ export default function BacktestJournalPage() {
 
       const avgRR = rrRatios.length > 0 ? rrRatios.reduce((acc, ratio) => acc + ratio, 0) / rrRatios.length : 0;
 
+      const bestSession = getBestSession(entries as BacktestJournalEntry[]);
+
       setStatsData([
         {
           title: 'Net P&L',
@@ -164,6 +166,7 @@ export default function BacktestJournalPage() {
           change: '',
           changeType: sharpeRatio > 1 ? 'positive' : 'negative',
         },
+        bestSession,
       ]);
     } else if (entries?.length === 0) {
         setStatsData([
@@ -171,6 +174,7 @@ export default function BacktestJournalPage() {
             { title: 'Win Rate', value: '0.0%', change: '', changeType: 'negative' },
             { title: 'Average R:R', value: '0.00 : 1', change: '', changeType: 'negative' },
             { title: 'Sharpe Ratio', value: '0.00', change: '', changeType: 'negative' },
+            { title: 'Best Session', value: 'N/A', change: '', changeType: 'positive' },
         ]);
     }
   }, [entries]);
@@ -542,13 +546,13 @@ export default function BacktestJournalPage() {
             )}
         </TabsContent>
          <TabsContent value="dashboard">
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                 {statsData.map((stat) => (
-                    <div key={stat.title} className="col-span-4 sm:col-span-2 lg:col-span-1">
+                    <div key={stat.title} className="col-span-1">
                     <StatCard {...stat} />
                     </div>
                 ))}
-                <div className="col-span-4">
+                <div className="col-span-1 sm:col-span-2 lg:col-span-5">
                     <CumulativePnlChart entries={chartEntries as any[]} />
                 </div>
             </div>
