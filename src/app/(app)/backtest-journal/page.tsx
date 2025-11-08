@@ -184,25 +184,36 @@ export default function BacktestJournalPage() {
         rMultiple = currentEntry.pnl / (risk * (currentEntry.positionSize || 1));
     }
     
-    const finalEntry: Omit<BacktestJournalEntry, 'id'> = {
+    const baseEntry = {
       date: currentEntry.date || new Date().toISOString(),
-      session: currentEntry.session,
       currencyPair: currentEntry.currencyPair || '',
       direction: currentEntry.direction || 'Long',
       entryPrice: Number(currentEntry.entryPrice) || 0,
       stopLoss: Number(currentEntry.stopLoss) || 0,
       takeProfit: Number(currentEntry.takeProfit) || 0,
       positionSize: Number(currentEntry.positionSize) || 0,
-      entryTime: currentEntry.entryTime,
-      exitTime: currentEntry.exitTime,
-      pnl: currentEntry.pnl,
-      rMultiple: rMultiple,
       result: currentEntry.result || 'Ongoing',
       notes: currentEntry.notes || '',
-      screenshotBefore: currentEntry.screenshotBefore,
-      screenshotAfter: currentEntry.screenshotAfter,
       adherenceToPlan: currentEntry.adherenceToPlan || 'Yes',
     };
+
+    const optionalFields = {
+        session: currentEntry.session,
+        entryTime: currentEntry.entryTime,
+        exitTime: currentEntry.exitTime,
+        pnl: currentEntry.pnl,
+        rMultiple: rMultiple,
+        screenshotBefore: currentEntry.screenshotBefore,
+        screenshotAfter: currentEntry.screenshotAfter,
+    };
+
+    const finalEntry: Partial<Omit<BacktestJournalEntry, 'id'>> = { ...baseEntry };
+
+    for (const [key, value] of Object.entries(optionalFields)) {
+        if (value !== undefined && value !== null && value !== '') {
+            (finalEntry as any)[key] = value;
+        }
+    }
 
     if (editId) {
       const docRef = doc(firestore, 'users', user.uid, 'backtestJournalEntries', editId);
