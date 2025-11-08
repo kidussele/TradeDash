@@ -110,7 +110,7 @@ function NewsSection({ topic }: { topic: string }) {
 
 
 export default function NewsPage() {
-  const calendarUrl = "https://sslecal2.investing.com/?importance=2,3&timeframe=7";
+  const calendarUrl = "https://www.forexfactory.com/calendar";
 
   return (
     <Tabs defaultValue="calendar">
@@ -123,7 +123,7 @@ export default function NewsPage() {
               <CardHeader>
                   <CardTitle>Economic Calendar</CardTitle>
                   <CardDescription>
-                  This week's economic calendar filtered for moderate and high impact events.
+                  Live economic calendar from ForexFactory.com.
                   </CardDescription>
               </CardHeader>
               <CardContent style={{ height: '800px', width: '100%' }}>
