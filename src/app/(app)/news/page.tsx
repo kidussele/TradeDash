@@ -110,7 +110,7 @@ function NewsSection({ topic }: { topic: string }) {
 
 
 export default function NewsPage() {
-  const calendarUrl = "https://www.myfxbook.com/calendar_widget.html";
+  const calendarUrl = "https://www.tradingview.com/markets/economic-calendar/widget/";
 
   return (
     <Tabs defaultValue="calendar">
@@ -119,17 +119,18 @@ export default function NewsPage() {
         <TabsTrigger value="ai-news">AI Market News</TabsTrigger>
       </TabsList>
       <TabsContent value="calendar" className="mt-4">
-          <Card>
+          <Card className="h-[calc(100vh-12rem)] flex flex-col">
               <CardHeader>
                   <CardTitle>Economic Calendar</CardTitle>
                   <CardDescription>
-                  Live economic calendar from Myfxbook.com.
+                    Economic calendar widget by TradingView.
                   </CardDescription>
               </CardHeader>
-              <CardContent style={{ height: '800px', width: '100%' }}>
+              <CardContent className="flex-grow">
                   <iframe
                       src={calendarUrl}
-                      style={{ height: '100%', width: '100%', border: 'none' }}
+                      className="h-full w-full"
+                      style={{ border: 'none' }}
                       title="Economic Calendar"
                   />
               </CardContent>
