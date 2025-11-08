@@ -29,8 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit, PlusCircle, Image as ImageIcon, X } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Trash2, Edit, PlusCircle, Image as ImageIcon, X, TrendingUp, Sun } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -62,7 +62,24 @@ export type BacktestJournalEntry = {
   adherenceToPlan: 'Yes' | 'No' | 'Partial';
 };
 
-function getBestSession(entries: BacktestJournalEntry[]): StatCardData {
+type AdvancedStats = {
+    sharpeRatio: number;
+    bestSession: {
+        session: string;
+        pnl: number;
+    } | null;
+}
+
+function getAdvancedStats(entries: BacktestJournalEntry[]): AdvancedStats {
+    const closedTrades = entries.filter(e => e.result !== 'Ongoing' && e.pnl !== undefined);
+    
+    // Sharpe Ratio
+    const pnlValues = closedTrades.map(t => t.pnl || 0).filter(pnl => pnl !== 0);
+    const meanPnl = pnlValues.length > 0 ? pnlValues.reduce((a,b) => a + b, 0) / pnlValues.length : 0;
+    const stdDev = pnlValues.length > 0 ? Math.sqrt(pnlValues.map(x => Math.pow(x - meanPnl, 2)).reduce((a, b) => a + b) / pnlValues.length) : 0;
+    const sharpeRatio = stdDev > 0 ? meanPnl / stdDev : 0;
+
+    // Best Session
     const sessionPnl: Record<string, number> = {
         'London': 0,
         'New York': 0,
@@ -70,31 +87,20 @@ function getBestSession(entries: BacktestJournalEntry[]): StatCardData {
         'Sydney': 0,
     };
 
-    entries.forEach(entry => {
+    closedTrades.forEach(entry => {
         if (entry.session && entry.pnl !== undefined) {
             sessionPnl[entry.session] += entry.pnl;
         }
     });
 
-    const bestSession = Object.entries(sessionPnl).sort(([, pnlA], [, pnlB]) => pnlB - pnlA)[0];
-
-    if (!bestSession || bestSession[1] <= 0) {
-        return {
-            title: 'Best Session',
-            value: 'N/A',
-            change: '',
-            changeType: 'positive',
-        };
-    }
+    const bestSessionEntry = Object.entries(sessionPnl).sort(([, pnlA], [, pnlB]) => pnlB - pnlA)[0];
     
-    const [session, pnl] = bestSession;
+    let bestSession: { session: string; pnl: number } | null = null;
+    if (bestSessionEntry && bestSessionEntry[1] > 0) {
+        bestSession = { session: bestSessionEntry[0], pnl: bestSessionEntry[1] };
+    }
 
-    return {
-        title: 'Best Session',
-        value: session,
-        change: pnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-        changeType: pnl >= 0 ? 'positive' : 'negative',
-    };
+    return { sharpeRatio, bestSession };
 }
 
 
@@ -113,6 +119,7 @@ export default function BacktestJournalPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [statsData, setStatsData] = useState<StatCardData[]>([]);
+  const [advancedStats, setAdvancedStats] = useState<AdvancedStats>({ sharpeRatio: 0, bestSession: null });
 
    useEffect(() => {
     if (entries && entries.length > 0) {
@@ -124,11 +131,6 @@ export default function BacktestJournalPage() {
       const tradesWithOutcome = closedTrades.filter(trade => trade.result === 'Win' || trade.result === 'Loss' || trade.result === 'Breakeven').length;
       const winRate = tradesWithOutcome > 0 ? (wins / tradesWithOutcome) * 100 : 0;
       
-      const pnlValues = closedTrades.map(t => t.pnl || 0).filter(pnl => pnl !== 0);
-      const meanPnl = pnlValues.length > 0 ? pnlValues.reduce((a,b) => a + b, 0) / pnlValues.length : 0;
-      const stdDev = pnlValues.length > 0 ? Math.sqrt(pnlValues.map(x => Math.pow(x - meanPnl, 2)).reduce((a, b) => a + b) / pnlValues.length) : 0;
-      const sharpeRatio = stdDev > 0 ? meanPnl / stdDev : 0;
-      
       const rrRatios = entries
         .map(trade => {
             const risk = Math.abs(trade.entryPrice - trade.stopLoss);
@@ -138,8 +140,6 @@ export default function BacktestJournalPage() {
         .filter(ratio => ratio > 0);
 
       const avgRR = rrRatios.length > 0 ? rrRatios.reduce((acc, ratio) => acc + ratio, 0) / rrRatios.length : 0;
-
-      const bestSession = getBestSession(entries as BacktestJournalEntry[]);
 
       setStatsData([
         {
@@ -160,22 +160,16 @@ export default function BacktestJournalPage() {
             change: '',
             changeType: avgRR >= 1 ? 'positive' : 'negative',
         },
-        {
-          title: 'Sharpe Ratio',
-          value: sharpeRatio.toFixed(2),
-          change: '',
-          changeType: sharpeRatio > 1 ? 'positive' : 'negative',
-        },
-        bestSession,
       ]);
+      setAdvancedStats(getAdvancedStats(entries as BacktestJournalEntry[]));
+
     } else if (entries?.length === 0) {
         setStatsData([
             { title: 'Net P&L', value: '$0.00', change: '', changeType: 'positive' },
             { title: 'Win Rate', value: '0.0%', change: '', changeType: 'negative' },
             { title: 'Average R:R', value: '0.00 : 1', change: '', changeType: 'negative' },
-            { title: 'Sharpe Ratio', value: '0.00', change: '', changeType: 'negative' },
-            { title: 'Best Session', value: 'N/A', change: '', changeType: 'positive' },
         ]);
+        setAdvancedStats({ sharpeRatio: 0, bestSession: null });
     }
   }, [entries]);
 
@@ -546,13 +540,43 @@ export default function BacktestJournalPage() {
             )}
         </TabsContent>
          <TabsContent value="dashboard">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statsData.map((stat) => (
                     <div key={stat.title} className="col-span-1">
-                    <StatCard {...stat} />
+                        <StatCard {...stat} />
                     </div>
                 ))}
-                <div className="col-span-1 sm:col-span-2 lg:col-span-5">
+                <Card className="col-span-1">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Advanced Stats</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-4">
+                        <div className="flex items-center gap-2">
+                            <TrendingUp className="size-5 text-muted-foreground"/>
+                            <div>
+                                <p className="text-xs text-muted-foreground">Sharpe Ratio</p>
+                                <p className="text-lg font-bold">{advancedStats.sharpeRatio.toFixed(2)}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Sun className="size-5 text-muted-foreground"/>
+                            <div>
+                                <p className="text-xs text-muted-foreground">Best Session</p>
+                                {advancedStats.bestSession ? (
+                                    <p className="text-lg font-bold">{advancedStats.bestSession.session}
+                                     <span className="text-sm font-medium text-positive ml-2">
+                                        (+{advancedStats.bestSession.pnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' })})
+                                     </span>
+                                    </p>
+                                ) : (
+                                    <p className="text-lg font-bold">N/A</p>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="col-span-1 sm:col-span-2 lg:col-span-4">
                     <CumulativePnlChart entries={chartEntries as any[]} />
                 </div>
             </div>
