@@ -24,6 +24,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
+import { Confetti } from '@/components/ui/confetti';
 
 
 export type ChecklistItem = {
@@ -58,6 +59,8 @@ export default function StrategyChecklistPage() {
   const [currentItemText, setCurrentItemText] = useState('');
   const [activeChecklistId, setActiveChecklistId] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+
+  const [showConfettiFor, setShowConfettiFor] = useState<string | null>(null);
 
 
   // Checklist (Strategy) handlers
@@ -153,9 +156,17 @@ export default function StrategyChecklistPage() {
     const checklist = checklists.find(c => c.id === checklistId);
     if (!checklist) return;
 
+    const wasAllChecked = checklist.items.length > 0 && checklist.items.every(item => item.isChecked);
+
     const newItems = checklist.items.map(item =>
         item.id === itemId ? { ...item, isChecked: !item.isChecked } : item
       );
+    
+    const isAllChecked = newItems.length > 0 && newItems.every(item => item.isChecked);
+
+    if (isAllChecked && !wasAllChecked) {
+        setShowConfettiFor(checklistId);
+    }
     
     const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', checklistId);
     setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
@@ -253,6 +264,7 @@ export default function StrategyChecklistPage() {
             const allChecked = cl.items.length > 0 && cl.items.every(item => item.isChecked);
             return (
               <Card key={cl.id} className="flex flex-col">
+                 {showConfettiFor === cl.id && <Confetti onComplete={() => setShowConfettiFor(null)} />}
                 <CardHeader className="flex-row items-start justify-between">
                   <div>
                     <CardTitle>{cl.title}</CardTitle>
