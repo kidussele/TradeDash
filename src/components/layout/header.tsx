@@ -16,6 +16,7 @@ const pathToTitle: { [key: string]: string } = {
   '/self-development': 'Self Development',
   '/image-preview': 'Image Preview',
   '/goals': 'Goals',
+  '/settings': 'Settings',
 };
 
 export function Header() {
