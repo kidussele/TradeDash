@@ -1,20 +1,24 @@
 'use server';
 
 import { generateNewsSummary } from '@/services/generate-news-summary';
-import type { GenerateNewsSummaryOutput } from '@/services/generate-news-summary';
 
-export type GenerateNewsİnput = {
+export type GenerateNewsInput = {
   topic: string;
 };
 
 export async function getNews(
-  input: GenerateNewsİnput
-): Promise<GenerateNewsSummaryOutput | { error: string }> {
+  input: GenerateNewsInput
+): Promise<{ summary: string } | { error: string }> {
   try {
-    const summary = await generateNewsSummary(input.topic);
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY is not set in the environment.');
+    }
+    const summary = await generateNewsSummary(input.topic, apiKey);
     return { summary };
   } catch (e) {
     console.error('Error generating news summary:', e);
+    // Return a generic error to the client to avoid leaking implementation details.
     return { error: 'Failed to generate news. Please try again.' };
   }
 }
