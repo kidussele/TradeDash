@@ -110,7 +110,7 @@ function NewsSection({ topic }: { topic: string }) {
 
 
 export default function NewsPage() {
-  const calendarUrl = "https://www.forexfactory.com/calendar";
+  const calendarUrl = "https://www.myfxbook.com/calendar_widget.html";
 
   return (
     <Tabs defaultValue="calendar">
@@ -123,7 +123,7 @@ export default function NewsPage() {
               <CardHeader>
                   <CardTitle>Economic Calendar</CardTitle>
                   <CardDescription>
-                  Live economic calendar from ForexFactory.com.
+                  Live economic calendar from Myfxbook.com.
                   </CardDescription>
               </CardHeader>
               <CardContent style={{ height: '800px', width: '100%' }}>
