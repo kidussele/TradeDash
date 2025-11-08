@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +16,7 @@ export function WinRateRRCard({ winRate, avgRR }: WinRateRRCardProps) {
     
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 text-center">
         <CardTitle className="text-sm font-medium text-muted-foreground">Win Rate / Avg. R:R</CardTitle>
       </CardHeader>
       <CardContent className="flex justify-around items-center pt-2">
