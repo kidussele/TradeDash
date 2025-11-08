@@ -45,7 +45,6 @@ const menuItems = [
   { href: '/goals', label: 'Goals', icon: Target },
   { href: '/report', label: 'Reports', icon: FileText },
   { href: '/news', label: 'News', icon: Newspaper },
-  { href: '/ai-insights', label: 'AI Insights', icon: Lightbulb },
 ];
 
 const bottomMenuItems: { href: string; label: string; icon: React.ElementType }[] = [];
