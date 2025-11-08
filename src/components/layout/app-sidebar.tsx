@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical, LogIn, Sun, Moon, Laptop, FileText, Newspaper, BookCopy, ClipboardCheck, Smile, Target } from 'lucide-react';
+import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical, LogIn, Sun, Moon, Laptop, FileText, Newspaper, BookCopy, ClipboardCheck, Smile, Target, Lightbulb } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -49,6 +49,7 @@ const menuItems = [
 
 const bottomMenuItems = [
     { href: '/insights', label: 'AI Insights', icon: Sparkles },
+    { href: '/trade-ideas', label: 'Trade Ideas', icon: Lightbulb },
 ];
 
 export function AppSidebar() {

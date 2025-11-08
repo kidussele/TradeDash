@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 const pathToTitle: { [key: string]: string } = {
   '/': 'Dashboard',
   '/insights': 'AI Insights',
+  '/trade-ideas': 'Trade Ideas',
   '/journal': 'Journal',
   '/backtest-journal': 'Backtest Journal',
   '/report': 'Reports',

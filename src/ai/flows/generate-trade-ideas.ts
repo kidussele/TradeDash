@@ -1,9 +1,10 @@
+
 'use server';
 
 /**
- * @fileOverview Generates trading ideas based on market trends and risk tolerance.
+ * @fileOverview Generates trading ideas and answers questions based on user's trading data.
  *
- * - generateTradeIdeas - A function that generates trading ideas.
+ * - generateTradeIdeas - A function that generates trading ideas or answers questions.
  * - GenerateTradeIdeasInput - The input type for the generateTradeIdeas function.
  * - GenerateTradeIdeasOutput - The return type for the generateTradeIdeas function.
  */
@@ -12,21 +13,14 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateTradeIdeasInputSchema = z.object({
-  marketTrends: z.string().describe('The current market trends.'),
-  riskTolerance: z.string().describe('The user\u2019s risk tolerance (e.g., high, medium, low).'),
+  history: z.string().describe("The user's trading history in CSV format."),
+  question: z.string().describe("The user's question about their trading history."),
 });
 
 export type GenerateTradeIdeasInput = z.infer<typeof GenerateTradeIdeasInputSchema>;
 
 const GenerateTradeIdeasOutputSchema = z.object({
-  tradeIdeas: z.array(
-    z.object({
-      asset: z.string().describe('The asset to trade (e.g., AAPL, TSLA).'),
-      strategy: z.string().describe('The trading strategy to use (e.g., long, short).'),
-      rationale: z.string().describe('The rationale behind the trade idea.'),
-      risk: z.string().describe('The risk associated with the trade idea.'),
-    })
-  ).describe('A list of trading ideas.'),
+  answer: z.string().describe('A short and brief answer to the user question based on the provided trade history.'),
 });
 
 export type GenerateTradeIdeasOutput = z.infer<typeof GenerateTradeIdeasOutputSchema>;
@@ -39,13 +33,17 @@ const prompt = ai.definePrompt({
   name: 'generateTradeIdeasPrompt',
   input: {schema: GenerateTradeIdeasInputSchema},
   output: {schema: GenerateTradeIdeasOutputSchema},
-  prompt: `You are an AI trading assistant that generates trading ideas based on market trends and the user's risk tolerance.
+  prompt: `You are an expert trading analyst. Your role is to answer questions about a user's trading history.
+The user's trade history is provided below in CSV format.
+Today's date is ${new Date().toDateString()}.
 
-  Market Trends: {{{marketTrends}}}
-  Risk Tolerance: {{{riskTolerance}}}
+Analyze the user's trading history and answer their question concisely. Be brief and to the point.
 
-  Generate a list of trading ideas, including the asset to trade, the trading strategy to use (long or short), a rationale behind the trade idea, and the risk associated with the trade idea.
-  `,
+User's Question: {{{question}}}
+
+Trading History:
+"{{history}}"
+`,
 });
 
 const generateTradeIdeasFlow = ai.defineFlow(
