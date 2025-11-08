@@ -142,6 +142,7 @@ export default function NewsPage() {
               </CardHeader>
               <CardContent className="flex-grow">
                   <iframe 
+                      key={calendarUrl}
                       src={calendarUrl}
                       className="w-full h-full border-0 rounded-lg"
                       title="Economic Calendar"
