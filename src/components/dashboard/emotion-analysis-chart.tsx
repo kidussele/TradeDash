@@ -69,9 +69,9 @@ export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
                     dataKey="count"
                     nameKey="name"
                     cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    innerRadius={60}
+                    cy="40%"
+                    outerRadius={60}
+                    innerRadius={40}
                 >
                     {chartData.map((entry) => (
                         <Cell key={`cell-${entry.name}`} fill={entry.fill} opacity={0.7} />
@@ -79,9 +79,10 @@ export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
                 </Pie>
                  <ChartLegend
                     content={<ChartLegendContent nameKey="name" />}
-                    verticalAlign="middle"
-                    align="right"
-                    layout="vertical"
+                    verticalAlign="bottom"
+                    align="center"
+                    layout="horizontal"
+                    wrapperStyle={{ paddingTop: 20 }}
                   />
             </PieChart>
            ) : (
@@ -94,3 +95,4 @@ export function EmotionAnalysisChart({ entries }: EmotionAnalysisChartProps) {
     </Card>
   );
 }
+
