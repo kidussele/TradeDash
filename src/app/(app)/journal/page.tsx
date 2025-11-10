@@ -60,6 +60,7 @@ export type JournalEntry = {
   screenshotAfter?: string;
   adherenceToPlan: 'Yes' | 'No' | 'Partial';
   emotion?: Emotion;
+  createdAt?: any;
 };
 
 
@@ -137,6 +138,7 @@ export default function JournalPage() {
       const docRef = doc(firestore, 'users', user.uid, 'journalEntries', editId);
       setDocumentNonBlocking(docRef, finalEntry, { merge: true });
     } else {
+      (finalEntry as any).createdAt = serverTimestamp();
       addDocumentNonBlocking(entriesRef, finalEntry);
     }
     
@@ -208,28 +210,32 @@ export default function JournalPage() {
             json.forEach(row => {
                 // --- Column Mapping ---
                 // This is a flexible mapping to handle common CSV headers.
-                const pnl = parseFloat(row.Profit) || parseFloat(row.pnl) || 0;
-                const entryPrice = parseFloat(row.Price) || parseFloat(row['Entry Price']) || 0;
-                const stopLoss = parseFloat(row['S/L']) || parseFloat(row.stopLoss) || 0;
-                const takeProfit = parseFloat(row['T/P']) || parseFloat(row.takeProfit) || 0;
-                const type = (row.Type || row.direction || '').toLowerCase();
+                const pnl = parseFloat(row.profit_usd) || parseFloat(row.Profit) || parseFloat(row.pnl) || 0;
+                const entryPrice = parseFloat(row.opening_price) || parseFloat(row.Price) || parseFloat(row['Entry Price']) || 0;
+                const stopLoss = parseFloat(row.stop_loss) || parseFloat(row['S/L']) || 0;
+                const takeProfit = parseFloat(row.take_profit) || parseFloat(row['T/P']) || 0;
+                const positionSize = parseFloat(row.lots) || parseFloat(row.Size) || parseFloat(row.positionSize) || 0;
+                const direction = (row.type || row.Type || row.direction || '').toLowerCase();
+                const symbol = row.symbol || row.Symbol;
+                const openTime = row.opening_time_utc || row.Time;
 
                 // Basic validation
-                if (!row.Symbol || !type || !entryPrice) {
+                if (!symbol || !direction || !entryPrice) {
+                    console.warn('Skipping invalid row:', row);
                     return; // Skip invalid row
                 }
 
                 const newEntry: Omit<JournalEntry, 'id'> = {
-                    date: row.Time ? new Date(row.Time).toISOString() : new Date().toISOString(),
-                    currencyPair: row.Symbol || '',
-                    direction: type.includes('buy') ? 'Long' : 'Short',
+                    date: openTime ? new Date(openTime).toISOString() : new Date().toISOString(),
+                    currencyPair: symbol,
+                    direction: direction.includes('buy') ? 'Long' : 'Short',
                     entryPrice,
                     stopLoss,
                     takeProfit,
-                    positionSize: parseFloat(row.Size) || parseFloat(row.positionSize) || 0,
+                    positionSize: positionSize,
                     pnl,
                     result: pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'Breakeven',
-                    notes: `Imported trade. Order #${row.Order || row.id || 'N/A'}.`,
+                    notes: `Imported trade. Order #${row.ticket || row.Order || row.id || 'N/A'}.`,
                     adherenceToPlan: 'Yes', // Default value
                     createdAt: serverTimestamp()
                 };
@@ -243,7 +249,7 @@ export default function JournalPage() {
               await batch.commit();
               toast({ title: 'Import Successful', description: `${importedCount} trades were successfully imported.` });
             } else {
-              toast({ variant: 'destructive', title: 'Import Failed', description: 'No valid trades were found in the file. Please check the file format.' });
+              toast({ variant: 'destructive', title: 'Import Failed', description: 'No valid trades were found in the file. Please check the file format and column headers.' });
             }
 
         } catch (error) {
@@ -261,7 +267,11 @@ export default function JournalPage() {
     return <div>Loading...</div>; 
   }
 
-  const sortedEntries = [...(entries || [])].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedEntries = [...(entries || [])].sort((a,b) => {
+    const dateA = a.createdAt?.toDate?.() || new Date(a.date);
+    const dateB = b.createdAt?.toDate?.() || new Date(b.date);
+    return dateB - dateA;
+  });
 
   return (
     <div>
@@ -422,7 +432,7 @@ export default function JournalPage() {
                     </Select>
                 </div>
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="pnl">Net P&L</Label>
+                  <Label htmlFor="pnl">Net P&amp;L</Label>
                   <Input
                     id="pnl"
                     type="number"
@@ -439,7 +449,7 @@ export default function JournalPage() {
                   >
                     <SelectTrigger id="adherence">
                       <SelectValue placeholder="Select adherence" />
-                    </SelectTrigger>
+                    </Trigger>
                     <SelectContent>
                       <SelectItem value="Yes">Yes</SelectItem>
                       <SelectItem value="No">No</SelectItem>
@@ -490,7 +500,7 @@ export default function JournalPage() {
             <TableHead>Date</TableHead>
             <TableHead>Pair</TableHead>
             <TableHead>Direction</TableHead>
-            <TableHead>P&L</TableHead>
+            <TableHead>P&amp;L</TableHead>
             <TableHead>Emotion</TableHead>
             <TableHead>Result</TableHead>
             <TableHead>Before</TableHead>
@@ -568,5 +578,3 @@ export default function JournalPage() {
     </div>
   );
 }
-
-    
