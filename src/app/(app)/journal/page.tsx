@@ -19,6 +19,17 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {Textarea} from '@/components/ui/textarea';
@@ -33,7 +44,7 @@ import {Trash2, Edit, PlusCircle, Image as ImageIcon, X, FileUp} from 'lucide-re
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, writeBatch, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 
@@ -60,6 +71,7 @@ export type JournalEntry = {
   screenshotAfter?: string;
   adherenceToPlan: 'Yes' | 'No' | 'Partial';
   emotion?: Emotion;
+  isImported?: boolean;
   createdAt?: any;
 };
 
@@ -186,6 +198,38 @@ export default function JournalPage() {
   const handlePreviewImage = (url: string) => {
     setPreviewImageUrl(url);
   };
+
+  const handleRemoveImported = async () => {
+    if (!user || !entriesRef) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not remove trades. User not found.' });
+      return;
+    }
+    
+    toast({ title: 'Removing imported trades...', description: 'Please wait.' });
+
+    try {
+      const q = query(entriesRef, where('isImported', '==', true));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        toast({ title: 'No Imported Trades Found', description: 'There are no trades flagged as imported to remove.' });
+        return;
+      }
+      
+      const batch = writeBatch(firestore);
+      querySnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      
+      await batch.commit();
+
+      toast({ title: 'Success', description: `Removed ${querySnapshot.size} imported trades.` });
+
+    } catch (error) {
+      console.error("Error removing imported trades:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not remove imported trades.' });
+    }
+  };
   
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -238,6 +282,7 @@ export default function JournalPage() {
                     result: pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'Breakeven',
                     notes: `Imported trade. Order #${row.ticket || row.Order || row.id || 'N/A'}.`,
                     adherenceToPlan: 'Yes', // Default value
+                    isImported: true,
                     createdAt: serverTimestamp()
                 };
 
@@ -274,6 +319,8 @@ export default function JournalPage() {
     return dateB.getTime() - dateA.getTime();
   });
 
+  const hasImportedTrades = entries?.some(e => e.isImported);
+
   return (
     <div>
       <div className="flex justify-end mb-4 gap-2">
@@ -288,6 +335,29 @@ export default function JournalPage() {
             <FileUp className="mr-2 h-4 w-4" />
             Import from CSV
         </Button>
+        {hasImportedTrades && (
+           <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remove Imported
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                  <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      This will permanently delete all trades that were imported via CSV.
+                      This action cannot be undone.
+                  </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleRemoveImported}>Continue</AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+        )}
         <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => {
           setIsEditDialogOpen(isOpen);
           if (!isOpen) {
@@ -579,5 +649,3 @@ export default function JournalPage() {
     </div>
   );
 }
-
-    
