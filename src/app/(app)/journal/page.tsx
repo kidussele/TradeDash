@@ -70,9 +70,10 @@ export default function JournalPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const entriesRef = useMemoFirebase(() => 
-    user ? collection(firestore, 'users', user.uid, 'journalEntries') : null,
-  [user, firestore]);
+  const entriesRef = useMemoFirebase(
+    () => (user ? collection(firestore, 'users', user.uid, 'journalEntries') : null),
+    [user, firestore]
+  );
   
   const { data: entries = [], isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
 
@@ -449,7 +450,7 @@ export default function JournalPage() {
                   >
                     <SelectTrigger id="adherence">
                       <SelectValue placeholder="Select adherence" />
-                    </Trigger>
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Yes">Yes</SelectItem>
                       <SelectItem value="No">No</SelectItem>
