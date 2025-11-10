@@ -71,8 +71,8 @@ export default function JournalPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const entriesRef = useMemoFirebase(() => 
-    user ? collection(firestore, 'users', user.uid, 'journalEntries') : null
-  , [user, firestore]);
+    user ? collection(firestore, 'users', user.uid, 'journalEntries') : null,
+  [user, firestore]);
   
   const { data: entries = [], isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
 
@@ -270,7 +270,7 @@ export default function JournalPage() {
   const sortedEntries = [...(entries || [])].sort((a,b) => {
     const dateA = a.createdAt?.toDate?.() || new Date(a.date);
     const dateB = b.createdAt?.toDate?.() || new Date(b.date);
-    return dateB - dateA;
+    return dateB.getTime() - dateA.getTime();
   });
 
   return (
