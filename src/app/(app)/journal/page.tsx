@@ -1,6 +1,6 @@
 
 'use client';
-import {useState, useEffect, useMemo} from 'react';
+import {useState, useEffect, useMemo, useRef} from 'react';
 import {
   Table,
   TableHeader,
@@ -29,11 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {Trash2, Edit, PlusCircle, Image as ImageIcon, X} from 'lucide-react';
+import {Trash2, Edit, PlusCircle, Image as ImageIcon, X, FileUp} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
 
 export type TradingSession = 'London' | 'New York' | 'Tokyo' | 'Sydney';
 export type Emotion = 'Greedy' | 'Fearful' | 'Confident' | 'Neutral' | 'Anxious' | 'Patient';
@@ -64,6 +66,8 @@ export type JournalEntry = {
 export default function JournalPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const entriesRef = useMemoFirebase(() => 
     user ? collection(firestore, 'users', user.uid, 'journalEntries') : null
@@ -179,6 +183,79 @@ export default function JournalPage() {
   const handlePreviewImage = (url: string) => {
     setPreviewImageUrl(url);
   };
+  
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user || !entriesRef) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const json: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+            if (json.length === 0) {
+              toast({ variant: 'destructive', title: 'Import Error', description: 'CSV file is empty or in the wrong format.' });
+              return;
+            }
+
+            const batch = writeBatch(firestore);
+            let importedCount = 0;
+
+            json.forEach(row => {
+                // --- Column Mapping ---
+                // This is a flexible mapping to handle common CSV headers.
+                const pnl = parseFloat(row.Profit) || parseFloat(row.pnl) || 0;
+                const entryPrice = parseFloat(row.Price) || parseFloat(row['Entry Price']) || 0;
+                const stopLoss = parseFloat(row['S/L']) || parseFloat(row.stopLoss) || 0;
+                const takeProfit = parseFloat(row['T/P']) || parseFloat(row.takeProfit) || 0;
+                const type = (row.Type || row.direction || '').toLowerCase();
+
+                // Basic validation
+                if (!row.Symbol || !type || !entryPrice) {
+                    return; // Skip invalid row
+                }
+
+                const newEntry: Omit<JournalEntry, 'id'> = {
+                    date: row.Time ? new Date(row.Time).toISOString() : new Date().toISOString(),
+                    currencyPair: row.Symbol || '',
+                    direction: type.includes('buy') ? 'Long' : 'Short',
+                    entryPrice,
+                    stopLoss,
+                    takeProfit,
+                    positionSize: parseFloat(row.Size) || parseFloat(row.positionSize) || 0,
+                    pnl,
+                    result: pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'Breakeven',
+                    notes: `Imported trade. Order #${row.Order || row.id || 'N/A'}.`,
+                    adherenceToPlan: 'Yes', // Default value
+                    createdAt: serverTimestamp()
+                };
+
+                const docRef = doc(entriesRef);
+                batch.set(docRef, newEntry);
+                importedCount++;
+            });
+
+            if (importedCount > 0) {
+              await batch.commit();
+              toast({ title: 'Import Successful', description: `${importedCount} trades were successfully imported.` });
+            } else {
+              toast({ variant: 'destructive', title: 'Import Failed', description: 'No valid trades were found in the file. Please check the file format.' });
+            }
+
+        } catch (error) {
+            console.error("CSV Import Error:", error);
+            toast({ variant: 'destructive', title: 'Import Failed', description: 'There was an error processing your file.' });
+        } finally {
+            // Reset file input to allow re-uploading the same file
+            if(fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+    reader.readAsArrayBuffer(file);
+  };
 
   if (isLoading) {
     return <div>Loading...</div>; 
@@ -188,7 +265,18 @@ export default function JournalPage() {
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-2">
+        <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+        />
+        <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <FileUp className="mr-2 h-4 w-4" />
+            Import from CSV
+        </Button>
         <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => {
           setIsEditDialogOpen(isOpen);
           if (!isOpen) {
@@ -480,3 +568,5 @@ export default function JournalPage() {
     </div>
   );
 }
+
+    
