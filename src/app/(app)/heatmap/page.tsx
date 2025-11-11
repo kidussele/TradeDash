@@ -1,7 +1,7 @@
-
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ForexHeatmapWidget } from '@/components/widgets/forex-heatmap-widget';
 import { Lightbulb } from 'lucide-react';
 
 export default function HeatmapPage() {
@@ -18,14 +18,9 @@ export default function HeatmapPage() {
             </div>
         </CardHeader>
       </Card>
-      <Card>
-        <CardContent className="p-0 h-[600px] sm:h-[800px]">
-          <iframe
-            src="https://s.tradingview.com/embed-widget/forex-heat-map/?locale=en&colorTheme=light&width=100%25&height=100%25&currencies=EUR,USD,JPY,GBP,CHF,AUD,CAD,NZD"
-            className="w-full h-full border-0"
-            title="Forex Heatmap"
-          ></iframe>
-        </CardContent>
+      
+      <Card className="h-[600px] sm:h-[800px] w-full p-0 overflow-hidden">
+        <ForexHeatmapWidget />
       </Card>
     </div>
   );
