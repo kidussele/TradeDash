@@ -21,7 +21,7 @@ export default function HeatmapPage() {
       <Card>
         <CardContent className="p-0 h-[600px] sm:h-[800px]">
           <iframe
-            src="https://s.tradingview.com/embed-widget/forex-heat-map/?locale=en&colorTheme=light&width=100%&height=100%&currencies=EUR,USD,JPY,GBP,CHF,AUD,CAD,NZD"
+            src="https://s.tradingview.com/embed-widget/forex-heat-map/?locale=en&colorTheme=light&width=100%25&height=100%25&currencies=EUR,USD,JPY,GBP,CHF,AUD,CAD,NZD"
             className="w-full h-full border-0"
             title="Forex Heatmap"
           ></iframe>
