@@ -49,7 +49,6 @@ const menuItems = [
 ];
 
 const bottomMenuItems: { href: string; label: string; icon: React.ElementType }[] = [
-    { href: '/ai-insights', label: 'AI Insights', icon: Lightbulb },
 ];
 
 export function AppSidebar() {

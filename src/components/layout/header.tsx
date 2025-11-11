@@ -17,7 +17,6 @@ const pathToTitle: { [key: string]: string } = {
   '/image-preview': 'Image Preview',
   '/goals': 'Goals',
   '/settings': 'Settings',
-  '/ai-insights': 'AI Insights',
   '/heatmap': 'Forex Heatmap',
 };
 
