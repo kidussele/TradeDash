@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical, LogIn, Sun, Moon, Laptop, FileText, Newspaper, BookCopy, ClipboardCheck, Smile, Target, Lightbulb } from 'lucide-react';
+import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical, LogIn, Sun, Moon, Laptop, FileText, Newspaper, BookCopy, ClipboardCheck, Smile, Target, Lightbulb, Flame } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -45,9 +45,12 @@ const menuItems = [
   { href: '/goals', label: 'Goals', icon: Target },
   { href: '/report', label: 'Reports', icon: FileText },
   { href: '/news', label: 'News', icon: Newspaper },
+  { href: '/heatmap', label: 'Forex Heatmap', icon: Flame },
 ];
 
-const bottomMenuItems: { href: string; label: string; icon: React.ElementType }[] = [];
+const bottomMenuItems: { href: string; label: string; icon: React.ElementType }[] = [
+    { href: '/ai-insights', label: 'AI Insights', icon: Lightbulb },
+];
 
 export function AppSidebar() {
   const pathname = usePathname();

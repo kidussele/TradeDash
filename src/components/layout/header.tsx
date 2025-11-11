@@ -1,3 +1,4 @@
+
 'use client';
 
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -18,6 +19,7 @@ const pathToTitle: { [key: string]: string } = {
   '/settings': 'Settings',
   '/ai-insights': 'AI Insights',
   '/trade-ideas': 'Trade Ideas',
+  '/heatmap': 'Forex Heatmap',
 };
 
 export function Header() {
