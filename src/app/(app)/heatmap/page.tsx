@@ -20,9 +20,9 @@ export default function HeatmapPage() {
         </CardHeader>
       </Card>
       
-      <Card className="h-[600px] sm:h-[800px] w-full p-0 overflow-hidden">
+      <div className="h-[75vh] w-full rounded-lg border overflow-hidden">
         <ForexHeatmapWidget />
-      </Card>
+      </div>
     </div>
   );
 }
