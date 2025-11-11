@@ -18,7 +18,6 @@ const pathToTitle: { [key: string]: string } = {
   '/goals': 'Goals',
   '/settings': 'Settings',
   '/ai-insights': 'AI Insights',
-  '/trade-ideas': 'Trade Ideas',
   '/heatmap': 'Forex Heatmap',
 };
 
