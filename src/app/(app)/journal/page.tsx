@@ -27,8 +27,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTitle as AlertDialogTitleComponent,
 } from "@/components/ui/alert-dialog"
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
@@ -352,7 +351,7 @@ export default function JournalPage() {
               </AlertDialogTrigger>
               <AlertDialogContent>
                   <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogTitleComponent>Are you absolutely sure?</AlertDialogTitleComponent>
                   <AlertDialogDescription>
                       This will permanently delete all trades that were imported via CSV.
                       This action cannot be undone.
@@ -634,12 +633,15 @@ export default function JournalPage() {
 
        {cardPreviewEntry && (
         <Dialog open={!!cardPreviewEntry} onOpenChange={(isOpen) => !isOpen && setCardPreviewEntry(null)}>
-          <DialogContent className="max-w-min bg-transparent border-none shadow-none">
-                <TradeResultCard 
-                    entry={cardPreviewEntry.entry} 
-                    allEntries={entries as JournalEntry[]}
-                    tradeIndex={cardPreviewEntry.index}
-                />
+          <DialogContent className="max-w-min bg-transparent border-none shadow-none p-0">
+             <DialogHeader>
+                <DialogTitle className="sr-only">Trade Result Card Preview</DialogTitle>
+             </DialogHeader>
+             <TradeResultCard 
+                entry={cardPreviewEntry.entry} 
+                allEntries={entries as JournalEntry[]}
+                tradeIndex={cardPreviewEntry.index}
+            />
           </DialogContent>
         </Dialog>
       )}
