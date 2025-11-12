@@ -99,10 +99,12 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
             <div className="flex-grow flex flex-col justify-center items-start relative -ml-6 -mr-6">
             <div className="pl-6">
                 <p className={cn("text-6xl font-bold", isWin ? 'text-blue-500' : 'text-red-500')}>
-                {riskRewardRatio}
+                  {riskRewardRatio}
                 </p>
                  <div className="flex items-baseline gap-3">
-                    <p className="text-2xl font-semibold text-gray-400">Risk/Reward</p>
+                    <p className="text-2xl font-semibold">
+                      {entry.result.toUpperCase()}
+                    </p>
                     {entry.session && (
                         <p className="text-2xl font-semibold text-gray-400">{entry.session}</p>
                     )}
