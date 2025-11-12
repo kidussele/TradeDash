@@ -16,39 +16,39 @@ type TradeResultCardProps = {
 };
 
 function Logo() {
-  return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M8 40H17.2929C17.6834 40 18.0584 39.842 18.3414 39.5589L39.5589 18.3414C39.842 18.0584 40 17.6834 40 17.2929V8"
-        stroke="hsl(var(--primary))"
-        strokeWidth="4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M24 12V24H36"
-        stroke="hsl(var(--primary))"
-        strokeWidth="4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8 8L40 40"
-        stroke="hsl(var(--foreground))"
-        strokeWidth="4"
-        strokeOpacity="0.1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+    return (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 48 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M8 40H17.2929C17.6834 40 18.0584 39.842 18.3414 39.5589L39.5589 18.3414C39.842 18.0584 40 17.6834 40 17.2929V8"
+          stroke="hsl(var(--primary))"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M24 12V24H36"
+          stroke="hsl(var(--primary))"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M8 8L40 40"
+          stroke="hsl(var(--foreground))"
+          strokeWidth="4"
+          strokeOpacity="0.1"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
 
 export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCardProps) {
   const { user } = useUser();
@@ -84,7 +84,7 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
     if (cardRef.current === null) {
       return;
     }
-    toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 })
+    toPng(cardRef.current, { cacheBust: true, pixelRatio: 2, fontEmbedCSS: '' })
       .then((dataUrl) => {
         const link = document.createElement('a');
         link.download = `TradeDash-${entry.currencyPair}-${entry.date.split('T')[0]}.png`;
@@ -122,16 +122,16 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
         {/* Main Body */}
         <div className="flex-grow flex flex-col justify-center items-start relative -ml-6 -mr-6">
           <div className="pl-6">
-            <p className={cn("text-6xl font-bold", isWin ? 'text-blue-500' : 'text-red-500')}>
-              1 : {riskRewardRatio}
+            <p className={cn("text-6xl font-bold")}>
+              {entry.result}
             </p>
             <div className="flex items-baseline gap-3">
-                <p className="text-4xl font-semibold">
-                    {entry.result}
-                </p>
-                {entry.session && (
-                    <p className="text-2xl font-semibold text-gray-400">{entry.session}</p>
-                )}
+              <p className="text-4xl font-semibold text-gray-400">
+                1 : {riskRewardRatio}
+              </p>
+              {entry.session && (
+                 <p className="text-2xl font-semibold text-gray-400">{entry.session}</p>
+              )}
             </div>
           </div>
 
