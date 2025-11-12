@@ -40,13 +40,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {Trash2, Edit, PlusCircle, Image as ImageIcon, X, FileUp} from 'lucide-react';
+import {Trash2, Edit, PlusCircle, Image as ImageIcon, X, FileUp, Eye} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, writeBatch, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, writeBatch, serverTimestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
+import { TradeResultCard } from '@/components/trade-result-card';
 
 export type TradingSession = 'London' | 'New York' | 'Tokyo' | 'Sydney';
 export type Emotion = 'Greedy' | 'Fearful' | 'Confident' | 'Neutral' | 'Anxious' | 'Patient';
@@ -86,13 +87,19 @@ export default function JournalPage() {
     () => (user ? collection(firestore, 'users', user.uid, 'journalEntries') : null),
     [user, firestore]
   );
+
+  const entriesQuery = useMemoFirebase(() =>
+    entriesRef ? query(entriesRef, orderBy('date', 'asc')) : null,
+    [entriesRef]
+  );
   
-  const { data: entries = [], isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
+  const { data: entries = [], isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesQuery);
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<Partial<JournalEntry>>({});
   const [editId, setEditId] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [cardPreviewEntry, setCardPreviewEntry] = useState<{entry: JournalEntry, index: number} | null>(null);
 
   const rr = useMemo(() => {
     if (currentEntry.entryPrice && currentEntry.stopLoss && currentEntry.takeProfit) {
@@ -576,11 +583,12 @@ export default function JournalPage() {
             <TableHead>Result</TableHead>
             <TableHead>Before</TableHead>
             <TableHead>After</TableHead>
+            <TableHead>Preview</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedEntries.map((entry) => (
+          {sortedEntries.map((entry, index) => (
             <TableRow key={entry.id}>
               <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
               <TableCell className="font-medium">{entry.currencyPair}</TableCell>
@@ -606,8 +614,13 @@ export default function JournalPage() {
                   </Button>
                 ) : 'N/A'}
               </TableCell>
+              <TableCell>
+                <Button variant="ghost" size="icon" onClick={() => setCardPreviewEntry({entry: entry as JournalEntry, index})}>
+                  <Eye className="h-5 w-5 text-blue-500 hover:text-blue-700" />
+                </Button>
+              </TableCell>
               <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={() => handleEdit(entry)}>
+                <Button variant="ghost" size="icon" onClick={() => handleEdit(entry as JournalEntry)}>
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}>
@@ -618,6 +631,19 @@ export default function JournalPage() {
           ))}
         </TableBody>
       </Table>
+
+       {cardPreviewEntry && (
+        <Dialog open={!!cardPreviewEntry} onOpenChange={(isOpen) => !isOpen && setCardPreviewEntry(null)}>
+          <DialogContent className="max-w-min bg-transparent border-none shadow-none">
+                <TradeResultCard 
+                    entry={cardPreviewEntry.entry} 
+                    allEntries={entries as JournalEntry[]}
+                    tradeIndex={cardPreviewEntry.index}
+                />
+          </DialogContent>
+        </Dialog>
+      )}
+
        {(!entries || entries.length === 0) && !isLoading && (
         <div className="text-center py-12 text-muted-foreground">
             No journal entries yet.
@@ -649,5 +675,3 @@ export default function JournalPage() {
     </div>
   );
 }
-
-    
