@@ -122,15 +122,15 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
         {/* Main Body */}
         <div className="flex-grow flex flex-col justify-center items-start relative -ml-6 -mr-6">
           <div className="pl-6">
-            <p className={cn("text-6xl font-bold")}>
+            <p className={cn("text-6xl font-bold", isWin ? "text-green-400" : "text-red-400")}>
               {entry.result}
             </p>
             <div className="flex items-baseline gap-3">
-              <p className="text-4xl font-semibold text-gray-400">
+              <p className="text-4xl font-semibold text-blue-500">
                 1 : {riskRewardRatio}
               </p>
               {entry.session && (
-                 <p className="text-2xl font-semibold text-gray-400">{entry.session}</p>
+                 <p className="text-2xl font-semibold text-gray-200">{entry.session}</p>
               )}
             </div>
           </div>
