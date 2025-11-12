@@ -13,31 +13,31 @@ type TradeResultCardProps = {
 };
 
 function Logo() {
-    return (
-        <svg
-            width="24"
-            height="24"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="text-gray-300"
-        >
-            <path
-                d="M8 40H17.2929C17.6834 40 18.0584 39.842 18.3414 39.5589L39.5589 18.3414C39.842 18.0584 40 17.6834 40 17.2929V8"
-                stroke="hsl(var(--primary))"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            <path
-                d="M24 12V24H36"
-                stroke="hsl(var(--primary))"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-    );
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 48 48"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="text-gray-300"
+    >
+      <path
+        d="M8 40H17.2929C17.6834 40 18.0584 39.842 18.3414 39.5589L39.5589 18.3414C39.842 18.0584 40 17.6834 40 17.2929V8"
+        stroke="hsl(var(--primary))"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M24 12V24H36"
+        stroke="hsl(var(--primary))"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 
@@ -111,18 +111,18 @@ export function TradeResultCard({ entry }: TradeResultCardProps) {
 
             {/* Main Body */}
             <div className="flex-grow flex flex-col justify-center items-center text-center gap-4">
-              <p className={cn("text-5xl font-bold tracking-wider", isWin ? 'text-green-400' : 'text-red-400')}>
+              <p className={cn("text-8xl font-bold tracking-wider", isWin ? 'text-green-400' : 'text-red-400')}>
                 {entry.result.toUpperCase()}
               </p>
               <div className="text-center">
-                 <p className="text-lg font-semibold text-gray-200">
-                  {(entry.rMultiple?.toFixed(2) ?? '0.00')}R
+                <p className="text-3xl font-semibold text-gray-200">
+                  1 : {riskRewardRatio}
                 </p>
                 <p className="text-sm text-gray-400">Risk/Reward</p>
               </div>
               {entry.session && (
                 <div className="text-center">
-                   <p className="text-lg font-semibold text-gray-200">{entry.session}</p>
+                   <p className="text-3xl font-semibold text-gray-200">{entry.session}</p>
                    <p className="text-sm text-gray-400">Session</p>
                 </div>
               )}
