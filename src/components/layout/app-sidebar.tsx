@@ -46,10 +46,10 @@ const menuItems = [
   { href: '/report', label: 'Reports', icon: FileText },
   { href: '/news', label: 'News', icon: Newspaper },
   { href: '/heatmap', label: 'Forex Heatmap', icon: Flame },
-  { href: '/trade-cards', label: 'Trade Cards', icon: Share2 },
 ];
 
 const bottomMenuItems: { href: string; label: string; icon: React.ElementType }[] = [
+  { href: '/ai-insights', label: 'AI Insights', icon: Lightbulb },
 ];
 
 export function AppSidebar() {
