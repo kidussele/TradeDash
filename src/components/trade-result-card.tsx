@@ -102,6 +102,7 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
                 {riskRewardRatio}
                 </p>
                  <div className="flex items-baseline gap-3">
+                    <p className="text-2xl font-semibold text-gray-400">Risk/Reward</p>
                     {entry.session && (
                         <p className="text-2xl font-semibold text-gray-400">{entry.session}</p>
                     )}
