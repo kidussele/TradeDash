@@ -85,20 +85,19 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
         </div>
 
         {/* Main Body */}
-        <div className="flex-grow flex flex-col justify-center items-center relative">
-          <p className={cn("text-8xl font-bold", isWin ? 'text-blue-500' : 'text-red-500')}>
-            {isWin ? 'WIN' : 'LOSS'}
-          </p>
-          <div className="flex items-baseline gap-3">
-             <p className="text-2xl font-semibold">
-                {isWin ? '+' : ''}{(entry.rMultiple?.toFixed(2) ?? '0.00')}R
+        <div className="flex-grow flex flex-col justify-center items-start relative -ml-6 -mr-6">
+          <div className="pl-6">
+            <p className={cn("text-6xl font-bold", isWin ? 'text-blue-500' : 'text-red-500')}>
+              1 : {riskRewardRatio}
             </p>
-             <p className="text-2xl font-semibold text-gray-400">
-                1:{riskRewardRatio}
-             </p>
+            <div className="flex items-baseline gap-3">
+              {entry.session && (
+                 <p className="text-2xl font-semibold text-gray-400">{entry.session}</p>
+              )}
+            </div>
           </div>
-          
-          <div className="absolute bottom-0 left-0 w-full h-48 -ml-6 -mr-6">
+
+          <div className="absolute bottom-0 left-0 w-full h-48">
             <AreaChart data={chartData} width={380} height={192} margin={{top:0, right:0, left: 0, bottom: 0}}>
                 <defs>
                     <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
