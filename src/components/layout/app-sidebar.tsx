@@ -48,9 +48,7 @@ const menuItems = [
   { href: '/heatmap', label: 'Forex Heatmap', icon: Flame },
 ];
 
-const bottomMenuItems: { href: string; label: string; icon: React.ElementType }[] = [
-  { href: '/ai-insights', label: 'AI Insights', icon: Lightbulb },
-];
+const bottomMenuItems: { href: string; label: string; icon: React.ElementType }[] = [];
 
 export function AppSidebar() {
   const pathname = usePathname();
