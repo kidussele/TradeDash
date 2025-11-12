@@ -81,9 +81,14 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
             <p className={cn("text-6xl font-bold", isWin ? 'text-blue-500' : 'text-red-500')}>
               {entry.result.toUpperCase()}
             </p>
-            <p className="text-4xl font-semibold">
-              {isWin ? '+' : ''}{(entry.rMultiple?.toFixed(2) ?? '0.00')}R
-            </p>
+            <div className="flex items-baseline gap-3">
+              <p className="text-4xl font-semibold">
+                {isWin ? '+' : ''}{(entry.rMultiple?.toFixed(2) ?? '0.00')}R
+              </p>
+              {entry.session && (
+                 <p className="text-2xl font-semibold text-gray-400">{entry.session}</p>
+              )}
+            </div>
           </div>
 
           <div className="absolute bottom-0 left-0 w-full h-48">
