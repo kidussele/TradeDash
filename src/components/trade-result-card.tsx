@@ -2,7 +2,6 @@
 'use client';
 import { useRef, useMemo, useCallback } from 'react';
 import { toPng } from 'html-to-image';
-import { Area, AreaChart } from 'recharts';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
@@ -102,7 +101,7 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
        <div 
         ref={cardRef} 
         className="text-white p-6 rounded-lg w-[380px] h-[500px] flex flex-col font-sans bg-cover bg-center relative overflow-hidden"
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')" }}
+        style={{ backgroundImage: "url('https://i.ibb.co/S43wJjCz/Gemini-Generated-Image-njuz27njuz27njuz.png')" }}
       >
         <div className="absolute inset-0 bg-black/60"/>
         <div className="relative z-10 flex flex-col h-full">
