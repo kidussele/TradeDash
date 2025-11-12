@@ -99,65 +99,63 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
 
   return (
     <div className="space-y-2">
-      <div ref={cardRef} className="bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-white p-6 rounded-lg w-[380px] h-[500px] flex flex-col font-sans">
-        {/* Header */}
-        <div className="flex justify-between items-start">
-          <div>
-            <p className="text-2xl font-bold flex items-center">
-              {entry.currencyPair.toUpperCase()}
-              <span className={cn("ml-2", isWin ? "text-green-400" : "text-red-400")}>
-                {isWin ? '+' : ''}{(entry.pnl ?? 0).toFixed(2)}
-              </span>
-            </p>
-            <p className="text-sm text-gray-400">
-              CLOSE DATE {new Date(entry.date).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Logo />
-            <span className="font-bold text-sm text-gray-300">TRADEDASH</span>
-          </div>
-        </div>
+       <div 
+        ref={cardRef} 
+        className="text-white p-6 rounded-lg w-[380px] h-[500px] flex flex-col font-sans bg-cover bg-center relative overflow-hidden"
+        style={{ backgroundImage: "url('https://storage.googleapis.com/aai-web-samples/061124/financial-background.png')" }}
+      >
+        <div className="absolute inset-0 bg-black/60"/>
+        <div className="relative z-10 flex flex-col h-full">
+            {/* Header */}
+            <div className="flex justify-between items-start">
+                <div className="flex items-center gap-2">
+                    <Logo />
+                    <span className="font-bold text-sm text-gray-300">TRADEDASH</span>
+                </div>
+                <p className="text-sm text-gray-400">
+                  {new Date(entry.date).toLocaleDateString()}
+                </p>
+            </div>
+            
+            <div className="flex justify-between items-baseline mt-4">
+                 <div>
+                    <p className="text-sm text-gray-400">PAIR</p>
+                    <p className="text-2xl font-bold">{entry.currencyPair.toUpperCase()}</p>
+                 </div>
+                 <div className="text-right">
+                    <p className="text-sm text-gray-400">PROFIT</p>
+                    <p className={cn("text-2xl font-bold", isWin ? "text-green-400" : "text-red-400")}>
+                        {isWin ? '+' : ''}{(entry.pnl ?? 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                    </p>
+                 </div>
+            </div>
 
-        {/* Main Body */}
-        <div className="flex-grow flex flex-col justify-center items-start relative -ml-6 -mr-6">
-          <div className="pl-6">
-            <p className={cn("text-6xl font-bold", isWin ? "text-green-400" : "text-red-400")}>
-              {entry.result}
-            </p>
-            <div className="flex items-baseline gap-3">
-              <p className="text-4xl font-semibold text-blue-500">
-                1 : {riskRewardRatio}
+            {/* Main Body */}
+            <div className="flex-grow flex flex-col justify-center items-center text-center gap-4">
+              <p className={cn("text-8xl font-bold tracking-wider", isWin ? 'text-green-400' : 'text-red-400')}>
+                {entry.result.toUpperCase()}
               </p>
+              <div className="text-center">
+                <p className="text-3xl font-semibold text-blue-400">
+                  1 : {riskRewardRatio}
+                </p>
+                <p className="text-sm text-gray-400">Risk/Reward</p>
+              </div>
               {entry.session && (
-                 <p className="text-2xl font-semibold text-gray-200">{entry.session}</p>
+                <div className="text-center">
+                   <p className="text-3xl font-semibold text-yellow-400">{entry.session}</p>
+                   <p className="text-sm text-gray-400">Session</p>
+                </div>
               )}
             </div>
-          </div>
 
-          <div className="absolute bottom-0 left-0 w-full h-48">
-            <AreaChart data={chartData} width={380} height={192} margin={{top:0, right:0, left: 0, bottom: 0}}>
-                <defs>
-                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                    </linearGradient>
-                </defs>
-                <Area type="monotone" dataKey="cumulativePnl" stroke="#3B82F6" strokeWidth={2} fill="url(#chartGradient)" />
-            </AreaChart>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-between items-end">
-          <div>
-            <p className="text-xs text-gray-400">TRADER</p>
-            <p className="font-semibold">{user?.displayName || 'Trader'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400 text-right">STATUS</p>
-            <p className="font-semibold">{user?.isAnonymous ? 'Guest' : 'Member'}</p>
-          </div>
+            {/* Footer */}
+            <div className="flex justify-center items-end">
+              <div>
+                <p className="text-xs text-gray-400 text-center">TRADER</p>
+                <p className="font-semibold text-center">{user?.displayName || 'Trader'}</p>
+              </div>
+            </div>
         </div>
       </div>
       <Button onClick={onDownload} variant="outline" className="w-full">
