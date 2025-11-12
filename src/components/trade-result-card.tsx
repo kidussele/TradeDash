@@ -4,13 +4,22 @@ import { useRef, useMemo, useCallback } from 'react';
 import { toPng } from 'html-to-image';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Download, Activity } from 'lucide-react';
+import { Download } from 'lucide-react';
 import type { JournalEntry } from '@/app/(app)/journal/page';
 import { useUser } from '@/firebase';
 
 type TradeResultCardProps = {
   entry: JournalEntry;
 };
+
+function Logo() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-300">
+        <path d="M4 20H8.34315C8.70364 20 9.051 19.856 9.31019 19.5968L19.5968 9.31019C19.856 9.051 20 8.70364 20 8.34315V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M12 6V12H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
 
 export function TradeResultCard({ entry }: TradeResultCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -59,10 +68,7 @@ export function TradeResultCard({ entry }: TradeResultCardProps) {
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2">
-                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-300">
-                        <path d="M4 20H8.34315C8.70364 20 9.051 19.856 9.31019 19.5968L19.5968 9.31019C19.856 9.051 20 8.70364 20 8.34315V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M12 6V12H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                    <Logo />
                     <span className="font-bold text-sm text-gray-300">TRADEDASH</span>
                 </div>
                 <p className="text-sm text-gray-400">
