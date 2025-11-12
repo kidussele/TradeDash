@@ -5,7 +5,7 @@ import { toPng } from 'html-to-image';
 import { Area, AreaChart } from 'recharts';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Activity } from 'lucide-react';
 import { useUser } from '@/firebase';
 import type { JournalEntry } from '@/app/(app)/journal/page';
 
@@ -38,12 +38,10 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
         const risk = Math.abs(entry.entryPrice - entry.stopLoss);
         const reward = Math.abs(entry.takeProfit - entry.entryPrice);
         if (risk > 0) {
-            const ratio = reward / risk;
-            // Return in 1:R format, e.g. 1:2.5
-            return `1 : ${ratio.toFixed(2)}`;
+            return (reward / risk).toFixed(2);
         }
     }
-    return '1 : 0.00';
+    return '0.00';
   }, [entry.entryPrice, entry.stopLoss, entry.takeProfit]);
 
 
@@ -66,78 +64,63 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
 
   return (
     <div className="space-y-2">
-      <div 
-        ref={cardRef} 
-        className="text-white p-6 rounded-lg w-[380px] h-[500px] flex flex-col font-sans bg-cover bg-center relative overflow-hidden"
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')" }}
-      >
-        <div className="absolute inset-0 bg-black/50"/>
-        <div className="relative z-10 flex flex-col h-full">
-            {/* Header */}
-            <div className="flex justify-between items-start">
-            <div>
-                <p className="text-2xl font-bold flex items-center">
-                {entry.currencyPair.toUpperCase()}
-                <span className={cn("ml-2", isWin ? "text-green-400" : "text-red-400")}>
-                    {isWin ? '+' : ''}{(entry.pnl ?? 0).toFixed(2)}
-                </span>
-                </p>
-                <p className="text-sm text-gray-400">
-                CLOSE DATE {new Date(entry.date).toLocaleDateString()}
-                </p>
-            </div>
-            <div className="flex items-center gap-2">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-300">
-                    <path d="M4 20H8.34315C8.70364 20 9.051 19.856 9.31019 19.5968L19.5968 9.31019C19.856 9.051 20 8.70364 20 8.34315V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 6V12H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="font-bold text-sm text-gray-300">TRADEDASH</span>
-            </div>
-            </div>
+      <div ref={cardRef} className="bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-white p-6 rounded-lg w-[380px] h-[500px] flex flex-col font-sans">
+        {/* Header */}
+        <div className="flex justify-between items-start">
+          <div>
+            <p className="text-2xl font-bold flex items-center">
+              {entry.currencyPair.toUpperCase()}
+              <span className={cn("ml-2", isWin ? "text-green-400" : "text-red-400")}>
+                {isWin ? '+' : ''}{(entry.pnl ?? 0).toFixed(2)}
+              </span>
+            </p>
+            <p className="text-sm text-gray-400">
+              CLOSE DATE {new Date(entry.date).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Activity className="size-6 text-gray-300" />
+            <span className="font-bold text-sm text-gray-300">TRADEDASH</span>
+          </div>
+        </div>
 
-            {/* Main Body */}
-            <div className="flex-grow flex flex-col justify-center items-start relative -ml-6 -mr-6">
-            <div className="pl-6">
-                <p className={cn("text-6xl font-bold", isWin ? 'text-blue-500' : 'text-red-500')}>
-                  {riskRewardRatio}
-                </p>
-                 <div className="flex items-baseline gap-3">
-                    <p className="text-2xl font-semibold">
-                      {isWin ? '+' : ''}{(entry.rMultiple?.toFixed(2) ?? '0.00')}R
-                    </p>
-                    <p className="text-2xl font-semibold text-gray-400">
-                      {entry.result.toUpperCase()}
-                    </p>
-                    {entry.session && (
-                        <p className="text-2xl font-semibold text-gray-400">{entry.session}</p>
-                    )}
-                </div>
-            </div>
+        {/* Main Body */}
+        <div className="flex-grow flex flex-col justify-center items-center relative">
+          <p className={cn("text-8xl font-bold", isWin ? 'text-blue-500' : 'text-red-500')}>
+            {isWin ? 'WIN' : 'LOSS'}
+          </p>
+          <div className="flex items-baseline gap-3">
+             <p className="text-2xl font-semibold">
+                {isWin ? '+' : ''}{(entry.rMultiple?.toFixed(2) ?? '0.00')}R
+            </p>
+             <p className="text-2xl font-semibold text-gray-400">
+                1:{riskRewardRatio}
+             </p>
+          </div>
+          
+          <div className="absolute bottom-0 left-0 w-full h-48 -ml-6 -mr-6">
+            <AreaChart data={chartData} width={380} height={192} margin={{top:0, right:0, left: 0, bottom: 0}}>
+                <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                    </linearGradient>
+                </defs>
+                <Area type="monotone" dataKey="cumulativePnl" stroke="#3B82F6" strokeWidth={2} fill="url(#chartGradient)" />
+            </AreaChart>
+          </div>
+        </div>
 
-            <div className="absolute bottom-0 left-0 w-full h-48">
-                <AreaChart data={chartData} width={380} height={192} margin={{top:0, right:0, left: 0, bottom: 0}}>
-                    <defs>
-                        <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                        </linearGradient>
-                    </defs>
-                    <Area type="monotone" dataKey="cumulativePnl" stroke="#3B82F6" strokeWidth={2} fill="url(#chartGradient)" />
-                </AreaChart>
-            </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex justify-between items-end">
-            <div>
-                <p className="text-xs text-gray-400">TRADER</p>
-                <p className="font-semibold">{user?.displayName || 'Trader'}</p>
-            </div>
-            <div>
-                <p className="text-xs text-gray-400 text-right">STATUS</p>
-                <p className="font-semibold">{user?.isAnonymous ? 'Guest' : 'Member'}</p>
-            </div>
-            </div>
+        {/* Footer */}
+        <div className="flex justify-between items-end">
+          <div>
+            <p className="text-xs text-gray-400">TRADER</p>
+            <p className="font-semibold">{user?.displayName || 'Trader'}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 text-right">STATUS</p>
+            <p className="font-semibold">{user?.isAnonymous ? 'Guest' : 'Member'}</p>
+          </div>
         </div>
       </div>
       <Button onClick={onDownload} variant="outline" className="w-full">
