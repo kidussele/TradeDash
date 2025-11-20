@@ -37,7 +37,7 @@ service cloud.firestore {
 
       // Messages can be listed, read, and created by members of the chat room.
       match /messages/{messageId} {
-        allow list, read, create: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.members;
+        allow list, read, create: if isAuthenticated() && get(/databases/$(database)/documents/chatRooms/$(roomId)).data.members.hasAny([request.auth.uid]);
       }
     }
   }
