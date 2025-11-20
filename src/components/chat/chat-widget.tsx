@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Minus, X, Expand, Users, MessageCircle, Paperclip } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
 
 type UserProfile = {
   id: string;
@@ -45,15 +46,17 @@ type ChatMessage = {
 export function ChatWidget() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState<'chats' | 'users'>('chats');
   const [activeRoomId, setActiveRoomId] = useState<string | null>('general');
   const [newMessage, setNewMessage] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const [isAddingImage, setIsAddingImage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [lastReadTimestamps, setLastReadTimestamps] = useState<Record<string, Timestamp>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   // --- Data Fetching ---
   const usersRef = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
@@ -111,8 +114,8 @@ export function ChatWidget() {
   }, [chatRooms, user, firestore, allUsers]);
 
   // --- Event Handlers ---
-  const handleSendMessage = async () => {
-    if ((!newMessage.trim() && !imageUrl.trim()) || !user || !activeRoomId || !activeRoom) return;
+  const handleSendMessage = async (imageUrlToSend?: string) => {
+    if ((!newMessage.trim() && !imageUrlToSend) || !user || !activeRoomId || !activeRoom) return;
 
     const messagePayload: Omit<ChatMessage, 'id' | 'timestamp'> = {
       senderId: user.uid,
@@ -122,8 +125,8 @@ export function ChatWidget() {
     if (newMessage.trim()) {
       messagePayload.text = newMessage.trim();
     }
-    if (imageUrl.trim()) {
-      messagePayload.imageUrl = imageUrl.trim();
+    if (imageUrlToSend) {
+      messagePayload.imageUrl = imageUrlToSend;
     }
     
     const messagesColRef = collection(firestore, 'chatRooms', activeRoomId, 'messages');
@@ -139,7 +142,6 @@ export function ChatWidget() {
     }, { merge: true });
 
     setNewMessage('');
-    setImageUrl('');
     setIsAddingImage(false);
   };
   
@@ -184,6 +186,53 @@ export function ChatWidget() {
     const otherUser = allUsers.find(u => u.id === otherUserId);
     return otherUser?.displayName || 'Private Chat';
   }
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1 * 1024 * 1024) { // 1MB limit
+        toast({
+            variant: 'destructive',
+            title: 'File too large',
+            description: 'Please upload an image smaller than 1MB.',
+        });
+        return;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'File upload failed');
+        }
+
+        const { url } = await response.json();
+        await handleSendMessage(url);
+
+    } catch (error) {
+        console.error(error);
+        toast({
+            variant: 'destructive',
+            title: 'Upload Failed',
+            description: (error as Error).message || 'Could not upload the image.',
+        });
+    } finally {
+        setIsUploading(false);
+        // Reset file input
+        if(fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    }
+  };
 
   if (!user) return null;
 
@@ -342,20 +391,22 @@ export function ChatWidget() {
                 <div ref={messagesEndRef} />
               </ScrollArea>
               <CardFooter className="p-2 border-t flex flex-col items-start gap-2">
-                 {isAddingImage && (
-                  <Input 
-                    value={imageUrl} 
-                    onChange={e => setImageUrl(e.target.value)} 
-                    placeholder="Paste image URL..."
-                    className="h-8"
-                  />
-                 )}
+                 <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/png, image/jpeg, image/gif"
+                    disabled={isUploading}
+                 />
                 <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="w-full flex gap-2">
-                  <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => setIsAddingImage(!isAddingImage)}>
-                    <Paperclip className={cn("h-5 w-5", isAddingImage && "text-primary")} />
+                  <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." disabled={isUploading} />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                    <Paperclip className="h-5 w-5" />
                   </Button>
-                  <Button type="submit">Send</Button>
+                  <Button type="submit" disabled={isUploading || (!newMessage.trim())}>
+                    {isUploading ? '...' : 'Send'}
+                  </Button>
                 </form>
               </CardFooter>
             </div>
