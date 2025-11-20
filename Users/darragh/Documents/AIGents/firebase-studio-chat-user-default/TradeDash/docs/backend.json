@@ -1,0 +1,213 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile information.",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "UserStatus": {
+      "title": "UserStatus",
+      "type": "object",
+      "description": "Represents a user's real-time presence status.",
+      "properties": {
+        "status": { "type": "string", "enum": ["online", "offline"] },
+        "lastChanged": { "type": "string", "format": "date-time" }
+      },
+      "required": ["status", "lastChanged"]
+    },
+    "ChatRoom": {
+        "title": "ChatRoom",
+        "type": "object",
+        "description": "Represents a single chat room, either a group or private.",
+        "properties": {
+            "name": { "type": "string" },
+            "type": { "type": "string", "enum": ["group", "private"]},
+            "members": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Array of user IDs who are members of this room."
+            },
+            "lastMessage": {
+              "type": "object",
+              "properties": {
+                "text": { "type": "string" },
+                "timestamp": { "type": "string", "format": "date-time" }
+              }
+            }
+        },
+        "required": ["name", "type", "members"]
+    },
+    "ChatMessage": {
+        "title": "ChatMessage",
+        "type": "object",
+        "description": "A single message within a chat room.",
+        "properties": {
+            "senderId": { "type": "string" },
+            "senderName": { "type": "string" },
+            "senderAvatar": { "type": "string", "format": "uri" },
+            "text": { "type": "string" },
+            "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["senderId", "senderName", "text", "timestamp"]
+    },
+    "JournalEntry": {
+        "title": "JournalEntry",
+        "type": "object",
+        "description": "A single entry in the user's trading journal.",
+        "properties": {
+            "id": { "type": "string" },
+            "date": { "type": "string", "format": "date-time" },
+            "session": { "type": "string", "enum": ["London", "New York", "Tokyo", "Sydney"] },
+            "currencyPair": { "type": "string" },
+            "direction": { "type": "string", "enum": ["Long", "Short"] },
+            "entryPrice": { "type": "number" },
+            "stopLoss": { "type": "number" },
+            "takeProfit": { "type": "number" },
+            "positionSize": { "type": "number" },
+            "entryTime": { "type": "string", "format": "date-time" },
+            "exitTime": { "type": "string", "format": "date-time" },
+            "pnl": { "type": "number" },
+            "rMultiple": { "type": "number" },
+            "result": { "type": "string", "enum": ["Win", "Loss", "Breakeven", "Ongoing"] },
+            "notes": { "type": "string" },
+            "screenshotBefore": { "type": "string", "format": "uri" },
+            "screenshotAfter": { "type": "string", "format": "uri" },
+            "adherenceToPlan": { "type": "string", "enum": ["Yes", "No", "Partial"] },
+            "emotion": { "type": "string", "enum": ["Greedy", "Fearful", "Confident", "Neutral", "Anxious", "Patient"] }
+        },
+        "required": ["id", "date", "currencyPair", "direction", "entryPrice", "stopLoss", "takeProfit", "positionSize", "result", "notes", "adherenceToPlan"]
+    },
+    "BacktestJournalEntry": {
+        "title": "BacktestJournalEntry",
+        "type": "object",
+        "description": "A single entry in the user's backtest journal.",
+        "properties": {
+            "id": { "type": "string" },
+            "date": { "type": "string", "format": "date-time" },
+            "session": { "type": "string", "enum": ["London", "New York", "Tokyo", "Sydney"] },
+            "currencyPair": { "type": "string" },
+            "direction": { "type": "string", "enum": ["Long", "Short"] },
+            "entryPrice": { "type": "number" },
+            "stopLoss": { "type": "number" },
+            "takeProfit": { "type": "number" },
+            "positionSize": { "type": "number" },
+            "entryTime": { "type": "string", "format": "date-time" },
+            "exitTime": { "type": "string", "format": "date-time" },
+            "pnl": { "type": "number" },
+            "rMultiple": { "type": "number" },
+            "result": { "type": "string", "enum": ["Win", "Loss", "Breakeven", "Ongoing"] },
+            "notes": { "type": "string" },
+            "screenshotBefore": { "type": "string", "format": "uri" },
+            "screenshotAfter": { "type": "string", "format": "uri" },
+            "adherenceToPlan": { "type": "string", "enum": ["Yes", "No", "Partial"] }
+        },
+        "required": ["id", "date", "currencyPair", "direction", "entryPrice", "stopLoss", "takeProfit", "positionSize", "result", "notes", "adherenceToPlan"]
+    },
+    "Goal": {
+        "title": "Goal",
+        "type": "object",
+        "description": "A user's personal or trading goal.",
+        "properties": {
+            "id": { "type": "string" },
+            "period": { "type": "string", "enum": ["Monthly", "Quarterly", "Half Year", "Yearly", "Big Goal"] },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "imageUrl": { "type": "string", "format": "uri" },
+            "linkUrl": { "type": "string", "format": "uri" },
+            "imageHint": { "type": "string" },
+            "status": { "type": "string", "enum": ["In Progress", "Completed"] }
+        },
+        "required": ["id", "period", "title", "description", "imageUrl", "status"]
+    },
+    "Note": {
+        "title": "Note",
+        "type": "object",
+        "description": "A note in the user's market analysis or self-development notebook.",
+        "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "content": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "currencyPair": { "type": "string" },
+            "imageUrl": { "type": "string", "format": "uri" },
+            "linkUrl": { "type": "string", "format": "uri" }
+        },
+        "required": ["id", "title", "content", "createdAt"]
+    },
+    "Checklist": {
+        "title": "Checklist",
+        "type": "object",
+        "description": "A single strategy checklist.",
+        "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "items": { 
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string" },
+                        "text": { "type": "string" },
+                        "isChecked": { "type": "boolean" }
+                    },
+                    "required": ["id", "text", "isChecked"]
+                }
+            }
+        },
+        "required": ["id", "title", "items"]
+    }
+  },
+  "auth": {
+    "providers": ["password", "anonymous"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores public information about a user."
+    },
+    "/userStatus/{userId}": {
+      "schema": { "$ref": "#/entities/UserStatus" },
+      "description": "Stores the real-time presence of a user."
+    },
+    "/chatRooms/{roomId}": {
+        "schema": { "$ref": "#/entities/ChatRoom" },
+        "description": "A chat room, which can be a group or private."
+    },
+    "/chatRooms/{roomId}/messages/{messageId}": {
+        "schema": { "$ref": "#/entities/ChatMessage" },
+        "description": "Messages within a specific chat room."
+    },
+    "/users/{userId}/journalEntries/{entryId}": {
+        "schema": { "$ref": "#/entities/JournalEntry" },
+        "description": "User's live trading journal entries."
+    },
+    "/users/{userId}/backtestJournalEntries/{entryId}": {
+        "schema": { "$ref": "#/entities/BacktestJournalEntry" },
+        "description": "User's backtest trading journal entries."
+    },
+    "/users/{userId}/goals/{goalId}": {
+        "schema": { "$ref": "#/entities/Goal" },
+        "description": "User's motivational goals."
+    },
+    "/users/{userId}/notebookNotes/{noteId}": {
+        "schema": { "$ref": "#/entities/Note" },
+        "description": "User's market analysis notes."
+    },
+    "/users/{userId}/selfDevelopmentNotes/{noteId}": {
+        "schema": { "$ref": "#/entities/Note" },
+        "description": "User's self-development notes."
+    },
+    "/users/{userId}/strategyChecklists/{checklistId}": {
+        "schema": { "$ref": "#/entities/Checklist" },
+        "description": "User's trading strategy checklists."
+    }
+  }
+}
