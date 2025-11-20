@@ -8,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Minus, X, Expand, Users, MessageCircle, Paperclip, Pencil } from 'lucide-react';
+import { MessageSquare, Expand, X, Users, MessageCircle, Paperclip, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 type UserProfile = {
   id: string;
@@ -158,6 +159,13 @@ export function ChatWidget() {
 
     setNewMessage('');
   };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        handleSendMessage();
+    }
+  };
   
   const handleUserClick = async (targetUser: UserProfile) => {
     if (!user) return;
@@ -291,7 +299,7 @@ export function ChatWidget() {
         <Button onClick={() => setIsOpen(true)} className="rounded-full w-16 h-16 shadow-lg relative">
           <MessageSquare className="h-8 w-8" />
           {hasUnreadMessages && (
-            <span className="absolute top-0.5 left-0.5 block h-3 w-3 rounded-full bg-red-500 ring-2 ring-background" />
+            <span className="absolute top-0.5 left-0.5 block h-3.5 w-3.5 rounded-full bg-red-500 ring-2 ring-background" />
           )}
         </Button>
       </div>
@@ -307,7 +315,7 @@ export function ChatWidget() {
           <CardTitle className="text-lg font-semibold">{activeRoom ? getRoomDisplayName(activeRoom) : 'Chat'}</CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsExpanded(!isExpanded)}>
-              {isExpanded ? <Minus className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+              {isExpanded ? <X className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
             </Button>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsOpen(false)}>
               <X className="h-4 w-4" />
@@ -427,7 +435,7 @@ export function ChatWidget() {
                                 <Pencil className="h-4 w-4" />
                             </Button>
                         )}
-                        <div className={cn("max-w-xs rounded-lg text-sm", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted", isEditing ? "w-full" : "p-2")}>
+                        <div className={cn("max-w-xs rounded-lg text-sm whitespace-pre-wrap", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted", isEditing ? "w-full" : "p-2")}>
                           {!isCurrentUser && <p className="font-bold mb-1 p-2">{sender?.displayName}</p>}
                           
                           {isEditing ? (
@@ -462,7 +470,7 @@ export function ChatWidget() {
                 </div>
                 <div ref={messagesEndRef} />
               </ScrollArea>
-              <CardFooter className="p-2 border-t flex flex-col items-start gap-2">
+              <CardFooter className="p-2 border-t flex items-start gap-2">
                  <input
                     type="file"
                     ref={fileInputRef}
@@ -471,15 +479,23 @@ export function ChatWidget() {
                     accept="image/png, image/jpeg, image/gif"
                     disabled={isUploading}
                  />
-                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="w-full flex gap-2">
-                  <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message or paste an image URL" disabled={isUploading} />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                    <Paperclip className="h-5 w-5" />
-                  </Button>
-                  <Button type="submit" disabled={isUploading || (!newMessage.trim())}>
-                    {isUploading ? '...' : 'Send'}
-                  </Button>
-                </form>
+                <Textarea 
+                    value={newMessage} 
+                    onChange={e => setNewMessage(e.target.value)} 
+                    placeholder="Type a message..."
+                    onKeyDown={handleKeyDown}
+                    disabled={isUploading}
+                    className="flex-grow resize-none"
+                    rows={1}
+                />
+                  <div className="flex flex-col gap-1">
+                    <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                        <Paperclip className="h-5 w-5" />
+                    </Button>
+                    <Button type="submit" size="icon" onClick={() => handleSendMessage()} disabled={isUploading || (!newMessage.trim())}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-send-horizontal"><path d="m3 3 3 9-3 9 19-9Z"/><path d="M6 12h16"/></svg>
+                    </Button>
+                 </div>
               </CardFooter>
             </div>
           </div>
@@ -488,5 +504,3 @@ export function ChatWidget() {
     </div>
   );
 }
-
-    
