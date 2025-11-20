@@ -10,7 +10,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Minus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { placeholderImages } from '@/lib/placeholder-images';
 
 type UserProfile = {
   id: string;
@@ -30,7 +29,7 @@ type ChatRoom = {
   name: string;
   type: 'group' | 'private';
   members: string[];
-  lastMessage?: { text: string; timestamp: Timestamp };
+  lastMessage?: { text: string; timestamp: Timestamp, senderId: string };
 };
 
 type ChatMessage = {
@@ -77,7 +76,7 @@ export function ChatWidget() {
       const status = userStatuses?.find(s => s.id === u.id);
       return { ...u, online: status?.online ?? false };
     }).filter(u => u.id !== user?.uid);
-  }, [allUsers, userStatuses, user]);
+  }, [allUsers, userStatuses, user?.uid]);
 
   const sortedMessages = useMemo(() => 
     [...(messages || [])].sort((a,b) => a.timestamp?.toDate() - b.timestamp?.toDate()), 
@@ -116,14 +115,15 @@ export function ChatWidget() {
       text: newMessage,
       senderId: user.uid,
       timestamp: serverTimestamp(),
-      members: activeRoom.members, // Add denormalized members list
+      members: activeRoom.members,
     });
     
     const roomDocRef = doc(firestore, 'chatRooms', activeRoomId);
     setDocumentNonBlocking(roomDocRef, {
         lastMessage: {
             text: newMessage,
-            timestamp: serverTimestamp()
+            timestamp: serverTimestamp(),
+            senderId: user.uid,
         }
     }, { merge: true });
 
@@ -133,7 +133,6 @@ export function ChatWidget() {
   const handleUserClick = async (targetUser: UserProfile) => {
     if (!user) return;
     
-    // Check if a private chat room already exists
     const memberIds = [user.uid, targetUser.id].sort();
     const roomId = memberIds.join('_');
     
@@ -142,10 +141,9 @@ export function ChatWidget() {
     if (existingRoom) {
       handleRoomSelect(existingRoom.id);
     } else {
-      // Create a new private chat room
       const newRoomRef = doc(firestore, 'chatRooms', roomId);
       await setDocumentNonBlocking(newRoomRef, {
-        name: ``, // Private chats don't need a name, we'll derive it
+        name: ``,
         type: 'private',
         members: memberIds,
       });
@@ -177,10 +175,19 @@ export function ChatWidget() {
   if (!user) return null;
 
   if (!isOpen) {
+    const hasUnreadMessages = chatRooms.some(room => 
+      room.lastMessage && 
+      room.lastMessage.senderId !== user.uid &&
+      (!lastReadTimestamps[room.id] || room.lastMessage.timestamp > lastReadTimestamps[room.id])
+    );
+
     return (
       <div className="fixed bottom-4 right-4 z-50">
-        <Button onClick={() => setIsOpen(true)} className="rounded-full w-16 h-16 shadow-lg">
+        <Button onClick={() => setIsOpen(true)} className="rounded-full w-16 h-16 shadow-lg relative">
           <MessageSquare className="h-8 w-8" />
+          {hasUnreadMessages && (
+            <span className="absolute top-0 right-0 block h-3 w-3 transform -translate-y-1/2 translate-x-1/2 rounded-full bg-blue-500 ring-2 ring-background" />
+          )}
         </Button>
       </div>
     );
@@ -218,6 +225,7 @@ export function ChatWidget() {
                   <div className="p-2 space-y-1">
                     {chatRooms?.sort((a,b) => (b.lastMessage?.timestamp?.toDate() || 0) - (a.lastMessage?.timestamp?.toDate() || 0)).map(room => {
                         const isUnread = room.lastMessage && 
+                                       room.lastMessage.senderId !== user.uid &&
                                        (!lastReadTimestamps[room.id] || room.lastMessage.timestamp > lastReadTimestamps[room.id]);
 
                         return (
@@ -248,7 +256,7 @@ export function ChatWidget() {
                                 <AvatarImage src={u.photoURL} />
                                 <AvatarFallback>{u.displayName.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <div className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background", u.online ? 'bg-green-500' : 'bg-gray-400')} />
+                            <div className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background", u.online ? 'bg-green-500' : 'bg-red-500')} />
                           </div>
                           <span className="truncate">{u.displayName}</span>
                         </div>

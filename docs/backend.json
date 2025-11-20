@@ -142,7 +142,8 @@
           "type": "object",
           "properties": {
             "text": { "type": "string" },
-            "timestamp": { "type": "string", "format": "date-time" }
+            "timestamp": { "type": "string", "format": "date-time" },
+            "senderId": { "type": "string" }
           }
         }
       },
@@ -208,5 +209,3 @@
     }
   }
 }
-
-    
