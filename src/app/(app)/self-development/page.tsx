@@ -181,7 +181,7 @@ export default function SelfDevelopmentPage() {
        ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {sortedNotes.map((note, index) => (
-             <div key={note.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+             <div key={note.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 150}ms` }}>
                 <Card className="flex flex-col h-full">
                 <CardHeader>
                     <div className="flex justify-between items-start">

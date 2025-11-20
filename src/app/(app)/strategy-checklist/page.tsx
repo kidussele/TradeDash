@@ -263,7 +263,7 @@ export default function StrategyChecklistPage() {
           {checklists.map((cl, index) => {
             const allChecked = cl.items.length > 0 && cl.items.every(item => item.isChecked);
             return (
-              <div key={cl.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+              <div key={cl.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 150}ms` }}>
                 <Card className="flex flex-col h-full">
                     {showConfettiFor === cl.id && <Confetti onComplete={() => setShowConfettiFor(null)} />}
                     <CardHeader className="flex-row items-start justify-between">
