@@ -186,7 +186,7 @@ export function ChatWidget() {
         <Button onClick={() => setIsOpen(true)} className="rounded-full w-16 h-16 shadow-lg relative">
           <MessageSquare className="h-8 w-8" />
           {hasUnreadMessages && (
-            <span className="absolute top-0 left-0 block h-4 w-4 transform -translate-y-1/2 -translate-x-1/2 rounded-full bg-red-500 ring-2 ring-background" />
+            <span className="absolute top-0 left-0 block h-3 w-3 rounded-full bg-red-500 ring-2 ring-background" />
           )}
         </Button>
       </div>
@@ -232,7 +232,7 @@ export function ChatWidget() {
                         let otherUserStatus: UserStatus | undefined;
                         if (room.type === 'private') {
                             const otherUserId = room.members.find(id => id !== user.uid);
-                            otherUser = allUsers.find(u => u.id === otherUserId);
+                            otherUser = usersWithStatus.find(u => u.id === otherUserId);
                             if (otherUserId) {
                                 otherUserStatus = userStatuses.find(s => s.id === otherUserId);
                             }
@@ -249,7 +249,7 @@ export function ChatWidget() {
                                      {room.type === 'private' && (
                                         <div className={cn(
                                             "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background", 
-                                            otherUserStatus?.online ? 'bg-green-500' : 'bg-red-500'
+                                            otherUser?.online ? 'bg-green-500' : 'bg-red-500'
                                         )} />
                                     )}
                                 </div>
@@ -323,3 +323,5 @@ export function ChatWidget() {
     </div>
   );
 }
+
+    
