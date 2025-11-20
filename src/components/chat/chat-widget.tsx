@@ -186,7 +186,7 @@ export function ChatWidget() {
         <Button onClick={() => setIsOpen(true)} className="rounded-full w-16 h-16 shadow-lg relative">
           <MessageSquare className="h-8 w-8" />
           {hasUnreadMessages && (
-            <span className="absolute top-0 right-0 block h-3 w-3 transform -translate-y-1/2 translate-x-1/2 rounded-full bg-blue-500 ring-2 ring-background" />
+            <span className="absolute top-0 left-0 block h-4 w-4 transform -translate-y-1/2 -translate-x-1/2 rounded-full bg-red-500 ring-2 ring-background" />
           )}
         </Button>
       </div>
