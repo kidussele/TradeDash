@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Minus, X } from 'lucide-react';
+import { MessageSquare, Minus, X, Expand } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type UserProfile = {
@@ -186,7 +186,7 @@ export function ChatWidget() {
         <Button onClick={() => setIsOpen(true)} className="rounded-full w-16 h-16 shadow-lg relative">
           <MessageSquare className="h-8 w-8" />
           {hasUnreadMessages && (
-            <span className="absolute top-0 left-0 block h-3 w-3 rounded-full bg-red-500 ring-2 ring-background" />
+            <span className="absolute top-0.5 left-0.5 block h-3 w-3 rounded-full bg-red-500 ring-2 ring-background" />
           )}
         </Button>
       </div>
@@ -196,13 +196,13 @@ export function ChatWidget() {
   const getSender = (senderId: string) => allUsers.find(u => u.id === senderId);
 
   return (
-    <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[680px] h-[500px]" : "w-[350px] h-14")}>
+    <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[680px] h-[500px]" : "w-[300px] h-14")}>
       <Card className="w-full h-full flex flex-col shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
           <CardTitle className="text-lg font-semibold">{activeRoom ? getRoomDisplayName(activeRoom) : 'Chat'}</CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsExpanded(!isExpanded)}>
-              <Minus className="h-4 w-4" />
+              {isExpanded ? <Minus className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
             </Button>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsOpen(false)}>
               <X className="h-4 w-4" />
@@ -229,13 +229,9 @@ export function ChatWidget() {
                                        (!lastReadTimestamps[room.id] || room.lastMessage.timestamp > lastReadTimestamps[room.id]);
                         
                         let otherUser: (UserProfile & {online?: boolean}) | undefined;
-                        let otherUserStatus: UserStatus | undefined;
                         if (room.type === 'private') {
                             const otherUserId = room.members.find(id => id !== user.uid);
                             otherUser = usersWithStatus.find(u => u.id === otherUserId);
-                            if (otherUserId) {
-                                otherUserStatus = userStatuses.find(s => s.id === otherUserId);
-                            }
                         }
 
                         return (
@@ -246,7 +242,7 @@ export function ChatWidget() {
                                         <AvatarImage src={room.type === 'group' ? undefined : otherUser?.photoURL} />
                                         <AvatarFallback>{getRoomDisplayName(room).charAt(0)}</AvatarFallback>
                                     </Avatar>
-                                     {room.type === 'private' && (
+                                     {room.type === 'private' && otherUser && (
                                         <div className={cn(
                                             "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background", 
                                             otherUser?.online ? 'bg-green-500' : 'bg-red-500'
@@ -323,5 +319,7 @@ export function ChatWidget() {
     </div>
   );
 }
+
+    
 
     
