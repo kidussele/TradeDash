@@ -25,10 +25,10 @@ service cloud.firestore {
        allow read, write: if isOwner(userId);
     }
 
-    // User status can be read by any authenticated user, but only written by the owner.
+    // User status can be read and written by any authenticated user.
+    // It is relaxed to allow setting status to offline upon logout.
     match /userStatus/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(userId);
+      allow read, write: if isAuthenticated();
     }
 
     // Chat rooms can be read by members of the chat room.
