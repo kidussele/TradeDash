@@ -60,9 +60,9 @@ export default function AppLayout({
       <AppSidebar />
       <SidebarInset>
         <Header />
-        <main className="p-4 lg:p-6">{children}</main>
+        <main className="p-4 lg:p-6 flex-grow">{children}</main>
         <Toaster />
-        <div className="relative">
+        <div className="fixed bottom-0 right-0 z-40">
           <ChatWidget />
         </div>
         <PresenceIndicator />
