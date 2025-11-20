@@ -78,7 +78,7 @@ export default function HomePage() {
       <header className="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
           <Activity className="size-7 shrink-0 text-primary" />
-          <h1 className="text-xl font-semibold">TradeDash</h1>
+          <h1 className="text-xl font-semibold">Quantum Ledger</h1>
         </Link>
         <div className="flex items-center gap-2">
           <Button variant="ghost" asChild>
@@ -95,10 +95,10 @@ export default function HomePage() {
         <section className="py-20 md:py-32">
           <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              Elevate Your Trading with TradeDash
+              Elevate Your Trading with Quantum Ledger
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-              TradeDash is an amazing trading journal designed to help you analyze your performance, find your edge, and achieve your goals.
+              Quantum Ledger is an amazing trading journal designed to help you analyze your performance, find your edge, and achieve your goals.
             </p>
             <div className="mt-8 flex justify-center gap-4">
               <Button size="lg" asChild>
@@ -160,7 +160,7 @@ export default function HomePage() {
 
       <footer className="py-8 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-muted-foreground text-sm">
-          <p>&copy; {new Date().getFullYear()} TradeDash. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Quantum Ledger. All rights reserved.</p>
         </div>
       </footer>
     </div>

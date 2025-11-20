@@ -81,7 +81,7 @@ export function AppSidebar() {
            <Activity className="size-7 shrink-0 text-primary" />
            <div className={cn("flex-1 overflow-hidden transition-all duration-200", state === 'collapsed' ? "w-0" : "w-auto")}>
             <h1 className='text-lg font-semibold'>
-              TradeDash
+              Quantum Ledger
             </h1>
            </div>
            <div className={cn("ml-auto", state === 'collapsed' && "hidden")}>

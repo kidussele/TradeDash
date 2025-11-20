@@ -3,7 +3,7 @@ import { placeholderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
 
 export const metadata: Metadata = {
-  title: 'Authentication - TradeDash',
+  title: 'Authentication - Quantum Ledger',
   description: 'Login or create an account to get started.',
 };
 

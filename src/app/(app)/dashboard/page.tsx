@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { CumulativePnlChart } from '@/components/dashboard/cumulative-pnl-chart';
 import { DailyPnlChart } from '@/components/dashboard/daily-pnl-chart';
-import { TradeDashScore } from '@/components/dashboard/tradedash-score';
+import { QuantumScore } from '@/components/dashboard/quantum-score';
 import { RecentTrades } from '@/components/dashboard/recent-trades';
 import { TradingCalendar } from '@/components/dashboard/trading-calendar';
 import type { JournalEntry } from '../journal/page';
@@ -149,7 +149,7 @@ export default function DashboardPage() {
         <CumulativePnlChart entries={journalEntries as JournalEntry[]} />
       </div>
       <div className="col-span-4 lg:col-span-1">
-        <TradeDashScore entries={journalEntries as JournalEntry[]} />
+        <QuantumScore entries={journalEntries as JournalEntry[]} />
       </div>
       <div className="col-span-4 lg:col-span-2">
         <RecentTrades entries={journalEntries as JournalEntry[]} />

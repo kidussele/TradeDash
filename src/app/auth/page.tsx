@@ -126,7 +126,7 @@ export default function AuthPage() {
         <Link href="/" className="flex items-center gap-2 text-foreground">
           <Activity className="size-7 shrink-0 text-primary" />
           <h1 className='text-xl font-semibold'>
-            TradeDash
+            Quantum Ledger
           </h1>
         </Link>
       </div>
