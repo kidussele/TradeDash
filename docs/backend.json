@@ -158,9 +158,10 @@
         "text": { "type": "string" },
         "senderId": { "type": "string" },
         "timestamp": { "type": "string", "format": "date-time" },
-        "members": { "type": "array", "items": { "type": "string" } }
+        "members": { "type": "array", "items": { "type": "string" } },
+        "imageUrl": { "type": "string", "format": "uri" }
       },
-      "required": ["id", "text", "senderId", "timestamp", "members"]
+      "required": ["id", "senderId", "timestamp", "members"]
     }
   },
   "auth": {

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Minus, X, Expand, Users, MessageCircle } from 'lucide-react';
+import { MessageSquare, Minus, X, Expand, Users, MessageCircle, Paperclip } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -35,7 +35,8 @@ type ChatRoom = {
 
 type ChatMessage = {
   id: string;
-  text: string;
+  text?: string;
+  imageUrl?: string;
   senderId: string;
   timestamp: any;
   members: string[]; // Denormalized for security rules
@@ -49,6 +50,8 @@ export function ChatWidget() {
   const [activeTab, setActiveTab] = useState<'chats' | 'users'>('chats');
   const [activeRoomId, setActiveRoomId] = useState<string | null>('general');
   const [newMessage, setNewMessage] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [isAddingImage, setIsAddingImage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [lastReadTimestamps, setLastReadTimestamps] = useState<Record<string, Timestamp>>({});
   
@@ -109,26 +112,35 @@ export function ChatWidget() {
 
   // --- Event Handlers ---
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !user || !activeRoomId || !activeRoom) return;
+    if ((!newMessage.trim() && !imageUrl.trim()) || !user || !activeRoomId || !activeRoom) return;
 
-    const messagesColRef = collection(firestore, 'chatRooms', activeRoomId, 'messages');
-    await addDocumentNonBlocking(messagesColRef, {
-      text: newMessage,
+    const messagePayload: Omit<ChatMessage, 'id' | 'timestamp'> = {
       senderId: user.uid,
-      timestamp: serverTimestamp(),
       members: activeRoom.members,
-    });
+    };
+    
+    if (newMessage.trim()) {
+      messagePayload.text = newMessage.trim();
+    }
+    if (imageUrl.trim()) {
+      messagePayload.imageUrl = imageUrl.trim();
+    }
+    
+    const messagesColRef = collection(firestore, 'chatRooms', activeRoomId, 'messages');
+    await addDocumentNonBlocking(messagesColRef, { ...messagePayload, timestamp: serverTimestamp() });
     
     const roomDocRef = doc(firestore, 'chatRooms', activeRoomId);
     setDocumentNonBlocking(roomDocRef, {
         lastMessage: {
-            text: newMessage,
+            text: messagePayload.text || 'Image',
             timestamp: serverTimestamp(),
             senderId: user.uid,
         }
     }, { merge: true });
 
     setNewMessage('');
+    setImageUrl('');
+    setIsAddingImage(false);
   };
   
   const handleUserClick = async (targetUser: UserProfile) => {
@@ -315,9 +327,13 @@ export function ChatWidget() {
                             <AvatarFallback>{sender?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
                           </Avatar>
                         )}
-                        <div className={cn("max-w-xs rounded-lg p-3 text-sm", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted")}>
+                        <div className={cn("max-w-xs rounded-lg p-2 text-sm", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted")}>
                           {!isCurrentUser && <p className="font-bold mb-1">{sender?.displayName}</p>}
-                          <p>{message.text}</p>
+                          {message.text && <p>{message.text}</p>}
+                          {message.imageUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={message.imageUrl} alt="Shared image" className="mt-2 rounded-md max-w-full h-auto cursor-pointer" onClick={() => window.open(message.imageUrl, '_blank')} />
+                          )}
                         </div>
                       </div>
                     );
@@ -325,9 +341,20 @@ export function ChatWidget() {
                 </div>
                 <div ref={messagesEndRef} />
               </ScrollArea>
-              <CardFooter className="p-2 border-t">
+              <CardFooter className="p-2 border-t flex flex-col items-start gap-2">
+                 {isAddingImage && (
+                  <Input 
+                    value={imageUrl} 
+                    onChange={e => setImageUrl(e.target.value)} 
+                    placeholder="Paste image URL..."
+                    className="h-8"
+                  />
+                 )}
                 <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="w-full flex gap-2">
                   <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => setIsAddingImage(!isAddingImage)}>
+                    <Paperclip className={cn("h-5 w-5", isAddingImage && "text-primary")} />
+                  </Button>
                   <Button type="submit">Send</Button>
                 </form>
               </CardFooter>
