@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Expand, X, Users, MessageCircle, Paperclip, Pencil } from 'lucide-react';
+import { MessageSquare, Expand, X, Users, MessageCircle, Paperclip, Pencil, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
@@ -311,11 +311,11 @@ export function ChatWidget() {
   return (
     <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[480px] h-[450px]" : "w-auto")}>
       <Card className={cn("w-full h-full flex flex-col shadow-lg", !isExpanded && "h-14")}>
-        <CardHeader className="flex flex-row items-center justify-between p-3 border-b bg-accent/10">
+        <CardHeader className="flex flex-row items-center justify-between p-3 border-b bg-blue-500/10">
           <CardTitle className="text-lg font-semibold">{activeRoom ? getRoomDisplayName(activeRoom) : 'Chat'}</CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsExpanded(!isExpanded)}>
-              {isExpanded ? <X className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+              {isExpanded ? <Minus className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
             </Button>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsOpen(false)}>
               <X className="h-4 w-4" />
@@ -506,6 +506,8 @@ export function ChatWidget() {
 }
 
     
+    
+
     
 
     
