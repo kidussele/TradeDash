@@ -113,7 +113,7 @@ export default function NotebookPage() {
               }
             }}>
                 <DialogTrigger asChild>
-                    <Button onClick={handleAddNew}>
+                    <Button onClick={handleAddNew} className="animate-in fade-in-0 zoom-in-95 duration-500">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Note
                     </Button>

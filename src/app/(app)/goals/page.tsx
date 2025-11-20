@@ -186,11 +186,11 @@ export default function GoalsPage() {
   return (
     <div className="space-y-6">
        <div className="flex justify-between items-center animate-in fade-in-0 duration-500">
-        <div>
+        <div className="animate-in fade-in-0 slide-in-from-left-4 duration-500">
           <h1 className="text-2xl font-bold">Goals</h1>
           <p className="text-muted-foreground">Set and track what you want to achieve.</p>
         </div>
-        <Button onClick={handleAddNew}>
+        <Button onClick={handleAddNew} className="animate-in fade-in-0 zoom-in-95 duration-500">
             <PlusCircle className="mr-2 h-4 w-4" />
             Add New Goal
         </Button>

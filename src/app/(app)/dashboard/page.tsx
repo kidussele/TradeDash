@@ -132,34 +132,34 @@ export default function DashboardPage() {
   }
 
   const allCards = [
-    <div key="pnl" className="col-span-4 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '100ms' }}>
+    <div key="pnl" className="col-span-4 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '100ms' }}>
       <StatCard {...statsData.pnl} />
     </div>,
-    <div key="winrate" className="col-span-4 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '200ms' }}>
+    <div key="winrate" className="col-span-4 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '200ms' }}>
       <WinRateRRCard winRate={statsData.winRate} avgRR={statsData.avgRR} />
     </div>,
-    <div key="bestday" className="col-span-4 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '300ms' }}>
+    <div key="bestday" className="col-span-4 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '300ms' }}>
       <StatCard {...statsData.bestDay} />
     </div>,
-    <div key="worstday" className="col-span-4 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '400ms' }}>
+    <div key="worstday" className="col-span-4 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '400ms' }}>
       <StatCard {...statsData.worstDay} />
     </div>,
-    <div key="cumpnl" className="col-span-4 lg:col-span-3 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '500ms' }}>
+    <div key="cumpnl" className="col-span-4 lg:col-span-3 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '500ms' }}>
       <CumulativePnlChart entries={journalEntries as JournalEntry[]} />
     </div>,
-    <div key="qscore" className="col-span-4 lg:col-span-1 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '600ms' }}>
+    <div key="qscore" className="col-span-4 lg:col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '600ms' }}>
       <QuantumScore entries={journalEntries as JournalEntry[]} />
     </div>,
-    <div key="recent" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '700ms' }}>
+    <div key="recent" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '700ms' }}>
       <RecentTrades entries={journalEntries as JournalEntry[]} />
     </div>,
-    <div key="dailypnl" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '800ms' }}>
+    <div key="dailypnl" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '800ms' }}>
       <DailyPnlChart entries={journalEntries as JournalEntry[]} />
     </div>,
-    <div key="emotion" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '900ms' }}>
+    <div key="emotion" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '900ms' }}>
       <EmotionAnalysisChart entries={journalEntries as JournalEntry[]} />
     </div>,
-    <div key="calendar" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '1000ms' }}>
+    <div key="calendar" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '1000ms' }}>
       <TradingCalendar entries={journalEntries as JournalEntry[]} />
     </div>
   ];

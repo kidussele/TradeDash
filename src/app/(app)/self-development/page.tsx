@@ -103,7 +103,7 @@ export default function SelfDevelopmentPage() {
   return (
     <div className="space-y-6">
        <div className="flex justify-between items-center animate-in fade-in-0 duration-500">
-            <div>
+            <div className="animate-in fade-in-0 slide-in-from-left-4 duration-500">
               <h1 className="text-2xl font-bold">Self Development</h1>
               <p className="text-muted-foreground">A space for personal growth and reflection.</p>
             </div>
@@ -115,7 +115,7 @@ export default function SelfDevelopmentPage() {
               }
             }}>
                 <DialogTrigger asChild>
-                    <Button onClick={handleAddNew}>
+                    <Button onClick={handleAddNew} className="animate-in fade-in-0 zoom-in-95 duration-500">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Note
                     </Button>
