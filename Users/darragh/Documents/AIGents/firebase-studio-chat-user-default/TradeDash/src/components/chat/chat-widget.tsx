@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, getDocs, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, serverTimestamp, orderBy, doc } from 'firebase/firestore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -204,15 +204,19 @@ export function ChatWidget() {
 
   // Effect to ensure a "General" room exists.
    useMemo(() => {
-    if (user && rooms.length === 0) {
+    if (user && users.length > 0 && rooms.length === 0) {
       const generalRoomRef = collection(firestore, 'chatRooms');
       const q = query(generalRoomRef, where('name', '==', 'General'));
       getDocs(q).then(snapshot => {
         if (snapshot.empty) {
+          const allUserIds = users.map(u => u.id);
+          if (!allUserIds.includes(user.uid)) {
+            allUserIds.push(user.uid);
+          }
           addDocumentNonBlocking(generalRoomRef, {
             name: 'General',
             type: 'group',
-            members: users.map(u => u.id)
+            members: allUserIds
           });
         }
       });
