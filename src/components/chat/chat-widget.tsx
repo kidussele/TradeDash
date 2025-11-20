@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Minus, X, Expand } from 'lucide-react';
+import { MessageSquare, Minus, X, Expand, Users, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type UserProfile = {
   id: string;
@@ -196,7 +197,7 @@ export function ChatWidget() {
   const getSender = (senderId: string) => allUsers.find(u => u.id === senderId);
 
   return (
-    <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[680px] h-[500px]" : "w-[300px] h-14")}>
+    <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[480px] h-[450px]" : "w-[300px] h-14")}>
       <Card className="w-full h-full flex flex-col shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
           <CardTitle className="text-lg font-semibold">{activeRoom ? getRoomDisplayName(activeRoom) : 'Chat'}</CardTitle>
@@ -213,16 +214,28 @@ export function ChatWidget() {
         {isExpanded && (
           <div className="flex flex-grow min-h-0">
             {/* Sidebar */}
-            <div className="w-[200px] border-r flex flex-col">
+             <div className="w-[72px] border-r flex flex-col items-center">
               <div className="p-2 border-b">
-                 <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
-                    <Button size="sm" variant={activeTab === 'chats' ? 'secondary': 'ghost'} className="h-7" onClick={() => setActiveTab('chats')}>Chats</Button>
-                    <Button size="sm" variant={activeTab === 'users' ? 'secondary': 'ghost'} className="h-7" onClick={() => setActiveTab('users')}>Users</Button>
+                 <div className="flex flex-col gap-1 rounded-md bg-muted p-1">
+                    <TooltipProvider>
+                       <Tooltip>
+                         <TooltipTrigger asChild>
+                           <Button size="sm" variant={activeTab === 'chats' ? 'secondary': 'ghost'} className="h-9 w-9 p-0" onClick={() => setActiveTab('chats')}><MessageCircle /></Button>
+                         </TooltipTrigger>
+                         <TooltipContent side="right"><p>Chats</p></TooltipContent>
+                       </Tooltip>
+                       <Tooltip>
+                         <TooltipTrigger asChild>
+                           <Button size="sm" variant={activeTab === 'users' ? 'secondary': 'ghost'} className="h-9 w-9 p-0" onClick={() => setActiveTab('users')}><Users/></Button>
+                         </TooltipTrigger>
+                         <TooltipContent side="right"><p>Users</p></TooltipContent>
+                       </Tooltip>
+                    </TooltipProvider>
                 </div>
               </div>
-              <ScrollArea className="flex-grow">
+              <ScrollArea className="flex-grow w-full">
                 {activeTab === 'chats' && (
-                  <div className="p-2 space-y-1">
+                  <div className="p-2 space-y-2 flex flex-col items-center">
                     {chatRooms?.sort((a,b) => (b.lastMessage?.timestamp?.toDate() || 0) - (a.lastMessage?.timestamp?.toDate() || 0)).map(room => {
                         const isUnread = room.lastMessage && 
                                        room.lastMessage.senderId !== user.uid &&
@@ -233,48 +246,54 @@ export function ChatWidget() {
                             const otherUserId = room.members.find(id => id !== user.uid);
                             otherUser = usersWithStatus.find(u => u.id === otherUserId);
                         }
+                        
+                        const displayName = getRoomDisplayName(room);
 
                         return (
-                        <Button key={room.id} variant={activeRoomId === room.id ? "secondary": "ghost"} className="w-full justify-start h-12" onClick={() => handleRoomSelect(room.id)}>
-                            <div className="flex items-center gap-2 w-full">
-                                <div className="relative">
-                                    <Avatar className="h-8 w-8">
+                        <TooltipProvider key={room.id}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button key={room.id} variant={activeRoomId === room.id ? "secondary": "ghost"} className="w-12 h-12 p-0 rounded-full relative" onClick={() => handleRoomSelect(room.id)}>
+                                    <Avatar className="h-10 w-10">
                                         <AvatarImage src={room.type === 'group' ? undefined : otherUser?.photoURL} />
-                                        <AvatarFallback>{getRoomDisplayName(room).charAt(0)}</AvatarFallback>
+                                        <AvatarFallback>{displayName.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                      {room.type === 'private' && otherUser && (
                                         <div className={cn(
-                                            "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background", 
+                                            "absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-background", 
                                             otherUser?.online ? 'bg-green-500' : 'bg-red-500'
                                         )} />
                                     )}
-                                </div>
-                                <div className="text-left flex-grow overflow-hidden">
-                                    <p className="text-sm font-medium truncate">{getRoomDisplayName(room)}</p>
-                                    <p className="text-xs text-muted-foreground truncate">{room.lastMessage?.text}</p>
-                                </div>
-                                {isUnread && <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
-                            </div>
-                        </Button>
+                                     {isUnread && <div className="absolute top-0 left-0 h-3 w-3 rounded-full bg-blue-500 ring-2 ring-background" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                                <p className="font-bold">{displayName}</p>
+                                {room.lastMessage && <p className="text-xs text-muted-foreground">{room.lastMessage.text}</p>}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         )
                     })}
                   </div>
                 )}
                 {activeTab === 'users' && (
-                  <div className="p-2 space-y-1">
+                  <div className="p-2 space-y-2 flex flex-col items-center">
                     {usersWithStatus.map(u => (
-                      <Button key={u.id} variant="ghost" className="w-full justify-start h-10" onClick={() => handleUserClick(u)}>
-                        <div className="flex items-center gap-3">
-                          <div className="relative">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={u.photoURL} />
-                                <AvatarFallback>{u.displayName.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background", u.online ? 'bg-green-500' : 'bg-red-500')} />
-                          </div>
-                          <span className="truncate">{u.displayName}</span>
-                        </div>
-                      </Button>
+                       <TooltipProvider key={u.id}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" className="w-12 h-12 p-0 rounded-full relative" onClick={() => handleUserClick(u)}>
+                                    <Avatar className="h-10 w-10">
+                                        <AvatarImage src={u.photoURL} />
+                                        <AvatarFallback>{u.displayName.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className={cn("absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-background", u.online ? 'bg-green-500' : 'bg-red-500')} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right"><p>{u.displayName}</p></TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                     ))}
                   </div>
                 )}
@@ -297,7 +316,7 @@ export function ChatWidget() {
                           </Avatar>
                         )}
                         <div className={cn("max-w-xs rounded-lg p-3 text-sm", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted")}>
-                          <p className="font-bold mb-1">{sender?.displayName}</p>
+                          {!isCurrentUser && <p className="font-bold mb-1">{sender?.displayName}</p>}
                           <p>{message.text}</p>
                         </div>
                       </div>
@@ -319,7 +338,3 @@ export function ChatWidget() {
     </div>
   );
 }
-
-    
-
-    
