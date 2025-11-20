@@ -38,6 +38,7 @@ type ChatMessage = {
   text: string;
   senderId: string;
   timestamp: any;
+  members: string[]; // Denormalized for security rules
 };
 
 export function ChatWidget() {
@@ -78,7 +79,7 @@ export function ChatWidget() {
   }, [allUsers, userStatuses, user]);
 
   const sortedMessages = useMemo(() => 
-    [...messages].sort((a,b) => a.timestamp?.toDate() - b.timestamp?.toDate()), 
+    [...(messages || [])].sort((a,b) => a.timestamp?.toDate() - b.timestamp?.toDate()), 
   [messages]);
 
   const activeRoom = useMemo(() => chatRooms?.find(r => r.id === activeRoomId), [chatRooms, activeRoomId]);
@@ -107,13 +108,14 @@ export function ChatWidget() {
 
   // --- Event Handlers ---
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !user || !activeRoomId) return;
+    if (!newMessage.trim() || !user || !activeRoomId || !activeRoom) return;
 
     const messagesColRef = collection(firestore, 'chatRooms', activeRoomId, 'messages');
     await addDocumentNonBlocking(messagesColRef, {
       text: newMessage,
       senderId: user.uid,
       timestamp: serverTimestamp(),
+      members: activeRoom.members, // Add denormalized members list
     });
     
     const roomDocRef = doc(firestore, 'chatRooms', activeRoomId);
@@ -277,3 +279,5 @@ export function ChatWidget() {
     </div>
   );
 }
+
+    

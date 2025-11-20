@@ -25,20 +25,23 @@ service cloud.firestore {
        allow read, write: if isOwner(userId);
     }
 
-    // User status can be read and written by any authenticated user.
+    // User status can be read by any authenticated user, and written by any authenticated user.
     match /userStatus/{userId} {
       allow read, write: if isAuthenticated();
     }
 
-    // Chat rooms can be read and created by members of the chat room.
+    // Chat rooms can be read and updated by members of the chat room.
+    // They can only be created by users who include themselves in the members list.
     match /chatRooms/{roomId} {
       allow read, update: if isAuthenticated() && request.auth.uid in resource.data.members;
       allow create: if isAuthenticated() && request.auth.uid in request.resource.data.members;
 
-      // Messages can be listed, read, and created by members of the chat room.
+      // Messages can be listed, read, and created by members of that chat.
       match /messages/{messageId} {
-        allow list, read, create: if isAuthenticated() && get(/databases/$(database)/documents/chatRooms/$(roomId)).data.members.hasAny([request.auth.uid]);
+        allow read, create: if isAuthenticated() && request.auth.uid in resource.data.members;
       }
     }
   }
 }
+
+    

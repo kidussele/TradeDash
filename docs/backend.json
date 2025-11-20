@@ -156,9 +156,10 @@
         "id": { "type": "string" },
         "text": { "type": "string" },
         "senderId": { "type": "string" },
-        "timestamp": { "type": "string", "format": "date-time" }
+        "timestamp": { "type": "string", "format": "date-time" },
+        "members": { "type": "array", "items": { "type": "string" } }
       },
-      "required": ["id", "text", "senderId", "timestamp"]
+      "required": ["id", "text", "senderId", "timestamp", "members"]
     }
   },
   "auth": {
@@ -207,3 +208,5 @@
     }
   }
 }
+
+    
