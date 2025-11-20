@@ -227,19 +227,37 @@ export function ChatWidget() {
                         const isUnread = room.lastMessage && 
                                        room.lastMessage.senderId !== user.uid &&
                                        (!lastReadTimestamps[room.id] || room.lastMessage.timestamp > lastReadTimestamps[room.id]);
+                        
+                        let otherUser: (UserProfile & {online?: boolean}) | undefined;
+                        let otherUserStatus: UserStatus | undefined;
+                        if (room.type === 'private') {
+                            const otherUserId = room.members.find(id => id !== user.uid);
+                            otherUser = allUsers.find(u => u.id === otherUserId);
+                            if (otherUserId) {
+                                otherUserStatus = userStatuses.find(s => s.id === otherUserId);
+                            }
+                        }
 
                         return (
                         <Button key={room.id} variant={activeRoomId === room.id ? "secondary": "ghost"} className="w-full justify-start h-12" onClick={() => handleRoomSelect(room.id)}>
                             <div className="flex items-center gap-2 w-full">
-                            <Avatar className="h-8 w-8">
-                                    <AvatarImage src={room.type === 'group' ? undefined : allUsers.find(u => u.id === room.members.find(id => id !== user.id))?.photoURL} />
-                                    <AvatarFallback>{getRoomDisplayName(room).charAt(0)}</AvatarFallback>
-                                </Avatar>
-                            <div className="text-left flex-grow overflow-hidden">
+                                <div className="relative">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={room.type === 'group' ? undefined : otherUser?.photoURL} />
+                                        <AvatarFallback>{getRoomDisplayName(room).charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                     {room.type === 'private' && (
+                                        <div className={cn(
+                                            "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background", 
+                                            otherUserStatus?.online ? 'bg-green-500' : 'bg-red-500'
+                                        )} />
+                                    )}
+                                </div>
+                                <div className="text-left flex-grow overflow-hidden">
                                     <p className="text-sm font-medium truncate">{getRoomDisplayName(room)}</p>
                                     <p className="text-xs text-muted-foreground truncate">{room.lastMessage?.text}</p>
-                            </div>
-                            {isUnread && <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
+                                </div>
+                                {isUnread && <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
                             </div>
                         </Button>
                         )
