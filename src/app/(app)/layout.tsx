@@ -62,7 +62,9 @@ export default function AppLayout({
         <Header />
         <main className="p-4 lg:p-6">{children}</main>
         <Toaster />
-        <ChatWidget />
+        <div className="relative">
+          <ChatWidget />
+        </div>
         <PresenceIndicator />
       </SidebarInset>
     </SidebarProvider>

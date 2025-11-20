@@ -72,8 +72,8 @@ export function ChatWidget() {
 
   // --- Memoized Data Processing ---
   const usersWithStatus = useMemo(() => {
-    return (allUsers || []).map(u => {
-      const status = (userStatuses || []).find(s => s.id === u.id);
+    return allUsers.map(u => {
+      const status = userStatuses.find(s => s.id === u.id);
       return { ...u, online: status?.online ?? false };
     }).filter(u => u.id !== user?.uid);
   }, [allUsers, userStatuses, user?.uid]);
