@@ -10,6 +10,8 @@ import {Header} from '@/components/layout/header';
 import {Toaster} from '@/components/ui/toaster';
 import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ChatWidget } from '@/components/chat/chat-widget';
+import { PresenceIndicator } from '@/components/presence-indicator';
 
 export default function AppLayout({
   children,
@@ -60,6 +62,8 @@ export default function AppLayout({
         <Header />
         <main className="p-4 lg:p-6">{children}</main>
         <Toaster />
+        <ChatWidget />
+        <PresenceIndicator />
       </SidebarInset>
     </SidebarProvider>
   );

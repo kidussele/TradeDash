@@ -118,6 +118,47 @@
             }
         },
         "required": ["id", "title", "items"]
+    },
+    "UserStatus": {
+      "title": "UserStatus",
+      "type": "object",
+      "description": "Tracks a user's online status.",
+      "properties": {
+        "online": { "type": "boolean" },
+        "lastChanged": { "type": "string", "format": "date-time" }
+      },
+      "required": ["online", "lastChanged"]
+    },
+    "ChatRoom": {
+      "title": "ChatRoom",
+      "type": "object",
+      "description": "Represents a chat room between two or more users.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["group", "private"] },
+        "members": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": {
+          "type": "object",
+          "properties": {
+            "text": { "type": "string" },
+            "timestamp": { "type": "string", "format": "date-time" }
+          }
+        }
+      },
+      "required": ["id", "name", "type", "members"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "type": "object",
+      "description": "A single message within a chat room.",
+      "properties": {
+        "id": { "type": "string" },
+        "text": { "type": "string" },
+        "senderId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "text", "senderId", "timestamp"]
     }
   },
   "auth": {
@@ -151,6 +192,18 @@
     "/users/{userId}/strategyChecklists/{checklistId}": {
         "schema": { "$ref": "#/entities/Checklist" },
         "description": "User's trading strategy checklists."
+    },
+    "/userStatus/{userId}": {
+      "schema": { "$ref": "#/entities/UserStatus" },
+      "description": "Real-time status of a user."
+    },
+    "/chatRooms/{roomId}": {
+      "schema": { "$ref": "#/entities/ChatRoom" },
+      "description": "A chat room's metadata."
+    },
+    "/chatRooms/{roomId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Messages within a specific chat room."
     }
   }
 }

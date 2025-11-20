@@ -1,0 +1,271 @@
+
+'use client';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { collection, query, where, doc, getDocs, serverTimestamp } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MessageSquare, Minus, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { placeholderImages } from '@/lib/placeholder-images';
+
+type UserProfile = {
+  id: string;
+  displayName: string;
+  photoURL?: string;
+  email: string;
+};
+
+type UserStatus = {
+  id: string;
+  online: boolean;
+  lastChanged: any;
+};
+
+type ChatRoom = {
+  id: string;
+  name: string;
+  type: 'group' | 'private';
+  members: string[];
+  lastMessage?: { text: string; timestamp: any };
+};
+
+type ChatMessage = {
+  id: string;
+  text: string;
+  senderId: string;
+  timestamp: any;
+};
+
+export function ChatWidget() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [activeTab, setActiveTab] = useState<'chats' | 'users'>('chats');
+  const [activeRoomId, setActiveRoomId] = useState<string | null>('general');
+  const [newMessage, setNewMessage] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // --- Data Fetching ---
+  const usersRef = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
+  const { data: allUsers = [] } = useCollection<UserProfile>(usersRef);
+
+  const userStatusRef = useMemoFirebase(() => collection(firestore, 'userStatus'), [firestore]);
+  const { data: userStatuses = [] } = useCollection<UserStatus>(userStatusRef);
+
+  const chatRoomsRef = useMemoFirebase(() => user ? query(collection(firestore, 'chatRooms'), where('members', 'array-contains', user.uid)) : null, [user]);
+  const { data: chatRooms = [] } = useCollection<ChatRoom>(chatRoomsRef);
+
+  const messagesRef = useMemoFirebase(() => activeRoomId ? query(collection(firestore, 'chatRooms', activeRoomId, 'messages'), where('timestamp', '!=', null)) : null, [activeRoomId]);
+  const { data: messages = [] } = useCollection<ChatMessage>(messagesRef);
+
+  // --- Memoized Data Processing ---
+  const usersWithStatus = useMemo(() => {
+    return allUsers.map(u => {
+      const status = userStatuses?.find(s => s.id === u.id);
+      return { ...u, online: status?.online ?? false };
+    }).filter(u => u.id !== user?.uid);
+  }, [allUsers, userStatuses, user]);
+
+  const sortedMessages = useMemo(() => 
+    [...(messages || [])].sort((a,b) => a.timestamp?.toDate() - b.timestamp?.toDate()), 
+  [messages]);
+
+  const activeRoom = useMemo(() => chatRooms?.find(r => r.id === activeRoomId), [chatRooms, activeRoomId]);
+  
+  // --- Effects ---
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [sortedMessages]);
+
+  useEffect(() => {
+    // Create 'general' chat room if it doesn't exist for the user
+    if (user && chatRooms && !chatRooms.find(r => r.id === 'general')) {
+      const generalRoomRef = doc(firestore, 'chatRooms', 'general');
+      const allUserIds = allUsers.map(u => u.id);
+      if (allUserIds.length > 0) {
+        setDocumentNonBlocking(generalRoomRef, {
+          name: 'General',
+          type: 'group',
+          members: allUserIds,
+        }, { merge: true });
+      }
+    }
+  }, [chatRooms, user, firestore, allUsers]);
+
+  // --- Event Handlers ---
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !user || !activeRoomId) return;
+
+    const messagesColRef = collection(firestore, 'chatRooms', activeRoomId, 'messages');
+    await addDocumentNonBlocking(messagesColRef, {
+      text: newMessage,
+      senderId: user.uid,
+      timestamp: serverTimestamp(),
+    });
+    
+    const roomDocRef = doc(firestore, 'chatRooms', activeRoomId);
+    setDocumentNonBlocking(roomDocRef, {
+        lastMessage: {
+            text: newMessage,
+            timestamp: serverTimestamp()
+        }
+    }, { merge: true });
+
+    setNewMessage('');
+  };
+  
+  const handleUserClick = async (targetUser: UserProfile) => {
+    if (!user) return;
+    
+    // Check if a private chat room already exists
+    const memberIds = [user.uid, targetUser.id].sort();
+    const roomId = memberIds.join('_');
+    
+    const existingRoom = chatRooms?.find(r => r.id === roomId);
+
+    if (existingRoom) {
+      setActiveRoomId(existingRoom.id);
+    } else {
+      // Create a new private chat room
+      const newRoomRef = doc(firestore, 'chatRooms', roomId);
+      await setDocumentNonBlocking(newRoomRef, {
+        name: ``, // Private chats don't need a name, we'll derive it
+        type: 'private',
+        members: memberIds,
+      });
+      setActiveRoomId(roomId);
+    }
+    setActiveTab('chats');
+  }
+
+  const getRoomDisplayName = (room: ChatRoom) => {
+    if (room.type === 'group') return room.name;
+    if (!user) return 'Private Chat';
+
+    const otherUserId = room.members.find(id => id !== user.uid);
+    const otherUser = allUsers.find(u => u.id === otherUserId);
+    return otherUser?.displayName || 'Private Chat';
+  }
+
+  if (!user) return null;
+
+  if (!isOpen) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <Button onClick={() => setIsOpen(true)} className="rounded-full w-16 h-16 shadow-lg">
+          <MessageSquare className="h-8 w-8" />
+        </Button>
+      </div>
+    );
+  }
+
+  const getSender = (senderId: string) => allUsers.find(u => u.id === senderId);
+
+  return (
+    <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[680px] h-[500px]" : "w-[350px] h-14")}>
+      <Card className="w-full h-full flex flex-col shadow-lg">
+        <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
+          <CardTitle className="text-lg font-semibold">{getRoomDisplayName(activeRoom!)}</CardTitle>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsExpanded(!isExpanded)}>
+              <Minus className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsOpen(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+
+        {isExpanded && (
+          <div className="flex flex-grow min-h-0">
+            {/* Sidebar */}
+            <div className="w-[200px] border-r flex flex-col">
+              <div className="p-2 border-b">
+                 <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
+                    <Button size="sm" variant={activeTab === 'chats' ? 'secondary': 'ghost'} className="h-7" onClick={() => setActiveTab('chats')}>Chats</Button>
+                    <Button size="sm" variant={activeTab === 'users' ? 'secondary': 'ghost'} className="h-7" onClick={() => setActiveTab('users')}>Users</Button>
+                </div>
+              </div>
+              <ScrollArea className="flex-grow">
+                {activeTab === 'chats' && (
+                  <div className="p-2 space-y-1">
+                    {chatRooms?.sort((a,b) => (b.lastMessage?.timestamp?.toDate() || 0) - (a.lastMessage?.timestamp?.toDate() || 0)).map(room => (
+                      <Button key={room.id} variant={activeRoomId === room.id ? "secondary": "ghost"} className="w-full justify-start h-12" onClick={() => setActiveRoomId(room.id)}>
+                        <div className="flex items-center gap-2">
+                           <Avatar className="h-8 w-8">
+                                <AvatarImage src={room.type === 'group' ? undefined : allUsers.find(u => u.id === room.members.find(id => id !== user.id))?.photoURL} />
+                                <AvatarFallback>{getRoomDisplayName(room).charAt(0)}</AvatarFallback>
+                            </Avatar>
+                           <div className="text-left">
+                                <p className="text-sm font-medium truncate">{getRoomDisplayName(room)}</p>
+                                <p className="text-xs text-muted-foreground truncate">{room.lastMessage?.text}</p>
+                           </div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+                {activeTab === 'users' && (
+                  <div className="p-2 space-y-1">
+                    {usersWithStatus.map(u => (
+                      <Button key={u.id} variant="ghost" className="w-full justify-start h-10" onClick={() => handleUserClick(u)}>
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage src={u.photoURL} />
+                                <AvatarFallback>{u.displayName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className={cn("absolute bottom-0 right-0 block h-2 w-2 rounded-full ring-2 ring-background", u.online ? 'bg-positive' : 'bg-muted-foreground')} />
+                          </div>
+                          <span className="truncate">{u.displayName}</span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+
+            {/* Main chat area */}
+            <div className="flex-grow flex flex-col">
+              <ScrollArea className="flex-grow p-4">
+                <div className="space-y-4">
+                  {sortedMessages.map(message => {
+                    const sender = getSender(message.senderId);
+                    const isCurrentUser = message.senderId === user.uid;
+                    return (
+                      <div key={message.id} className={cn("flex items-end gap-2", isCurrentUser ? "justify-end" : "justify-start")}>
+                        {!isCurrentUser && (
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={sender?.photoURL} />
+                            <AvatarFallback>{sender?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div className={cn("max-w-xs rounded-lg p-3 text-sm", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted")}>
+                          <p className="font-bold mb-1">{sender?.displayName}</p>
+                          <p>{message.text}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div ref={messagesEndRef} />
+              </ScrollArea>
+              <CardFooter className="p-2 border-t">
+                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="w-full flex gap-2">
+                  <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." />
+                  <Button type="submit">Send</Button>
+                </form>
+              </CardFooter>
+            </div>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}

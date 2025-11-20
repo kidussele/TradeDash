@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -22,6 +23,23 @@ service cloud.firestore {
     // All user-specific subcollections are only accessible by the owner.
     match /users/{userId}/{collection}/{documentId} {
        allow read, write: if isOwner(userId);
+    }
+
+    // User status can be read by any authenticated user, but only written by the owner.
+    match /userStatus/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // Chat rooms can be read by members of the chat room.
+    match /chatRooms/{roomId} {
+      allow read, update: if isAuthenticated() && request.auth.uid in resource.data.members;
+      allow create: if isAuthenticated() && request.auth.uid in request.resource.data.members;
+
+      // Messages can be read and written by members of the chat room.
+      match /messages/{messageId} {
+        allow read, create: if isAuthenticated() && get(/databases/$(database)/documents/chatRooms/$(roomId)).data.members.hasAny([request.auth.uid]);
+      }
     }
   }
 }
