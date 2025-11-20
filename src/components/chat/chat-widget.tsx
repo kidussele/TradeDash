@@ -2,7 +2,7 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, doc, getDocs, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, doc, getDocs, serverTimestamp, orderBy } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -59,17 +59,19 @@ export function ChatWidget() {
   const { data: userStatusesData } = useCollection<UserStatus>(userStatusRef);
   const userStatuses = userStatusesData || [];
 
-  const chatRoomsRef = useMemoFirebase(() => user ? query(collection(firestore, 'chatRooms'), where('members', 'array-contains', user.uid)) : null, [user]);
+  const chatRoomsRef = useMemoFirebase(() => user ? query(collection(firestore, 'chatRooms'), where('members', 'array-contains', user.uid)) : null, [user, firestore]);
   const { data: chatRoomsData } = useCollection<ChatRoom>(chatRoomsRef);
   const chatRooms = chatRoomsData || [];
 
-  const messagesRef = useMemoFirebase(() => activeRoomId ? query(collection(firestore, 'chatRooms', activeRoomId, 'messages'), where('timestamp', '!=', null)) : null, [activeRoomId]);
-  const { data: messagesData } = useCollection<ChatMessage>(messagesRef);
+  const messagesQuery = useMemoFirebase(() => 
+    activeRoomId ? query(collection(firestore, 'chatRooms', activeRoomId, 'messages'), orderBy('timestamp', 'asc')) : null, 
+  [activeRoomId, firestore]);
+  const { data: messagesData } = useCollection<ChatMessage>(messagesQuery);
   const messages = messagesData || [];
 
   // --- Memoized Data Processing ---
   const usersWithStatus = useMemo(() => {
-    return allUsers.map(u => {
+    return (allUsers || []).map(u => {
       const status = userStatuses?.find(s => s.id === u.id);
       return { ...u, online: status?.online ?? false };
     }).filter(u => u.id !== user?.uid);
@@ -88,16 +90,18 @@ export function ChatWidget() {
 
   useEffect(() => {
     // Create 'general' chat room if it doesn't exist for the user
-    if (user && chatRooms && !chatRooms.find(r => r.id === 'general')) {
+    if (user && chatRooms && allUsers.length > 0 && !chatRooms.find(r => r.id === 'general')) {
       const generalRoomRef = doc(firestore, 'chatRooms', 'general');
       const allUserIds = allUsers.map(u => u.id);
-      if (allUserIds.length > 0) {
-        setDocumentNonBlocking(generalRoomRef, {
+      // Ensure the current user is included if not already in allUsers
+      if (!allUserIds.includes(user.uid)) {
+        allUserIds.push(user.uid);
+      }
+      setDocumentNonBlocking(generalRoomRef, {
           name: 'General',
           type: 'group',
           members: allUserIds,
-        }, { merge: true });
-      }
+      }, { merge: true });
     }
   }, [chatRooms, user, firestore, allUsers]);
 
@@ -273,5 +277,3 @@ export function ChatWidget() {
     </div>
   );
 }
-
-    
