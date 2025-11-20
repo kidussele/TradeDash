@@ -5,15 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 
 export default function NewsPage() {
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-6 animate-in fade-in-0 duration-500">
+      <div className="animate-in fade-in-0 slide-in-from-top-4 duration-500">
         <h1 className="text-2xl font-bold">Market News & Analysis</h1>
         <p className="text-muted-foreground">
           Stay ahead with key financial events.
         </p>
       </div>
       
-      <Card>
+      <Card className="animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '200ms' }}>
         <CardHeader>
             <CardTitle>Economic Calendar</CardTitle>
             <CardDescription>

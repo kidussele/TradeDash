@@ -188,7 +188,7 @@ export default function StrategyChecklistPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center animate-in fade-in-0 duration-500">
         <div>
           <h1 className="text-2xl font-bold">Strategy Checklists</h1>
           <p className="text-muted-foreground">
@@ -254,76 +254,78 @@ export default function StrategyChecklistPage() {
         </Dialog>
 
       {(!checklists || checklists.length === 0) && !isLoading ? (
-        <div className="text-center py-24 border-2 border-dashed rounded-lg">
+        <div className="text-center py-24 border-2 border-dashed rounded-lg animate-in fade-in-0 zoom-in-95 duration-500">
           <h2 className="text-xl font-semibold text-muted-foreground">No checklists yet</h2>
           <p className="text-muted-foreground mt-2">Click "Add Strategy" to create your first checklist.</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {checklists.map((cl) => {
+          {checklists.map((cl, index) => {
             const allChecked = cl.items.length > 0 && cl.items.every(item => item.isChecked);
             return (
-              <Card key={cl.id} className="flex flex-col">
-                 {showConfettiFor === cl.id && <Confetti onComplete={() => setShowConfettiFor(null)} />}
-                <CardHeader className="flex-row items-start justify-between">
-                  <div>
-                    <CardTitle>{cl.title}</CardTitle>
-                  </div>
-                  <div className="flex items-center gap-1">
-                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditChecklist(cl)}>
-                        <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteChecklist(cl.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-grow space-y-4">
-                  {cl.items.length === 0 ? (
-                     <div className="text-center py-10 text-muted-foreground">
-                        <p>No rules added yet.</p>
-                     </div>
-                  ) : (
-                    cl.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3">
-                        <Checkbox
-                          id={`item-${item.id}`}
-                          checked={item.isChecked}
-                          onCheckedChange={() => handleCheckChange(cl.id, item.id)}
-                          className="size-5"
-                        />
-                        <label
-                          htmlFor={`item-${item.id}`}
-                          className="flex-1 text-sm font-medium leading-none"
-                        >
-                          {item.text}
-                        </label>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditItem(cl.id, item)}>
-                            <Edit className="h-3 w-3" />
+              <div key={cl.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+                <Card className="flex flex-col h-full">
+                    {showConfettiFor === cl.id && <Confetti onComplete={() => setShowConfettiFor(null)} />}
+                    <CardHeader className="flex-row items-start justify-between">
+                    <div>
+                        <CardTitle>{cl.title}</CardTitle>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditChecklist(cl)}>
+                            <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteItem(cl.id, item.id)}>
-                            <Trash2 className="h-3 w-3 text-destructive" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteChecklist(cl.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-                <CardFooter className="flex-col items-stretch gap-3 pt-6">
-                    <Button onClick={() => handleAddNewItem(cl.id)}>
-                        <PlusCircle className="mr-2 h-4 w-4"/>
-                        Add Rule
-                    </Button>
-                     {cl.items.length > 0 && (
-                        <Button variant="outline" onClick={() => handleResetChecks(cl.id)}>Reset Checklist</Button>
-                     )}
-                     {allChecked && (
-                        <div className="flex items-center justify-center gap-2 text-center p-3 rounded-md bg-positive/10 text-base font-semibold text-positive">
-                            <CheckCircle2 className="h-5 w-5" />
-                            <span>Cleared to trade!</span>
+                    </div>
+                    </CardHeader>
+                    <CardContent className="flex-grow space-y-4">
+                    {cl.items.length === 0 ? (
+                        <div className="text-center py-10 text-muted-foreground">
+                            <p>No rules added yet.</p>
                         </div>
+                    ) : (
+                        cl.items.map((item) => (
+                        <div key={item.id} className="flex items-center gap-3">
+                            <Checkbox
+                            id={`item-${item.id}`}
+                            checked={item.isChecked}
+                            onCheckedChange={() => handleCheckChange(cl.id, item.id)}
+                            className="size-5"
+                            />
+                            <label
+                            htmlFor={`item-${item.id}`}
+                            className="flex-1 text-sm font-medium leading-none"
+                            >
+                            {item.text}
+                            </label>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditItem(cl.id, item)}>
+                                <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteItem(cl.id, item.id)}>
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                            </Button>
+                        </div>
+                        ))
                     )}
-                </CardFooter>
-              </Card>
+                    </CardContent>
+                    <CardFooter className="flex-col items-stretch gap-3 pt-6">
+                        <Button onClick={() => handleAddNewItem(cl.id)}>
+                            <PlusCircle className="mr-2 h-4 w-4"/>
+                            Add Rule
+                        </Button>
+                        {cl.items.length > 0 && (
+                            <Button variant="outline" onClick={() => handleResetChecks(cl.id)}>Reset Checklist</Button>
+                        )}
+                        {allChecked && (
+                            <div className="flex items-center justify-center gap-2 text-center p-3 rounded-md bg-positive/10 text-base font-semibold text-positive animate-in fade-in-0 zoom-in-95">
+                                <CheckCircle2 className="h-5 w-5" />
+                                <span>Cleared to trade!</span>
+                            </div>
+                        )}
+                    </CardFooter>
+                </Card>
+              </div>
             );
           })}
         </div>

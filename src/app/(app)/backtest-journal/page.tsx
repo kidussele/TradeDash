@@ -287,7 +287,7 @@ export default function BacktestJournalPage() {
   const sortedEntries = [...(entries || [])].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
-    <Tabs defaultValue="journal">
+    <Tabs defaultValue="journal" className="animate-in fade-in-0 duration-500">
         <div className="flex justify-between items-center mb-4">
             <TabsList>
                 <TabsTrigger value="journal">Journal</TabsTrigger>
@@ -534,19 +534,19 @@ export default function BacktestJournalPage() {
                 </TableBody>
             </Table>
             {(!entries || entries.length === 0) && !isLoading && (
-                <div className="text-center py-12 text-muted-foreground">
+                <div className="text-center py-12 text-muted-foreground animate-in fade-in-0">
                     No backtest journal entries yet.
                 </div>
             )}
         </TabsContent>
          <TabsContent value="dashboard">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {statsData.map((stat) => (
-                    <div key={stat.title} className="col-span-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in-0 duration-300">
+                {statsData.map((stat, index) => (
+                    <div key={stat.title} className="col-span-1" style={{ animationDelay: `${index * 100}ms` }}>
                         <StatCard {...stat} />
                     </div>
                 ))}
-                <Card className="col-span-1">
+                <Card className="col-span-1" style={{ animationDelay: '300ms' }}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Advanced Stats</CardTitle>
                     </CardHeader>
@@ -576,14 +576,14 @@ export default function BacktestJournalPage() {
                     </CardContent>
                 </Card>
 
-                <div className="col-span-1 sm:col-span-2 lg:col-span-4">
+                <div className="col-span-1 sm:col-span-2 lg:col-span-4" style={{ animationDelay: '400ms' }}>
                     <CumulativePnlChart entries={chartEntries as any[]} />
                 </div>
             </div>
         </TabsContent>
 
        {previewImageUrl && (
-        <div className="fixed bottom-4 right-4 z-50">
+        <div className="fixed bottom-4 right-4 z-50 animate-in fade-in-0 zoom-in-95">
             <Card className="w-[600px] max-w-2xl">
                 <CardContent className="p-2 relative">
                     <Button

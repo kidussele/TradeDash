@@ -121,7 +121,7 @@ export default function AuthPage() {
 
 
   return (
-    <Tabs defaultValue="login" className="w-full">
+    <Tabs defaultValue="login" className="w-full animate-in fade-in-0 zoom-in-95 duration-500">
       <div className="flex justify-center mb-6">
         <Link href="/" className="flex items-center gap-2 text-foreground">
           <Activity className="size-7 shrink-0 text-primary" />

@@ -94,18 +94,18 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="py-20 md:py-32">
           <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight animate-in fade-in-0 slide-in-from-top-12 duration-700">
               Elevate Your Trading with Quantum Ledger
             </h1>
-            <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+            <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground animate-in fade-in-0 slide-in-from-top-12 duration-700" style={{ animationDelay: '200ms' }}>
               Quantum Ledger is an amazing trading journal designed to help you analyze your performance, find your edge, and achieve your goals.
             </p>
-            <div className="mt-8 flex justify-center gap-4">
+            <div className="mt-8 flex justify-center gap-4 animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '400ms' }}>
               <Button size="lg" asChild>
                 <Link href="/auth">Get Started for Free</Link>
               </Button>
             </div>
-             <div className="mt-16 mx-auto max-w-6xl">
+             <div className="mt-16 mx-auto max-w-6xl animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '600ms' }}>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="shadow-2xl shadow-primary/10 md:col-span-2">
                         <CardContent className="p-2 bg-card/50 h-full">
@@ -135,23 +135,25 @@ export default function HomePage() {
         {/* Features Section */}
         <section className="py-20 md:py-24 bg-muted">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
+            <div className="text-center animate-in fade-in-0 slide-in-from-bottom-8 duration-500">
               <h2 className="text-3xl font-bold">A Better Way to Journal</h2>
               <p className="mt-2 text-muted-foreground">
                 Everything you need to become a more disciplined and profitable trader.
               </p>
             </div>
             <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => (
-                <Card key={feature.title}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-primary text-primary-foreground">
-                      <feature.icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="mt-6 text-lg font-semibold">{feature.title}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">{feature.description}</p>
-                  </CardContent>
-                </Card>
+              {features.map((feature, index) => (
+                <div key={feature.title} className="animate-in fade-in-0 slide-in-from-bottom-8 duration-500" style={{ animationDelay: `${index * 150 + 300}ms` }}>
+                  <Card className="h-full">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-primary text-primary-foreground">
+                        <feature.icon className="h-6 w-6" />
+                      </div>
+                      <h3 className="mt-6 text-lg font-semibold">{feature.title}</h3>
+                      <p className="mt-2 text-sm text-muted-foreground">{feature.description}</p>
+                    </CardContent>
+                  </Card>
+                </div>
               ))}
             </div>
           </div>

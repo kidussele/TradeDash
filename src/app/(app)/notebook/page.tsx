@@ -104,7 +104,7 @@ export default function NotebookPage() {
 
   return (
     <div className="space-y-6">
-       <div className="flex justify-end items-center">
+       <div className="flex justify-end items-center animate-in fade-in-0 duration-500">
             <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => {
               setIsEditDialogOpen(isOpen);
               if (!isOpen) {
@@ -181,14 +181,15 @@ export default function NotebookPage() {
        </div>
        
        {(!notes || notes.length === 0) && !isLoading ? (
-         <div className="text-center py-24 border-2 border-dashed rounded-lg">
+         <div className="text-center py-24 border-2 border-dashed rounded-lg animate-in fade-in-0 zoom-in-95 duration-500">
             <h2 className="text-xl font-semibold text-muted-foreground">No notes yet</h2>
             <p className="text-muted-foreground mt-2">Click "Add Note" to start your analysis notebook.</p>
          </div>
        ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {sortedNotes.map((note) => (
-            <Card key={note.id} className="flex flex-col">
+          {sortedNotes.map((note, index) => (
+            <div key={note.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+            <Card className="flex flex-col h-full">
               <CardHeader>
                 <div className="flex justify-between items-start">
                     <div>
@@ -236,6 +237,7 @@ export default function NotebookPage() {
                 </div>
               </CardFooter>
             </Card>
+            </div>
           ))}
         </div>
        )}

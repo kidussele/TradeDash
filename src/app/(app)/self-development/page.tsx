@@ -102,7 +102,7 @@ export default function SelfDevelopmentPage() {
 
   return (
     <div className="space-y-6">
-       <div className="flex justify-between items-center">
+       <div className="flex justify-between items-center animate-in fade-in-0 duration-500">
             <div>
               <h1 className="text-2xl font-bold">Self Development</h1>
               <p className="text-muted-foreground">A space for personal growth and reflection.</p>
@@ -174,60 +174,62 @@ export default function SelfDevelopmentPage() {
        </div>
        
        {(!notes || notes.length === 0) && !isLoading ? (
-         <div className="text-center py-24 border-2 border-dashed rounded-lg">
+         <div className="text-center py-24 border-2 border-dashed rounded-lg animate-in fade-in-0 zoom-in-95 duration-500">
             <h2 className="text-xl font-semibold text-muted-foreground">No notes yet</h2>
             <p className="text-muted-foreground mt-2">Click "Add Note" to start your self-development journal.</p>
          </div>
        ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {sortedNotes.map((note) => (
-            <Card key={note.id} className="flex flex-col">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle>{note.title}</CardTitle>
-                        <CardDescription>
-                          {note.createdAt?.toDate().toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          }) || 'No date'}
-                        </CardDescription>
+          {sortedNotes.map((note, index) => (
+             <div key={note.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+                <Card className="flex flex-col h-full">
+                <CardHeader>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle>{note.title}</CardTitle>
+                            <CardDescription>
+                            {note.createdAt?.toDate().toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                            }) || 'No date'}
+                            </CardDescription>
+                        </div>
                     </div>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {note.content}
-                </p>
-                 {note.imageUrl && (
-                     <div className="mt-4">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={note.imageUrl} alt="Note attachment" className="rounded-md object-cover aspect-video" />
-                     </div>
-                )}
-              </CardContent>
-              <CardFooter className="flex justify-between items-center">
-                 <div>
-                    {note.linkUrl && (
-                        <Button variant="link" asChild className="p-0 h-auto">
-                            <Link href={note.linkUrl} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="mr-2 h-4 w-4" />
-                                View Resource
-                            </Link>
-                        </Button>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {note.content}
+                    </p>
+                    {note.imageUrl && (
+                        <div className="mt-4">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={note.imageUrl} alt="Note attachment" className="rounded-md object-cover aspect-video" />
+                        </div>
                     )}
-                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(note)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(note.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
+                </CardContent>
+                <CardFooter className="flex justify-between items-center">
+                    <div>
+                        {note.linkUrl && (
+                            <Button variant="link" asChild className="p-0 h-auto">
+                                <Link href={note.linkUrl} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                    View Resource
+                                </Link>
+                            </Button>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(note)}>
+                        <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(note.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                    </div>
+                </CardFooter>
+                </Card>
+             </div>
           ))}
         </div>
        )}

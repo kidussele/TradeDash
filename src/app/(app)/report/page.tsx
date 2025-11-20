@@ -170,7 +170,7 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
   if (isLoading) return <div>Loading reports...</div>;
 
   return (
-    <Card>
+    <Card className="animate-in fade-in-0 duration-500">
       <CardHeader>
         <CardTitle>{reportTitle}</CardTitle>
         <CardDescription>
@@ -247,7 +247,7 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
 
 export default function ReportPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in-0 duration-500">
       <Tabs defaultValue="journal">
         <TabsList>
           <TabsTrigger value="journal">Journal Report</TabsTrigger>

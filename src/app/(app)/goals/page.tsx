@@ -185,7 +185,7 @@ export default function GoalsPage() {
 
   return (
     <div className="space-y-6">
-       <div className="flex justify-between items-center">
+       <div className="flex justify-between items-center animate-in fade-in-0 duration-500">
         <div>
           <h1 className="text-2xl font-bold">Goals</h1>
           <p className="text-muted-foreground">Set and track what you want to achieve.</p>
@@ -272,14 +272,18 @@ export default function GoalsPage() {
       </Dialog>
       
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {sortedGoals.filter(g => g.period !== 'Big Goal').map((goal) => (
-              <GoalCard key={goal.id} goal={goal} onEdit={handleEdit} onDelete={handleDelete} onStatusChange={handleStatusChange}/>
+          {sortedGoals.filter(g => g.period !== 'Big Goal').map((goal, index) => (
+              <div key={goal.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+                <GoalCard goal={goal} onEdit={handleEdit} onDelete={handleDelete} onStatusChange={handleStatusChange}/>
+              </div>
           ))}
       </div>
       
        <div className="pt-6">
          {sortedGoals.filter(g => g.period === 'Big Goal').map((goal) => (
-              <GoalCard key={goal.id} goal={goal} onEdit={handleEdit} onDelete={handleDelete} onStatusChange={handleStatusChange} isBigGoal />
+              <div key={goal.id} className="animate-in fade-in-0 zoom-in-95 duration-500">
+                <GoalCard goal={goal} onEdit={handleEdit} onDelete={handleDelete} onStatusChange={handleStatusChange} isBigGoal />
+              </div>
           ))}
        </div>
     </div>

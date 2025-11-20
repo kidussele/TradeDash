@@ -132,7 +132,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="grid grid-cols-4 gap-6">
+    <div className="grid grid-cols-4 gap-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
       <div className="col-span-4 sm:col-span-2 lg:col-span-1">
         <StatCard {...statsData.pnl} />
       </div>

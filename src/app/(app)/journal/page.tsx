@@ -328,7 +328,7 @@ export default function JournalPage() {
   const hasImportedTrades = entries?.some(e => e.isImported);
 
   return (
-    <div>
+    <div className="animate-in fade-in-0 duration-500">
       <div className="flex justify-end mb-4 gap-2">
         <input
             type="file"
@@ -647,12 +647,12 @@ export default function JournalPage() {
       )}
 
        {(!entries || entries.length === 0) && !isLoading && (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-12 text-muted-foreground animate-in fade-in-0">
             No journal entries yet.
         </div>
       )}
        {previewImageUrl && (
-        <div className="fixed bottom-4 right-4 z-50">
+        <div className="fixed bottom-4 right-4 z-50 animate-in fade-in-0 zoom-in-95">
             <Card className="w-[600px] max-w-2xl">
                 <CardContent className="p-2 relative">
                     <Button
