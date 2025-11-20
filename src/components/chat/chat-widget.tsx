@@ -299,7 +299,7 @@ export function ChatWidget() {
         <Button onClick={() => setIsOpen(true)} className="rounded-full w-16 h-16 shadow-lg relative">
           <MessageSquare className="h-8 w-8" />
           {hasUnreadMessages && (
-            <span className="absolute top-0.5 left-0.5 block h-3.5 w-3.5 rounded-full bg-red-500 ring-2 ring-background" />
+            <span className="absolute top-0 left-0 block h-3.5 w-3.5 rounded-full bg-red-500 ring-2 ring-background" />
           )}
         </Button>
       </div>
@@ -311,7 +311,7 @@ export function ChatWidget() {
   return (
     <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[480px] h-[450px]" : "w-auto")}>
       <Card className={cn("w-full h-full flex flex-col shadow-lg", !isExpanded && "h-14")}>
-        <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
+        <CardHeader className="flex flex-row items-center justify-between p-3 border-b bg-muted/50">
           <CardTitle className="text-lg font-semibold">{activeRoom ? getRoomDisplayName(activeRoom) : 'Chat'}</CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsExpanded(!isExpanded)}>
@@ -485,7 +485,7 @@ export function ChatWidget() {
                     placeholder="Type a message..."
                     onKeyDown={handleKeyDown}
                     disabled={isUploading}
-                    className="flex-grow resize-none min-h-0"
+                    className="flex-grow resize-none min-h-[initial] h-9"
                     rows={1}
                 />
                   <div className="flex flex-col gap-1">
@@ -505,4 +505,5 @@ export function ChatWidget() {
   );
 }
 
+    
     
