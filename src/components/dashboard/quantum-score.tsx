@@ -57,7 +57,7 @@ export function QuantumScore({ entries }: QuantumScoreProps) {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Quantum Score</CardTitle>
+        <CardTitle>Kila Score</CardTitle>
         <CardDescription>Overall trading performance</CardDescription>
       </CardHeader>
       <CardContent className="flex items-center justify-center p-6">

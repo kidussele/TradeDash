@@ -86,7 +86,7 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
     toPng(cardRef.current, { cacheBust: true, pixelRatio: 2, fontEmbedCSS: '' })
       .then((dataUrl) => {
         const link = document.createElement('a');
-        link.download = `QuantumLedger-${entry.currencyPair}-${entry.date.split('T')[0]}.png`;
+        link.download = `KilaTrade-${entry.currencyPair}-${entry.date.split('T')[0]}.png`;
         link.href = dataUrl;
         link.click();
       })
@@ -109,7 +109,7 @@ export function TradeResultCard({ entry, allEntries, tradeIndex }: TradeResultCa
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2">
                     <Logo />
-                    <span className="font-bold text-sm text-gray-300">QUANTUM LEDGER</span>
+                    <span className="font-bold text-sm text-gray-300">KILATRADE</span>
                 </div>
                 <p className="text-sm text-gray-400">
                   {new Date(entry.date).toLocaleDateString()}

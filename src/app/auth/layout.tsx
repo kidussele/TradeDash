@@ -3,7 +3,7 @@ import { placeholderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
 
 export const metadata: Metadata = {
-  title: 'Authentication - Quantum Ledger',
+  title: 'Authentication - KilaTrade',
   description: 'Login or create an account to get started.',
 };
 
