@@ -329,7 +329,7 @@ export default function JournalPage() {
 
   return (
     <div className="animate-in fade-in-0 duration-500">
-      <div className="flex justify-end mb-4 gap-2">
+      <div className="flex justify-end mb-4 gap-2 animate-in fade-in-0 slide-in-from-top-4 duration-500">
         <input
             type="file"
             ref={fileInputRef}
@@ -349,7 +349,7 @@ export default function JournalPage() {
                     Remove Imported
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="animate-in fade-in-0 zoom-in-95 duration-300">
                   <AlertDialogHeader>
                   <AlertDialogTitleComponent>Are you absolutely sure?</AlertDialogTitleComponent>
                   <AlertDialogDescription>
@@ -377,7 +377,7 @@ export default function JournalPage() {
               Add Journal Entry
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] grid-rows-[auto,minmax(0,1fr),auto] max-h-[90vh]">
+          <DialogContent className="sm:max-w-[600px] grid-rows-[auto,minmax(0,1fr),auto] max-h-[90vh] animate-in fade-in-0 zoom-in-95 duration-300">
             <DialogHeader>
               <DialogTitle>{editId ? 'Edit' : 'Add'} Journal Entry</DialogTitle>
             </DialogHeader>
@@ -571,6 +571,7 @@ export default function JournalPage() {
           </DialogContent>
         </Dialog>
       </div>
+      <div className="animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '200ms' }}>
       <Table>
         <TableHeader>
           <TableRow>
@@ -588,7 +589,7 @@ export default function JournalPage() {
         </TableHeader>
         <TableBody>
           {sortedEntries.map((entry, index) => (
-            <TableRow key={entry.id}>
+            <TableRow key={entry.id} className="animate-in fade-in-0">
               <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
               <TableCell className="font-medium">{entry.currencyPair}</TableCell>
               <TableCell>{entry.direction}</TableCell>
@@ -630,10 +631,11 @@ export default function JournalPage() {
           ))}
         </TableBody>
       </Table>
+      </div>
 
        {cardPreviewEntry && (
         <Dialog open={!!cardPreviewEntry} onOpenChange={(isOpen) => !isOpen && setCardPreviewEntry(null)}>
-          <DialogContent className="max-w-min bg-transparent border-none shadow-none p-0">
+          <DialogContent className="max-w-min bg-transparent border-none shadow-none p-0 animate-in fade-in-0 zoom-in-95 duration-300">
              <DialogHeader>
                 <DialogTitle className="sr-only">Trade Result Card Preview</DialogTitle>
              </DialogHeader>
@@ -647,12 +649,12 @@ export default function JournalPage() {
       )}
 
        {(!entries || entries.length === 0) && !isLoading && (
-        <div className="text-center py-12 text-muted-foreground animate-in fade-in-0">
+        <div className="text-center py-12 text-muted-foreground animate-in fade-in-0 duration-500">
             No journal entries yet.
         </div>
       )}
        {previewImageUrl && (
-        <div className="fixed bottom-4 right-4 z-50 animate-in fade-in-0 zoom-in-95">
+        <div className="fixed bottom-4 right-4 z-50 animate-in fade-in-0 zoom-in-95 duration-300">
             <Card className="w-[600px] max-w-2xl">
                 <CardContent className="p-2 relative">
                     <Button

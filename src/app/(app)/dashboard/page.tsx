@@ -165,7 +165,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-6">
+    <div className="grid grid-cols-4 gap-6 animate-in fade-in-0 duration-500">
       {allCards}
     </div>
   );

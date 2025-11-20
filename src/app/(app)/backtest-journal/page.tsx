@@ -306,7 +306,7 @@ export default function BacktestJournalPage() {
                 Add Backtest Entry
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] grid-rows-[auto,minmax(0,1fr),auto] max-h-[90vh]">
+            <DialogContent className="sm:max-w-[600px] grid-rows-[auto,minmax(0,1fr),auto] max-h-[90vh] animate-in fade-in-0 zoom-in-95 duration-300">
                 <DialogHeader>
                 <DialogTitle>{editId !== null ? 'Edit' : 'Add'} Backtest Entry</DialogTitle>
                 </DialogHeader>
@@ -481,7 +481,7 @@ export default function BacktestJournalPage() {
             </DialogContent>
             </Dialog>
         </div>
-        <TabsContent value="journal">
+        <TabsContent value="journal" className="animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '200ms' }}>
             <Table>
                 <TableHeader>
                 <TableRow>
@@ -497,7 +497,7 @@ export default function BacktestJournalPage() {
                 </TableHeader>
                 <TableBody>
                 {sortedEntries.map((entry) => (
-                    <TableRow key={entry.id}>
+                    <TableRow key={entry.id} className="animate-in fade-in-0">
                     <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
                     <TableCell className="font-medium">{entry.currencyPair}</TableCell>
                     <TableCell>{entry.direction}</TableCell>
@@ -534,7 +534,7 @@ export default function BacktestJournalPage() {
                 </TableBody>
             </Table>
             {(!entries || entries.length === 0) && !isLoading && (
-                <div className="text-center py-12 text-muted-foreground animate-in fade-in-0">
+                <div className="text-center py-12 text-muted-foreground animate-in fade-in-0 duration-500">
                     No backtest journal entries yet.
                 </div>
             )}
@@ -583,7 +583,7 @@ export default function BacktestJournalPage() {
         </TabsContent>
 
        {previewImageUrl && (
-        <div className="fixed bottom-4 right-4 z-50 animate-in fade-in-0 zoom-in-95">
+        <div className="fixed bottom-4 right-4 z-50 animate-in fade-in-0 zoom-in-95 duration-300">
             <Card className="w-[600px] max-w-2xl">
                 <CardContent className="p-2 relative">
                     <Button
