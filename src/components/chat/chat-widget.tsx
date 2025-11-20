@@ -2,13 +2,13 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, doc, getDocs, serverTimestamp, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, where, doc, getDocs, serverTimestamp, orderBy, Timestamp, updateDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Minus, X, Expand, Users, MessageCircle, Paperclip } from 'lucide-react';
+import { MessageSquare, Minus, X, Expand, Users, MessageCircle, Paperclip, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
@@ -60,6 +60,8 @@ export function ChatWidget() {
   const [lastReadTimestamps, setLastReadTimestamps] = useState<Record<string, Timestamp>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
   
   // --- Data Fetching ---
   const usersRef = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
@@ -89,7 +91,7 @@ export function ChatWidget() {
   }, [allUsers, userStatuses, user?.uid]);
 
   const sortedMessages = useMemo(() => 
-    [...(messages || [])].sort((a,b) => a.timestamp?.toDate() - b.timestamp?.toDate()), 
+    [...(messages || [])].sort((a,b) => (a.timestamp?.toDate() || 0) - (b.timestamp?.toDate() || 0)),
   [messages]);
 
   const activeRoom = useMemo(() => chatRooms?.find(r => r.id === activeRoomId), [chatRooms, activeRoomId]);
@@ -246,13 +248,42 @@ export function ChatWidget() {
     }
   };
 
+  const handleStartEdit = (message: ChatMessage) => {
+    if (message.text) {
+        setEditingMessageId(message.id);
+        setEditingText(message.text);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessageId(null);
+    setEditingText('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMessageId || !activeRoomId) return;
+    
+    const messageRef = doc(firestore, 'chatRooms', activeRoomId, 'messages', editingMessageId);
+    try {
+        await updateDoc(messageRef, { text: editingText });
+        handleCancelEdit();
+    } catch (error) {
+        console.error("Error updating message:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Update Failed',
+            description: 'Could not save your changes.',
+        });
+    }
+  };
+
   if (!user) return null;
 
   if (!isOpen) {
     const hasUnreadMessages = chatRooms.some(room => 
       room.lastMessage && 
       room.lastMessage.senderId !== user.uid &&
-      (!lastReadTimestamps[room.id] || room.lastMessage.timestamp > lastReadTimestamps[room.id])
+      (!lastReadTimestamps[room.id] || room.lastMessage.timestamp.toMillis() > lastReadTimestamps[room.id].toMillis())
     );
 
     return (
@@ -270,8 +301,8 @@ export function ChatWidget() {
   const getSender = (senderId: string) => allUsers.find(u => u.id === senderId);
 
   return (
-    <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[480px] h-[450px]" : "w-auto h-14")}>
-      <Card className="w-full h-full flex flex-col shadow-lg">
+    <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[480px] h-[450px]" : "w-auto")}>
+      <Card className={cn("w-full h-full flex flex-col shadow-lg", !isExpanded && "h-14")}>
         <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
           <CardTitle className="text-lg font-semibold">{activeRoom ? getRoomDisplayName(activeRoom) : 'Chat'}</CardTitle>
           <div className="flex items-center gap-2">
@@ -312,7 +343,7 @@ export function ChatWidget() {
                     {chatRooms?.sort((a,b) => (b.lastMessage?.timestamp?.toDate() || 0) - (a.lastMessage?.timestamp?.toDate() || 0)).map(room => {
                         const isUnread = room.lastMessage && 
                                        room.lastMessage.senderId !== user.uid &&
-                                       (!lastReadTimestamps[room.id] || room.lastMessage.timestamp > lastReadTimestamps[room.id]);
+                                       (!lastReadTimestamps[room.id] || room.lastMessage.timestamp.toMillis() > lastReadTimestamps[room.id].toMillis());
                         
                         let otherUser: (UserProfile & {online?: boolean}) | undefined;
                         if (room.type === 'private') {
@@ -381,20 +412,48 @@ export function ChatWidget() {
                   {sortedMessages.map(message => {
                     const sender = getSender(message.senderId);
                     const isCurrentUser = message.senderId === user.uid;
+                    const isEditing = editingMessageId === message.id;
+
                     return (
-                      <div key={message.id} className={cn("flex items-end gap-2", isCurrentUser ? "justify-end" : "justify-start")}>
+                      <div key={message.id} className={cn("flex items-end gap-2 group", isCurrentUser ? "justify-end" : "justify-start")}>
                         {!isCurrentUser && (
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={sender?.photoURL} />
                             <AvatarFallback>{sender?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
                           </Avatar>
                         )}
-                        <div className={cn("max-w-xs rounded-lg p-2 text-sm", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted")}>
-                          {!isCurrentUser && <p className="font-bold mb-1">{sender?.displayName}</p>}
-                          {message.text && <p>{message.text}</p>}
-                          {message.imageUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={message.imageUrl} alt="Shared image" className="mt-2 rounded-md max-w-full h-auto cursor-pointer" onClick={() => window.open(message.imageUrl, '_blank')} />
+                         {isCurrentUser && message.text && !isEditing && (
+                            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => handleStartEdit(message as ChatMessage)}>
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                        )}
+                        <div className={cn("max-w-xs rounded-lg text-sm", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted", isEditing ? "w-full" : "p-2")}>
+                          {!isCurrentUser && <p className="font-bold mb-1 p-2">{sender?.displayName}</p>}
+                          
+                          {isEditing ? (
+                             <div className="p-1">
+                                <Input 
+                                    value={editingText} 
+                                    onChange={(e) => setEditingText(e.target.value)}
+                                    className="h-8"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSaveEdit();
+                                        if (e.key === 'Escape') handleCancelEdit();
+                                    }}
+                                />
+                                <div className="text-xs mt-1.5 flex justify-end gap-2">
+                                     <button onClick={handleCancelEdit} className="hover:underline">Cancel</button>
+                                     <button onClick={handleSaveEdit} className="font-semibold hover:underline">Save</button>
+                                </div>
+                            </div>
+                          ) : (
+                            <>
+                                {message.text && <p>{message.text}</p>}
+                                {message.imageUrl && (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={message.imageUrl} alt="Shared image" className="mt-2 rounded-md max-w-full h-auto cursor-pointer" onClick={() => window.open(message.imageUrl, '_blank')} />
+                                )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -429,3 +488,5 @@ export function ChatWidget() {
     </div>
   );
 }
+
+    
