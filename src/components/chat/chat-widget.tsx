@@ -270,7 +270,7 @@ export function ChatWidget() {
   const getSender = (senderId: string) => allUsers.find(u => u.id === senderId);
 
   return (
-    <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[480px] h-[450px]" : "w-[300px] h-14")}>
+    <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[480px] h-[450px]" : "w-auto h-14")}>
       <Card className="w-full h-full flex flex-col shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
           <CardTitle className="text-lg font-semibold">{activeRoom ? getRoomDisplayName(activeRoom) : 'Chat'}</CardTitle>
@@ -321,12 +321,13 @@ export function ChatWidget() {
                         }
                         
                         const displayName = getRoomDisplayName(room);
+                        const isActive = activeRoomId === room.id;
 
                         return (
                         <TooltipProvider key={room.id}>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button key={room.id} variant={activeRoomId === room.id ? "secondary": "ghost"} className="w-12 h-12 p-0 rounded-full relative" onClick={() => handleRoomSelect(room.id)}>
+                                <Button variant="ghost" className={cn("w-12 h-12 p-0 rounded-full relative", isActive && "ring-2 ring-primary")} onClick={() => handleRoomSelect(room.id)}>
                                     <Avatar className="h-10 w-10">
                                         <AvatarImage src={room.type === 'group' ? undefined : otherUser?.photoURL} />
                                         <AvatarFallback>{displayName.charAt(0)}</AvatarFallback>
@@ -428,5 +429,3 @@ export function ChatWidget() {
     </div>
   );
 }
-
-    
