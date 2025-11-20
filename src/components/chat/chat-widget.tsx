@@ -52,16 +52,20 @@ export function ChatWidget() {
   
   // --- Data Fetching ---
   const usersRef = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
-  const { data: allUsers = [] } = useCollection<UserProfile>(usersRef);
+  const { data: allUsersData } = useCollection<UserProfile>(usersRef);
+  const allUsers = allUsersData || [];
 
   const userStatusRef = useMemoFirebase(() => collection(firestore, 'userStatus'), [firestore]);
-  const { data: userStatuses = [] } = useCollection<UserStatus>(userStatusRef);
+  const { data: userStatusesData } = useCollection<UserStatus>(userStatusRef);
+  const userStatuses = userStatusesData || [];
 
   const chatRoomsRef = useMemoFirebase(() => user ? query(collection(firestore, 'chatRooms'), where('members', 'array-contains', user.uid)) : null, [user]);
-  const { data: chatRooms = [] } = useCollection<ChatRoom>(chatRoomsRef);
+  const { data: chatRoomsData } = useCollection<ChatRoom>(chatRoomsRef);
+  const chatRooms = chatRoomsData || [];
 
   const messagesRef = useMemoFirebase(() => activeRoomId ? query(collection(firestore, 'chatRooms', activeRoomId, 'messages'), where('timestamp', '!=', null)) : null, [activeRoomId]);
-  const { data: messages = [] } = useCollection<ChatMessage>(messagesRef);
+  const { data: messagesData } = useCollection<ChatMessage>(messagesRef);
+  const messages = messagesData || [];
 
   // --- Memoized Data Processing ---
   const usersWithStatus = useMemo(() => {
@@ -72,7 +76,7 @@ export function ChatWidget() {
   }, [allUsers, userStatuses, user]);
 
   const sortedMessages = useMemo(() => 
-    [...(messages || [])].sort((a,b) => a.timestamp?.toDate() - b.timestamp?.toDate()), 
+    [...messages].sort((a,b) => a.timestamp?.toDate() - b.timestamp?.toDate()), 
   [messages]);
 
   const activeRoom = useMemo(() => chatRooms?.find(r => r.id === activeRoomId), [chatRooms, activeRoomId]);
@@ -147,7 +151,7 @@ export function ChatWidget() {
     if (room.type === 'group') return room.name;
     if (!user) return 'Private Chat';
 
-    const otherUserId = room.members.find(id => id !== user.uid);
+    const otherUserId = room.members.find(id => id !== user.id);
     const otherUser = allUsers.find(u => u.id === otherUserId);
     return otherUser?.displayName || 'Private Chat';
   }
@@ -170,7 +174,7 @@ export function ChatWidget() {
     <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[680px] h-[500px]" : "w-[350px] h-14")}>
       <Card className="w-full h-full flex flex-col shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
-          <CardTitle className="text-lg font-semibold">{getRoomDisplayName(activeRoom!)}</CardTitle>
+          <CardTitle className="text-lg font-semibold">{activeRoom ? getRoomDisplayName(activeRoom) : 'Chat'}</CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsExpanded(!isExpanded)}>
               <Minus className="h-4 w-4" />
@@ -269,3 +273,5 @@ export function ChatWidget() {
     </div>
   );
 }
+
+    
