@@ -135,7 +135,7 @@ export function AppSidebar() {
                 state === 'collapsed' && 'size-8 justify-center'
               )}
             >
-              <Avatar className="size-7">
+              <Avatar className="size-7 rounded-full">
                 <AvatarImage src={displayAvatar} alt="User Avatar" />
                 <AvatarFallback>{displayFallback}</AvatarFallback>
               </Avatar>
