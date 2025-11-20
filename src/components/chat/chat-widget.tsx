@@ -2,7 +2,7 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, doc, getDocs, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, doc, getDocs, serverTimestamp, orderBy, Timestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ type ChatRoom = {
   name: string;
   type: 'group' | 'private';
   members: string[];
-  lastMessage?: { text: string; timestamp: any };
+  lastMessage?: { text: string; timestamp: Timestamp };
 };
 
 type ChatMessage = {
@@ -50,6 +50,7 @@ export function ChatWidget() {
   const [activeRoomId, setActiveRoomId] = useState<string | null>('general');
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [lastReadTimestamps, setLastReadTimestamps] = useState<Record<string, Timestamp>>({});
   
   // --- Data Fetching ---
   const usersRef = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
@@ -139,7 +140,7 @@ export function ChatWidget() {
     const existingRoom = chatRooms?.find(r => r.id === roomId);
 
     if (existingRoom) {
-      setActiveRoomId(existingRoom.id);
+      handleRoomSelect(existingRoom.id);
     } else {
       // Create a new private chat room
       const newRoomRef = doc(firestore, 'chatRooms', roomId);
@@ -148,16 +149,27 @@ export function ChatWidget() {
         type: 'private',
         members: memberIds,
       });
-      setActiveRoomId(roomId);
+      handleRoomSelect(roomId);
     }
     setActiveTab('chats');
+  }
+
+  const handleRoomSelect = (roomId: string) => {
+    setActiveRoomId(roomId);
+    const room = chatRooms.find(r => r.id === roomId);
+    if(room?.lastMessage?.timestamp) {
+        setLastReadTimestamps(prev => ({
+            ...prev,
+            [roomId]: room.lastMessage!.timestamp
+        }));
+    }
   }
 
   const getRoomDisplayName = (room: ChatRoom) => {
     if (room.type === 'group') return room.name;
     if (!user) return 'Private Chat';
 
-    const otherUserId = room.members.find(id => id !== user.id);
+    const otherUserId = room.members.find(id => id !== user.uid);
     const otherUser = allUsers.find(u => u.id === otherUserId);
     return otherUser?.displayName || 'Private Chat';
   }
@@ -204,20 +216,26 @@ export function ChatWidget() {
               <ScrollArea className="flex-grow">
                 {activeTab === 'chats' && (
                   <div className="p-2 space-y-1">
-                    {chatRooms?.sort((a,b) => (b.lastMessage?.timestamp?.toDate() || 0) - (a.lastMessage?.timestamp?.toDate() || 0)).map(room => (
-                      <Button key={room.id} variant={activeRoomId === room.id ? "secondary": "ghost"} className="w-full justify-start h-12" onClick={() => setActiveRoomId(room.id)}>
-                        <div className="flex items-center gap-2">
-                           <Avatar className="h-8 w-8">
-                                <AvatarImage src={room.type === 'group' ? undefined : allUsers.find(u => u.id === room.members.find(id => id !== user.id))?.photoURL} />
-                                <AvatarFallback>{getRoomDisplayName(room).charAt(0)}</AvatarFallback>
-                            </Avatar>
-                           <div className="text-left">
-                                <p className="text-sm font-medium truncate">{getRoomDisplayName(room)}</p>
-                                <p className="text-xs text-muted-foreground truncate">{room.lastMessage?.text}</p>
-                           </div>
-                        </div>
-                      </Button>
-                    ))}
+                    {chatRooms?.sort((a,b) => (b.lastMessage?.timestamp?.toDate() || 0) - (a.lastMessage?.timestamp?.toDate() || 0)).map(room => {
+                        const isUnread = room.lastMessage && 
+                                       (!lastReadTimestamps[room.id] || room.lastMessage.timestamp > lastReadTimestamps[room.id]);
+
+                        return (
+                        <Button key={room.id} variant={activeRoomId === room.id ? "secondary": "ghost"} className="w-full justify-start h-12" onClick={() => handleRoomSelect(room.id)}>
+                            <div className="flex items-center gap-2 w-full">
+                            <Avatar className="h-8 w-8">
+                                    <AvatarImage src={room.type === 'group' ? undefined : allUsers.find(u => u.id === room.members.find(id => id !== user.id))?.photoURL} />
+                                    <AvatarFallback>{getRoomDisplayName(room).charAt(0)}</AvatarFallback>
+                                </Avatar>
+                            <div className="text-left flex-grow overflow-hidden">
+                                    <p className="text-sm font-medium truncate">{getRoomDisplayName(room)}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{room.lastMessage?.text}</p>
+                            </div>
+                            {isUnread && <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
+                            </div>
+                        </Button>
+                        )
+                    })}
                   </div>
                 )}
                 {activeTab === 'users' && (
@@ -230,7 +248,7 @@ export function ChatWidget() {
                                 <AvatarImage src={u.photoURL} />
                                 <AvatarFallback>{u.displayName.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <div className={cn("absolute bottom-0 right-0 block h-2 w-2 rounded-full ring-2 ring-background", u.online ? 'bg-positive' : 'bg-muted-foreground')} />
+                            <div className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background", u.online ? 'bg-green-500' : 'bg-gray-400')} />
                           </div>
                           <span className="truncate">{u.displayName}</span>
                         </div>
@@ -279,5 +297,3 @@ export function ChatWidget() {
     </div>
   );
 }
-
-    
