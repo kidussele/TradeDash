@@ -35,12 +35,18 @@ export default function AppLayout({
   }, [user, isUserLoading, router, pathname]);
 
   useEffect(() => {
+    // Don't show loader for the initial dashboard load as it has its own skeleton
+    if (pathname === '/dashboard' && isPageLoading === false) {
+        return;
+    }
+    
     setIsPageLoading(true);
     const timer = setTimeout(() => {
         setIsPageLoading(false);
-    }, 2000); // Show loader for 2 seconds
+    }, 1500); // Show loader for 1.5 seconds
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   if (isUserLoading) {
