@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {SidebarProvider} from '@/components/ui/sidebar';
 import {AppSidebar} from '@/components/layout/app-sidebar';
 import {SidebarInset} from '@/components/ui/sidebar';
@@ -12,6 +12,7 @@ import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChatWidget } from '@/components/chat/chat-widget';
 import { PresenceIndicator } from '@/components/presence-indicator';
+import { PageLoader } from '@/components/layout/page-loader';
 
 export default function AppLayout({
   children,
@@ -21,6 +22,7 @@ export default function AppLayout({
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const [isPageLoading, setIsPageLoading] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && !user && pathname !== '/auth') {
@@ -31,6 +33,15 @@ export default function AppLayout({
         router.replace('/dashboard');
     }
   }, [user, isUserLoading, router, pathname]);
+
+  useEffect(() => {
+    setIsPageLoading(true);
+    const timer = setTimeout(() => {
+        setIsPageLoading(false);
+    }, 2000); // Show loader for 2 seconds
+
+    return () => clearTimeout(timer);
+  }, [pathname]);
 
   if (isUserLoading) {
     return (
@@ -48,15 +59,13 @@ export default function AppLayout({
     );
   }
 
-  // If loading is finished and there's still no user, we do nothing.
-  // The useEffect above has already triggered the redirect.
-  // This prevents rendering the children for a brief moment before the redirect happens.
   if (!user || pathname === '/') {
     return null;
   }
 
   return (
     <SidebarProvider>
+      {isPageLoading && <PageLoader />}
       <AppSidebar />
       <SidebarInset>
         <Header />
