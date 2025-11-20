@@ -43,6 +43,10 @@ type ChatMessage = {
   members: string[]; // Denormalized for security rules
 };
 
+const isImageUrl = (url: string) => {
+    return /\.(jpeg|jpg|gif|png|webp)$/.test(url.toLowerCase());
+}
+
 export function ChatWidget() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -52,7 +56,6 @@ export function ChatWidget() {
   const [activeTab, setActiveTab] = useState<'chats' | 'users'>('chats');
   const [activeRoomId, setActiveRoomId] = useState<string | null>('general');
   const [newMessage, setNewMessage] = useState('');
-  const [isAddingImage, setIsAddingImage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [lastReadTimestamps, setLastReadTimestamps] = useState<Record<string, Timestamp>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -115,16 +118,21 @@ export function ChatWidget() {
 
   // --- Event Handlers ---
   const handleSendMessage = async (imageUrlToSend?: string) => {
-    if ((!newMessage.trim() && !imageUrlToSend) || !user || !activeRoomId || !activeRoom) return;
+    const messageText = newMessage.trim();
+    if ((!messageText && !imageUrlToSend) || !user || !activeRoomId || !activeRoom) return;
 
     const messagePayload: Omit<ChatMessage, 'id' | 'timestamp'> = {
       senderId: user.uid,
       members: activeRoom.members,
     };
     
-    if (newMessage.trim()) {
-      messagePayload.text = newMessage.trim();
+    // Check if the pasted text is an image URL
+    if (messageText && isImageUrl(messageText) && !imageUrlToSend) {
+        messagePayload.imageUrl = messageText;
+    } else if (messageText) {
+        messagePayload.text = messageText;
     }
+
     if (imageUrlToSend) {
       messagePayload.imageUrl = imageUrlToSend;
     }
@@ -133,16 +141,20 @@ export function ChatWidget() {
     await addDocumentNonBlocking(messagesColRef, { ...messagePayload, timestamp: serverTimestamp() });
     
     const roomDocRef = doc(firestore, 'chatRooms', activeRoomId);
+    let lastMessageText = messagePayload.text;
+    if (messagePayload.imageUrl) {
+        lastMessageText = messagePayload.text ? `Image & Text` : 'Image';
+    }
+
     setDocumentNonBlocking(roomDocRef, {
         lastMessage: {
-            text: messagePayload.text || 'Image',
+            text: lastMessageText,
             timestamp: serverTimestamp(),
             senderId: user.uid,
         }
     }, { merge: true });
 
     setNewMessage('');
-    setIsAddingImage(false);
   };
   
   const handleUserClick = async (targetUser: UserProfile) => {
@@ -400,7 +412,7 @@ export function ChatWidget() {
                     disabled={isUploading}
                  />
                 <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="w-full flex gap-2">
-                  <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." disabled={isUploading} />
+                  <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message or paste an image URL" disabled={isUploading} />
                   <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
                     <Paperclip className="h-5 w-5" />
                   </Button>
@@ -416,3 +428,5 @@ export function ChatWidget() {
     </div>
   );
 }
+
+    
