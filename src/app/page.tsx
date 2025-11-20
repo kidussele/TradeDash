@@ -95,7 +95,7 @@ export default function HomePage() {
         <section className="py-20 md:py-32">
           <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight animate-in fade-in-0 slide-in-from-top-12 duration-700">
-              Elevate Your Trading with KilaTrade
+              Elevate Your Trading with Kila
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground animate-in fade-in-0 slide-in-from-top-12 duration-700" style={{ animationDelay: '200ms' }}>
               KilaTrade is an amazing trading journal designed to help you analyze your performance, find your edge, and achieve your goals.
