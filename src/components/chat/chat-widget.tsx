@@ -485,7 +485,7 @@ export function ChatWidget() {
                     placeholder="Type a message..."
                     onKeyDown={handleKeyDown}
                     disabled={isUploading}
-                    className="flex-grow resize-none"
+                    className="flex-grow resize-none min-h-0"
                     rows={1}
                 />
                   <div className="flex flex-col gap-1">
@@ -504,3 +504,5 @@ export function ChatWidget() {
     </div>
   );
 }
+
+    
