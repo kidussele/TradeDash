@@ -30,7 +30,9 @@ import { Confetti } from '@/components/ui/confetti';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StrategyUsageChart } from '@/components/strategy-usage-chart';
+import { StrategyUsageChart } from '@/components/dashboard/strategy-usage-chart';
+import { StrategyBreakdownChart } from '@/components/dashboard/strategy-breakdown-chart';
+import { TopStrategyCard } from '@/components/dashboard/top-strategy-card';
 
 export type ChecklistItem = {
   id: string;
@@ -417,7 +419,19 @@ export default function StrategyChecklistPage() {
             )}
         </TabsContent>
         <TabsContent value="analysis">
-            <StrategyUsageChart strategies={checklists as Checklist[]} />
+             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="col-span-1 lg:col-span-2 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+                    <StrategyUsageChart strategies={checklists as Checklist[]} />
+                </div>
+                <div className="col-span-1 space-y-6">
+                    <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '200ms' }}>
+                        <TopStrategyCard strategies={checklists as Checklist[]} />
+                    </div>
+                    <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '400ms' }}>
+                        <StrategyBreakdownChart strategies={checklists as Checklist[]} />
+                    </div>
+                </div>
+            </div>
         </TabsContent>
       </Tabs>
       
