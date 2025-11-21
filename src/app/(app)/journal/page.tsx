@@ -47,6 +47,7 @@ import { collection, doc, writeBatch, serverTimestamp, query, where, getDocs, or
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import { TradeResultCard } from '@/components/trade-result-card';
+import type { Checklist } from '@/app/(app)/strategy-checklist/page';
 
 export type TradingSession = 'London' | 'New York' | 'Tokyo' | 'Sydney';
 export type Emotion = 'Greedy' | 'Fearful' | 'Confident' | 'Neutral' | 'Anxious' | 'Patient';
@@ -73,6 +74,7 @@ export type JournalEntry = {
   emotion?: Emotion;
   isImported?: boolean;
   createdAt?: any;
+  strategy?: string;
 };
 
 
@@ -86,6 +88,12 @@ export default function JournalPage() {
     () => (user ? collection(firestore, 'users', user.uid, 'journalEntries') : null),
     [user, firestore]
   );
+
+  const checklistsRef = useMemoFirebase(() =>
+    user ? collection(firestore, 'users', user.uid, 'strategyChecklists') : null
+  , [user, firestore]);
+
+  const { data: checklists = [] } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
 
   const entriesQuery = useMemoFirebase(() =>
     entriesRef ? query(entriesRef, orderBy('date', 'asc')) : null,
@@ -143,6 +151,7 @@ export default function JournalPage() {
         screenshotBefore: currentEntry.screenshotBefore,
         screenshotAfter: currentEntry.screenshotAfter,
         emotion: currentEntry.emotion,
+        strategy: currentEntry.strategy,
     };
 
     const finalEntry: Partial<Omit<JournalEntry, 'id'>> = { ...baseEntry };
@@ -505,6 +514,23 @@ export default function JournalPage() {
                             <SelectItem value="Anxious">Anxious</SelectItem>
                             <SelectItem value="Patient">Patient</SelectItem>
                             <SelectItem value="Neutral">Neutral</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="strategy">Strategy</Label>
+                    <Select
+                        value={currentEntry.strategy}
+                        onValueChange={(value: string) => setCurrentEntry({ ...currentEntry, strategy: value })}
+                    >
+                        <SelectTrigger id="strategy">
+                        <SelectValue placeholder="Select strategy" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="None">None</SelectItem>
+                            {checklists.map(cl => (
+                                <SelectItem key={cl.id} value={cl.title}>{cl.title}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>

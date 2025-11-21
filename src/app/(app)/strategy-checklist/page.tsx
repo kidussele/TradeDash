@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import {
@@ -13,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PlusCircle, Edit, Trash2, CheckCircle2, HelpCircle } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CheckCircle2, HelpCircle, BarChart2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +28,9 @@ import { collection, doc } from 'firebase/firestore';
 import { Confetti } from '@/components/ui/confetti';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { StrategyPerformanceChart } from '@/components/strategy-performance-chart';
+import type { JournalEntry } from '@/app/(app)/journal/page';
 
 export type ChecklistItem = {
   id: string;
@@ -55,7 +57,13 @@ export default function StrategyChecklistPage() {
     user ? collection(firestore, 'users', user.uid, 'strategyChecklists') : null
   , [user, firestore]);
   
-  const { data: checklists = [], isLoading } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
+  const { data: checklists = [], isLoading: isLoadingChecklists } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
+
+  const journalEntriesRef = useMemoFirebase(() =>
+    user ? collection(firestore, 'users', user.uid, 'journalEntries') : null,
+  [user, firestore]);
+
+  const { data: journalEntries = [], isLoading: isLoadingEntries } = useCollection<Omit<JournalEntry, 'id'>>(journalEntriesRef);
 
   const [narrative, setNarrative] = useState<Narrative>('Bullish');
   
@@ -201,6 +209,8 @@ export default function StrategyChecklistPage() {
   
   const filteredChecklists = (checklists || []).filter(cl => cl.narrative === narrative);
 
+  const isLoading = isLoadingChecklists || isLoadingEntries;
+
   if (isLoading) {
     return <div>Loading...</div>; // Or a loading spinner
   }
@@ -209,9 +219,9 @@ export default function StrategyChecklistPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center animate-in fade-in-0 duration-500">
         <div className="animate-in fade-in-0 slide-in-from-left-4 duration-500">
-          <h1 className="text-2xl font-bold">Strategy Checklists</h1>
+          <h1 className="text-2xl font-bold">Strategy Playbook</h1>
           <p className="text-muted-foreground">
-            Define your rules of engagement based on market narrative.
+            Define your rules of engagement and analyze their performance.
           </p>
         </div>
         <Dialog open={isChecklistDialog} onOpenChange={setIsChecklistDialog}>
@@ -271,31 +281,144 @@ export default function StrategyChecklistPage() {
             </DialogContent>
         </Dialog>
       </div>
-      
-        <Card className="animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '200ms' }}>
-            <CardHeader>
-                <CardTitle>HTF Narrative</CardTitle>
-                <CardDescription>Select the current higher time frame market bias.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <RadioGroup
-                  defaultValue="Bullish"
-                  value={narrative}
-                  onValueChange={(value: Narrative) => setNarrative(value)}
-                  className="flex flex-wrap gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Bullish" id="narrative-bullish" />
-                    <Label htmlFor="narrative-bullish" className="text-base">Bullish</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Bearish" id="narrative-bearish" />
-                    <Label htmlFor="narrative-bearish" className="text-base">Bearish</Label>
-                  </div>
-                </RadioGroup>
-            </CardContent>
-        </Card>
 
+      <Tabs defaultValue="checklists">
+        <TabsList>
+          <TabsTrigger value="checklists"><ClipboardCheck className="mr-2 h-4 w-4" />Checklists</TabsTrigger>
+          <TabsTrigger value="analysis"><BarChart2 className="mr-2 h-4 w-4" />Analysis</TabsTrigger>
+        </TabsList>
+        <TabsContent value="checklists" className="space-y-6">
+            <Card className="animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '200ms' }}>
+                <CardHeader>
+                    <CardTitle>HTF Narrative</CardTitle>
+                    <CardDescription>Select the current higher time frame market bias.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <RadioGroup
+                    defaultValue="Bullish"
+                    value={narrative}
+                    onValueChange={(value: Narrative) => setNarrative(value)}
+                    className="flex flex-wrap gap-4"
+                    >
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Bullish" id="narrative-bullish" />
+                        <Label htmlFor="narrative-bullish" className="text-base">Bullish</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Bearish" id="narrative-bearish" />
+                        <Label htmlFor="narrative-bearish" className="text-base">Bearish</Label>
+                    </div>
+                    </RadioGroup>
+                </CardContent>
+            </Card>
+
+            {(!filteredChecklists || filteredChecklists.length === 0) && !isLoading ? (
+                <div className="text-center py-24 border-2 border-dashed rounded-lg animate-in fade-in-0 zoom-in-95 duration-500">
+                <h2 className="text-xl font-semibold text-muted-foreground">No {narrative.toLowerCase()} checklists yet</h2>
+                <p className="text-muted-foreground mt-2">Click "Add Strategy" to create one.</p>
+                </div>
+            ) : (
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {filteredChecklists.map((cl, index) => {
+                    const allChecked = cl.items.length > 0 && cl.items.every(item => item.isChecked);
+                    return (
+                    <div key={cl.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 150}ms` }}>
+                        <Card className="flex flex-col h-full">
+                            {showConfettiFor === cl.id && <Confetti onComplete={() => setShowConfettiFor(null)} />}
+                            <CardHeader className="flex-row items-start justify-between">
+                            <div className="flex items-center gap-2">
+                                <CardTitle>{cl.title}</CardTitle>
+                                {cl.description && (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="max-w-xs">{cl.description}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditChecklist(cl as Checklist)}>
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteChecklist(cl.id)}>
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                            </div>
+                            </CardHeader>
+                            <CardContent className="flex-grow space-y-4">
+                            {cl.items.length === 0 ? (
+                                <div className="text-center py-10 text-muted-foreground">
+                                    <p>No rules added yet.</p>
+                                </div>
+                            ) : (
+                                cl.items.map((item) => (
+                                <div key={item.id} className="flex items-center gap-3">
+                                    <Checkbox
+                                    id={`item-${item.id}`}
+                                    checked={item.isChecked}
+                                    onCheckedChange={() => handleCheckChange(cl.id, item.id)}
+                                    className="size-5"
+                                    />
+                                    <label
+                                    htmlFor={`item-${item.id}`}
+                                    className="flex-1 text-sm font-medium leading-none"
+                                    >
+                                    {item.text}
+                                    </label>
+                                    {item.description && (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help flex-shrink-0" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="max-w-xs">{item.description}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    )}
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditItem(cl.id, item)}>
+                                        <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteItem(cl.id, item.id)}>
+                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                    </Button>
+                                </div>
+                                ))
+                            )}
+                            </CardContent>
+                            <CardFooter className="flex-col items-stretch gap-3 pt-6">
+                                <Button onClick={() => handleAddNewItem(cl.id)}>
+                                    <PlusCircle className="mr-2 h-4 w-4"/>
+                                    Add Rule
+                                </Button>
+                                {cl.items.length > 0 && (
+                                    <Button variant="outline" onClick={() => handleResetChecks(cl.id)}>Reset Checklist</Button>
+                                )}
+                                {allChecked && (
+                                    <div className="flex items-center justify-center gap-2 text-center p-3 rounded-md bg-positive/10 text-base font-semibold text-positive animate-in fade-in-0 zoom-in-95">
+                                        <CheckCircle2 className="h-5 w-5" />
+                                        <span>Cleared to trade!</span>
+                                    </div>
+                                )}
+                            </CardFooter>
+                        </Card>
+                    </div>
+                    );
+                })}
+                </div>
+            )}
+        </TabsContent>
+        <TabsContent value="analysis">
+            <StrategyPerformanceChart strategies={checklists as Checklist[]} journalEntries={journalEntries as JournalEntry[]} />
+        </TabsContent>
+      </Tabs>
+      
        {/* Item Dialog */}
         <Dialog open={isItemDialog} onOpenChange={setIsItemDialog}>
             <DialogContent className="sm:max-w-[500px]">
@@ -330,108 +453,6 @@ export default function StrategyChecklistPage() {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-
-      {(!filteredChecklists || filteredChecklists.length === 0) && !isLoading ? (
-        <div className="text-center py-24 border-2 border-dashed rounded-lg animate-in fade-in-0 zoom-in-95 duration-500">
-          <h2 className="text-xl font-semibold text-muted-foreground">No {narrative.toLowerCase()} checklists yet</h2>
-          <p className="text-muted-foreground mt-2">Click "Add Strategy" to create one.</p>
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {filteredChecklists.map((cl, index) => {
-            const allChecked = cl.items.length > 0 && cl.items.every(item => item.isChecked);
-            return (
-              <div key={cl.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 150}ms` }}>
-                <Card className="flex flex-col h-full">
-                    {showConfettiFor === cl.id && <Confetti onComplete={() => setShowConfettiFor(null)} />}
-                    <CardHeader className="flex-row items-start justify-between">
-                    <div className="flex items-center gap-2">
-                        <CardTitle>{cl.title}</CardTitle>
-                         {cl.description && (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="max-w-xs">{cl.description}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                         )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditChecklist(cl as Checklist)}>
-                            <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteChecklist(cl.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                    </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow space-y-4">
-                    {cl.items.length === 0 ? (
-                        <div className="text-center py-10 text-muted-foreground">
-                            <p>No rules added yet.</p>
-                        </div>
-                    ) : (
-                        cl.items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3">
-                            <Checkbox
-                            id={`item-${item.id}`}
-                            checked={item.isChecked}
-                            onCheckedChange={() => handleCheckChange(cl.id, item.id)}
-                            className="size-5"
-                            />
-                            <label
-                            htmlFor={`item-${item.id}`}
-                            className="flex-1 text-sm font-medium leading-none"
-                            >
-                            {item.text}
-                            </label>
-                            {item.description && (
-                               <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help flex-shrink-0" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="max-w-xs">{item.description}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                               </TooltipProvider>
-                            )}
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditItem(cl.id, item)}>
-                                <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteItem(cl.id, item.id)}>
-                                <Trash2 className="h-3 w-3 text-destructive" />
-                            </Button>
-                        </div>
-                        ))
-                    )}
-                    </CardContent>
-                    <CardFooter className="flex-col items-stretch gap-3 pt-6">
-                        <Button onClick={() => handleAddNewItem(cl.id)}>
-                            <PlusCircle className="mr-2 h-4 w-4"/>
-                            Add Rule
-                        </Button>
-                        {cl.items.length > 0 && (
-                            <Button variant="outline" onClick={() => handleResetChecks(cl.id)}>Reset Checklist</Button>
-                        )}
-                        {allChecked && (
-                            <div className="flex items-center justify-center gap-2 text-center p-3 rounded-md bg-positive/10 text-base font-semibold text-positive animate-in fade-in-0 zoom-in-95">
-                                <CheckCircle2 className="h-5 w-5" />
-                                <span>Cleared to trade!</span>
-                            </div>
-                        )}
-                    </CardFooter>
-                </Card>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

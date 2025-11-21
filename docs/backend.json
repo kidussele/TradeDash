@@ -36,7 +36,8 @@
             "screenshotBefore": { "type": "string", "format": "uri" },
             "screenshotAfter": { "type": "string", "format": "uri" },
             "adherenceToPlan": { "type": "string", "enum": ["Yes", "No", "Partial"] },
-            "emotion": { "type": "string", "enum": ["Greedy", "Fearful", "Confident", "Neutral", "Anxious", "Patient"] }
+            "emotion": { "type": "string", "enum": ["Greedy", "Fearful", "Confident", "Neutral", "Anxious", "Patient"] },
+            "strategy": { "type": "string", "description": "The name of the strategy used for this trade." }
         },
         "required": ["id", "date", "currencyPair", "direction", "entryPrice", "stopLoss", "takeProfit", "positionSize", "result", "notes", "adherenceToPlan"]
     },
