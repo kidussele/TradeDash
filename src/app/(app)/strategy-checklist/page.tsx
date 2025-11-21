@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import {
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PlusCircle, Edit, Trash2, CheckCircle2, HelpCircle, BarChart2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CheckCircle2, HelpCircle, BarChart2, ClipboardCheck } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
