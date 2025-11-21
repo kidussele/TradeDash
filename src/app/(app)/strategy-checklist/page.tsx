@@ -420,7 +420,7 @@ export default function StrategyChecklistPage() {
         </TabsContent>
         <TabsContent value="analysis">
              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div className="col-span-1 lg:col-span-2 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+                <div className="lg:col-span-2 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                     <StrategyUsageChart strategies={checklists as Checklist[]} />
                 </div>
                 <div className="col-span-1 space-y-6">
@@ -472,3 +472,5 @@ export default function StrategyChecklistPage() {
     </div>
   );
 }
+
+    
