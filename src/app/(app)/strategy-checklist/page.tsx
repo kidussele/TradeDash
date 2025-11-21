@@ -1,4 +1,3 @@
-
 'use client';
 import { useState } from 'react';
 import {
@@ -30,9 +29,7 @@ import { Confetti } from '@/components/ui/confetti';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StrategyUsageChart } from '@/components/dashboard/strategy-usage-chart';
-import { StrategyBreakdownChart } from '@/components/dashboard/strategy-breakdown-chart';
-import { TopStrategyCard } from '@/components/dashboard/top-strategy-card';
+import { StrategyPerformanceChart } from '@/components/strategy-performance-chart';
 
 export type ChecklistItem = {
   id: string;
@@ -419,19 +416,7 @@ export default function StrategyChecklistPage() {
             )}
         </TabsContent>
         <TabsContent value="analysis">
-             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div className="lg:col-span-2 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                    <StrategyUsageChart strategies={checklists as Checklist[]} />
-                </div>
-                <div className="col-span-1 space-y-6">
-                    <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '200ms' }}>
-                        <TopStrategyCard strategies={checklists as Checklist[]} />
-                    </div>
-                    <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '400ms' }}>
-                        <StrategyBreakdownChart strategies={checklists as Checklist[]} />
-                    </div>
-                </div>
-            </div>
+             <StrategyPerformanceChart strategies={checklists as Checklist[]} />
         </TabsContent>
       </Tabs>
       
@@ -472,5 +457,3 @@ export default function StrategyChecklistPage() {
     </div>
   );
 }
-
-    
