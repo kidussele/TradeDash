@@ -114,7 +114,7 @@ export default function StrategyChecklistPage() {
 
   // Item handlers
   const handleSaveItem = () => {
-    if (!currentItem.text?.trim() || !activeChecklistId || !user) return;
+    if (!currentItem.text?.trim() || !activeChecklistId || !user || !checklists) return;
 
     const checklist = checklists.find(c => c.id === activeChecklistId);
     if (!checklist) return;
@@ -159,7 +159,7 @@ export default function StrategyChecklistPage() {
   };
 
   const handleDeleteItem = (checklistId: string, itemId: string) => {
-    if (!user) return;
+    if (!user || !checklists) return;
     const checklist = checklists.find(c => c.id === checklistId);
     if (!checklist) return;
 
@@ -169,7 +169,7 @@ export default function StrategyChecklistPage() {
   };
   
   const handleCheckChange = (checklistId: string, itemId: string) => {
-    if (!user) return;
+    if (!user || !checklists) return;
     const checklist = checklists.find(c => c.id === checklistId);
     if (!checklist) return;
 
@@ -190,7 +190,7 @@ export default function StrategyChecklistPage() {
   };
   
   const handleResetChecks = (checklistId: string) => {
-    if (!user) return;
+    if (!user || !checklists) return;
     const checklist = checklists.find(c => c.id === checklistId);
     if (!checklist) return;
 
@@ -199,7 +199,7 @@ export default function StrategyChecklistPage() {
     setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
   };
   
-  const filteredChecklists = checklists.filter(cl => cl.narrative === narrative);
+  const filteredChecklists = (checklists || []).filter(cl => cl.narrative === narrative);
 
   if (isLoading) {
     return <div>Loading...</div>; // Or a loading spinner
