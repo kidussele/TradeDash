@@ -31,7 +31,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { placeholderImages } from '@/lib/placeholder-images';
-import { useTheme } from 'next-themes';
+import { useAppTheme } from '@/components/theme-provider';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 
@@ -56,7 +56,7 @@ export function AppSidebar() {
   const { user, signOut } = useUser();
   const firestore = useFirestore();
   const userAvatar = placeholderImages.find(p => p.id === 'user-avatar');
-  const { setTheme } = useTheme();
+  const { setTheme } = useAppTheme();
   const router = useRouter();
 
   const userProfileRef = useMemoFirebase(() => 
@@ -157,7 +157,7 @@ export function AppSidebar() {
               <DropdownMenuSubTrigger>
                 <Sun className="mr-2 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                 <Moon className="absolute mr-2 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span>Theme</span>
+                <span>Appearance</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent>

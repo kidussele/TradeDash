@@ -22,6 +22,9 @@ import { doc } from 'firebase/firestore';
 import { useEffect } from 'react';
 import { updateProfile as updateAuthProfile } from 'firebase/auth';
 import { updateProfile as updateFirestoreProfile } from './actions';
+import { useAppTheme, themes } from '@/components/theme-provider';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 
 const profileFormSchema = z.object({
@@ -34,6 +37,37 @@ const profileFormSchema = z.object({
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
+const ThemeSwitcher = () => {
+    const { colorTheme, setColorTheme } = useAppTheme();
+    return (
+        <div>
+            <div className="grid grid-cols-3 gap-4">
+            {themes.map((t) => (
+                <div key={t.name}>
+                <Button
+                    variant="outline"
+                    className={cn(
+                    "w-full h-12 justify-start",
+                    colorTheme === t.name && "border-2 border-primary"
+                    )}
+                    onClick={() => setColorTheme(t.name)}
+                >
+                    <div className="flex items-center gap-3">
+                        <div
+                            className="size-5 rounded-full"
+                            style={{ backgroundColor: t.color }}
+                        />
+                        <span className="font-semibold">{t.label}</span>
+                    </div>
+                    {colorTheme === t.name && <Check className="ml-auto h-5 w-5" />}
+                </Button>
+                </div>
+            ))}
+            </div>
+        </div>
+    )
+}
 
 export default function SettingsPage() {
   const { user } = useUser();
@@ -177,6 +211,17 @@ export default function SettingsPage() {
               </Button>
             </form>
           </Form>
+        </CardContent>
+       </Card>
+       <Card>
+        <CardHeader>
+            <CardTitle>Theme</CardTitle>
+            <CardDescription>
+                Select a color theme for the application.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <ThemeSwitcher />
         </CardContent>
        </Card>
     </div>
