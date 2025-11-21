@@ -104,6 +104,8 @@
         "properties": {
             "id": { "type": "string" },
             "title": { "type": "string" },
+            "description": { "type": "string" },
+            "narrative": { "type": "string", "enum": ["Bullish", "Bearish"] },
             "items": { 
                 "type": "array",
                 "items": {
@@ -111,13 +113,14 @@
                     "properties": {
                         "id": { "type": "string" },
                         "text": { "type": "string" },
+                        "description": { "type": "string" },
                         "isChecked": { "type": "boolean" }
                     },
                     "required": ["id", "text", "isChecked"]
                 }
             }
         },
-        "required": ["id", "title", "items"]
+        "required": ["id", "title", "items", "narrative"]
     },
     "UserStatus": {
       "title": "UserStatus",

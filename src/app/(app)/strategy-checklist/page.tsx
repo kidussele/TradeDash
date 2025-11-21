@@ -7,11 +7,13 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
+  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PlusCircle, Edit, Trash2, CheckCircle2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CheckCircle2, HelpCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -25,17 +27,23 @@ import { Label } from '@/components/ui/label';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Confetti } from '@/components/ui/confetti';
-
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export type ChecklistItem = {
   id: string;
   text: string;
+  description?: string;
   isChecked: boolean;
 };
 
+export type Narrative = 'Bullish' | 'Bearish';
+
 export type Checklist = {
-  id: string;
+  id:string;
   title: string;
+  description?: string;
+  narrative: Narrative;
   items: ChecklistItem[];
 };
 
@@ -49,14 +57,16 @@ export default function StrategyChecklistPage() {
   
   const { data: checklists = [], isLoading } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
 
+  const [narrative, setNarrative] = useState<Narrative>('Bullish');
+  
   // For adding/editing a checklist (strategy)
   const [isChecklistDialog, setIsChecklistDialog] = useState(false);
-  const [currentChecklistTitle, setCurrentChecklistTitle] = useState('');
+  const [currentChecklist, setCurrentChecklist] = useState<Partial<Checklist>>({});
   const [editingChecklistId, setEditingChecklistId] = useState<string | null>(null);
 
   // For adding/editing an item within a checklist
   const [isItemDialog, setIsItemDialog] = useState(false);
-  const [currentItemText, setCurrentItemText] = useState('');
+  const [currentItem, setCurrentItem] = useState<Partial<ChecklistItem>>({});
   const [activeChecklistId, setActiveChecklistId] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
@@ -65,22 +75,28 @@ export default function StrategyChecklistPage() {
 
   // Checklist (Strategy) handlers
   const handleSaveChecklist = () => {
-    if (!currentChecklistTitle.trim() || !user || !checklistsRef) return;
+    if (!currentChecklist.title?.trim() || !user || !checklistsRef) return;
+    
+    const checklistData = {
+      title: currentChecklist.title,
+      description: currentChecklist.description || '',
+      narrative: currentChecklist.narrative || 'Bullish',
+    }
 
     if (editingChecklistId) {
       const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', editingChecklistId);
-      setDocumentNonBlocking(docRef, { title: currentChecklistTitle }, { merge: true });
+      setDocumentNonBlocking(docRef, checklistData, { merge: true });
     } else {
-      addDocumentNonBlocking(checklistsRef, { title: currentChecklistTitle, items: [] });
+      addDocumentNonBlocking(checklistsRef, { ...checklistData, items: [] });
     }
     setIsChecklistDialog(false);
-    setCurrentChecklistTitle('');
+    setCurrentChecklist({});
     setEditingChecklistId(null);
   };
 
   const handleEditChecklist = (checklist: Checklist) => {
     setEditingChecklistId(checklist.id);
-    setCurrentChecklistTitle(checklist.title);
+    setCurrentChecklist(checklist);
     setIsChecklistDialog(true);
   };
 
@@ -92,13 +108,13 @@ export default function StrategyChecklistPage() {
   
   const handleAddNewChecklist = () => {
     setEditingChecklistId(null);
-    setCurrentChecklistTitle('');
+    setCurrentChecklist({ narrative: 'Bullish' });
     setIsChecklistDialog(true);
   };
 
   // Item handlers
   const handleSaveItem = () => {
-    if (!currentItemText.trim() || !activeChecklistId || !user) return;
+    if (!currentItem.text?.trim() || !activeChecklistId || !user) return;
 
     const checklist = checklists.find(c => c.id === activeChecklistId);
     if (!checklist) return;
@@ -107,12 +123,13 @@ export default function StrategyChecklistPage() {
 
     if (editingItemId) { // Editing existing item
       newItems = checklist.items.map(item =>
-        item.id === editingItemId ? { ...item, text: currentItemText } : item
+        item.id === editingItemId ? { ...item, text: currentItem.text!, description: currentItem.description || '' } : item
       );
     } else { // Adding new item
       const newItem: ChecklistItem = {
         id: String(Date.now()),
-        text: currentItemText,
+        text: currentItem.text!,
+        description: currentItem.description || '',
         isChecked: false,
       };
       newItems = [...checklist.items, newItem];
@@ -122,7 +139,7 @@ export default function StrategyChecklistPage() {
     setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
 
     setIsItemDialog(false);
-    setCurrentItemText('');
+    setCurrentItem({});
     setEditingItemId(null);
     setActiveChecklistId(null);
   };
@@ -130,14 +147,14 @@ export default function StrategyChecklistPage() {
   const handleAddNewItem = (checklistId: string) => {
     setActiveChecklistId(checklistId);
     setEditingItemId(null);
-    setCurrentItemText('');
+    setCurrentItem({});
     setIsItemDialog(true);
   };
   
   const handleEditItem = (checklistId: string, item: ChecklistItem) => {
     setActiveChecklistId(checklistId);
     setEditingItemId(item.id);
-    setCurrentItemText(item.text);
+    setCurrentItem(item);
     setIsItemDialog(true);
   };
 
@@ -181,6 +198,8 @@ export default function StrategyChecklistPage() {
     const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', checklistId);
     setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
   };
+  
+  const filteredChecklists = checklists.filter(cl => cl.narrative === narrative);
 
   if (isLoading) {
     return <div>Loading...</div>; // Or a loading spinner
@@ -192,7 +211,7 @@ export default function StrategyChecklistPage() {
         <div className="animate-in fade-in-0 slide-in-from-left-4 duration-500">
           <h1 className="text-2xl font-bold">Strategy Checklists</h1>
           <p className="text-muted-foreground">
-            Manage your predefined rules for different trading strategies.
+            Define your rules of engagement based on market narrative.
           </p>
         </div>
         <Dialog open={isChecklistDialog} onOpenChange={setIsChecklistDialog}>
@@ -211,10 +230,36 @@ export default function StrategyChecklistPage() {
                         <Label htmlFor="checklist-title">Strategy Name</Label>
                         <Input
                             id="checklist-title"
-                            value={currentChecklistTitle}
-                            onChange={(e) => setCurrentChecklistTitle(e.target.value)}
+                            value={currentChecklist.title || ''}
+                            onChange={(e) => setCurrentChecklist({ ...currentChecklist, title: e.target.value})}
                             placeholder="e.g., ICT Silver Bullet"
                         />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="checklist-description">Description</Label>
+                        <Textarea
+                            id="checklist-description"
+                            value={currentChecklist.description || ''}
+                            onChange={(e) => setCurrentChecklist({ ...currentChecklist, description: e.target.value})}
+                            placeholder="Describe what this strategy is for."
+                        />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Narrative</Label>
+                       <RadioGroup
+                          value={currentChecklist.narrative}
+                          onValueChange={(value: Narrative) => setCurrentChecklist({ ...currentChecklist, narrative: value })}
+                          className="flex gap-4"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Bullish" id="r-bullish" />
+                            <Label htmlFor="r-bullish">Bullish</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Bearish" id="r-bearish" />
+                            <Label htmlFor="r-bearish">Bearish</Label>
+                          </div>
+                        </RadioGroup>
                     </div>
                 </div>
                 <DialogFooter>
@@ -226,6 +271,30 @@ export default function StrategyChecklistPage() {
             </DialogContent>
         </Dialog>
       </div>
+      
+        <Card className="animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '200ms' }}>
+            <CardHeader>
+                <CardTitle>HTF Narrative</CardTitle>
+                <CardDescription>Select the current higher time frame market bias.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <RadioGroup
+                  defaultValue="Bullish"
+                  value={narrative}
+                  onValueChange={(value: Narrative) => setNarrative(value)}
+                  className="flex flex-wrap gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Bullish" id="narrative-bullish" />
+                    <Label htmlFor="narrative-bullish" className="text-base">Bullish</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Bearish" id="narrative-bearish" />
+                    <Label htmlFor="narrative-bearish" className="text-base">Bearish</Label>
+                  </div>
+                </RadioGroup>
+            </CardContent>
+        </Card>
 
        {/* Item Dialog */}
         <Dialog open={isItemDialog} onOpenChange={setIsItemDialog}>
@@ -235,12 +304,21 @@ export default function StrategyChecklistPage() {
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor="rule-text">Rule Description</Label>
+                        <Label htmlFor="rule-text">Rule</Label>
                         <Input
                             id="rule-text"
-                            value={currentItemText}
-                            onChange={(e) => setCurrentItemText(e.target.value)}
+                            value={currentItem.text || ''}
+                            onChange={(e) => setCurrentItem({ ...currentItem, text: e.target.value })}
                             placeholder="e.g., Is the trade in line with the trend?"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="rule-description">Description (Optional)</Label>
+                         <Textarea
+                            id="rule-description"
+                            value={currentItem.description || ''}
+                            onChange={(e) => setCurrentItem({ ...currentItem, description: e.target.value })}
+                            placeholder="Explain the reasoning or importance of this rule."
                         />
                     </div>
                 </div>
@@ -253,25 +331,37 @@ export default function StrategyChecklistPage() {
             </DialogContent>
         </Dialog>
 
-      {(!checklists || checklists.length === 0) && !isLoading ? (
+      {(!filteredChecklists || filteredChecklists.length === 0) && !isLoading ? (
         <div className="text-center py-24 border-2 border-dashed rounded-lg animate-in fade-in-0 zoom-in-95 duration-500">
-          <h2 className="text-xl font-semibold text-muted-foreground">No checklists yet</h2>
-          <p className="text-muted-foreground mt-2">Click "Add Strategy" to create your first checklist.</p>
+          <h2 className="text-xl font-semibold text-muted-foreground">No {narrative.toLowerCase()} checklists yet</h2>
+          <p className="text-muted-foreground mt-2">Click "Add Strategy" to create one.</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {checklists.map((cl, index) => {
+          {filteredChecklists.map((cl, index) => {
             const allChecked = cl.items.length > 0 && cl.items.every(item => item.isChecked);
             return (
               <div key={cl.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 150}ms` }}>
                 <Card className="flex flex-col h-full">
                     {showConfettiFor === cl.id && <Confetti onComplete={() => setShowConfettiFor(null)} />}
                     <CardHeader className="flex-row items-start justify-between">
-                    <div>
+                    <div className="flex items-center gap-2">
                         <CardTitle>{cl.title}</CardTitle>
+                         {cl.description && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="max-w-xs">{cl.description}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                         )}
                     </div>
                     <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditChecklist(cl)}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditChecklist(cl as Checklist)}>
                             <Edit className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteChecklist(cl.id)}>
@@ -299,6 +389,18 @@ export default function StrategyChecklistPage() {
                             >
                             {item.text}
                             </label>
+                            {item.description && (
+                               <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help flex-shrink-0" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="max-w-xs">{item.description}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                               </TooltipProvider>
+                            )}
                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditItem(cl.id, item)}>
                                 <Edit className="h-3 w-3" />
                             </Button>
