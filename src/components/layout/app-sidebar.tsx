@@ -31,7 +31,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { placeholderImages } from '@/lib/placeholder-images';
-import { useAppTheme } from '@/components/theme-provider';
+import { useTheme } from "next-themes";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 
@@ -56,7 +56,7 @@ export function AppSidebar() {
   const { user, signOut } = useUser();
   const firestore = useFirestore();
   const userAvatar = placeholderImages.find(p => p.id === 'user-avatar');
-  const { setTheme } = useAppTheme();
+  const { setTheme } = useTheme();
   const router = useRouter();
 
   const userProfileRef = useMemoFirebase(() => 

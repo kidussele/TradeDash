@@ -22,9 +22,9 @@ import { doc } from 'firebase/firestore';
 import { useEffect } from 'react';
 import { updateProfile as updateAuthProfile } from 'firebase/auth';
 import { updateProfile as updateFirestoreProfile } from './actions';
-import { useAppTheme, themes } from '@/components/theme-provider';
-import { Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useTheme } from "next-themes"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Laptop, Moon, Sun } from 'lucide-react';
 
 
 const profileFormSchema = z.object({
@@ -38,40 +38,11 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-const ThemeSwitcher = () => {
-    const { colorTheme, setColorTheme } = useAppTheme();
-    return (
-        <div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {themes.map((t) => (
-                <div key={t.name}>
-                <Button
-                    variant="outline"
-                    className={cn(
-                    "w-full h-12 justify-start",
-                    colorTheme === t.name && "border-2 border-primary"
-                    )}
-                    onClick={() => setColorTheme(t.name)}
-                >
-                    <div className="flex items-center gap-3">
-                        <div
-                            className="size-5 rounded-full"
-                            style={{ backgroundColor: t.color }}
-                        />
-                        <span className="font-semibold">{t.label}</span>
-                    </div>
-                    {colorTheme === t.name && <Check className="ml-auto h-5 w-5" />}
-                </Button>
-                </div>
-            ))}
-            </div>
-        </div>
-    )
-}
 
 export default function SettingsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { setTheme } = useTheme()
 
   const userProfileRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -215,13 +186,38 @@ export default function SettingsPage() {
        </Card>
        <Card>
         <CardHeader>
-            <CardTitle>Theme</CardTitle>
+            <CardTitle>Appearance</CardTitle>
             <CardDescription>
-                Select a color theme for the application.
+                Customize the look and feel of the app.
             </CardDescription>
         </CardHeader>
         <CardContent>
-            <ThemeSwitcher />
+             <div className="space-y-2">
+                <Label>Theme</Label>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start">
+                             <Sun className="mr-2 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                            <Moon className="absolute mr-2 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                            <span>Change theme</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                        <DropdownMenuItem onClick={() => setTheme("light")}>
+                        <Sun className="mr-2 h-4 w-4" />
+                        Light
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTheme("dark")}>
+                        <Moon className="mr-2 h-4 w-4" />
+                        Dark
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTheme("system")}>
+                        <Laptop className="mr-2 h-4 w-4" />
+                        System
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+             </div>
         </CardContent>
        </Card>
     </div>
