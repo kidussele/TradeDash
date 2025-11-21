@@ -1,8 +1,10 @@
 
 'use client';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Checklist } from '@/app/(app)/strategy-checklist/page';
+import { Trophy } from 'lucide-react';
+import { useMemo } from 'react';
 
 type StrategyPerformanceChartProps = {
   strategies: Checklist[];
@@ -11,12 +13,18 @@ type StrategyPerformanceChartProps = {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 export function StrategyPerformanceChart({ strategies }: StrategyPerformanceChartProps) {
-  const chartData = (strategies || [])
+  const chartData = useMemo(() => (strategies || [])
     .filter(s => (s.useCount || 0) > 0)
     .map(strategy => ({
       name: strategy.title,
       count: strategy.useCount || 0,
-    }));
+    })), [strategies]);
+
+  const topStrategy = useMemo(() => {
+    if (!chartData || chartData.length === 0) return null;
+    return chartData.reduce((prev, current) => (prev.count > current.count) ? prev : current);
+  }, [chartData]);
+
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -47,8 +55,8 @@ export function StrategyPerformanceChart({ strategies }: StrategyPerformanceChar
       </CardHeader>
       <CardContent>
         {chartData.length > 0 ? (
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-                <div className="h-[350px]">
+            <div className="grid lg:grid-cols-3 gap-8 items-center">
+                <div className="h-[350px] lg:col-span-1">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={chartData} margin={{ left: -20, right: 20 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -59,7 +67,7 @@ export function StrategyPerformanceChart({ strategies }: StrategyPerformanceChar
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
-                <div className="h-[350px]">
+                 <div className="h-[350px] lg:col-span-1">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
@@ -89,9 +97,22 @@ export function StrategyPerformanceChart({ strategies }: StrategyPerformanceChar
                                 ))}
                             </Pie>
                             <Tooltip content={<CustomTooltip />} />
-                            <Legend />
                         </PieChart>
                     </ResponsiveContainer>
+                </div>
+                <div className="lg:col-span-1 flex items-center justify-center">
+                    {topStrategy && (
+                        <Card className="bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/30 dark:to-amber-950/30 border-amber-300/50 w-full">
+                            <CardHeader className="items-center text-center">
+                                <Trophy className="size-12 text-amber-500" />
+                                <CardTitle className="text-amber-700 dark:text-amber-300">Top Strategy</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-center">
+                                <p className="text-2xl font-bold">{topStrategy.name}</p>
+                                <p className="text-muted-foreground">Used <span className="font-bold text-foreground">{topStrategy.count}</span> times</p>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             </div>
         ) : (
