@@ -50,12 +50,12 @@ export function StrategyPerformanceChart({ strategies }: StrategyPerformanceChar
             <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div className="h-[350px]">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 30 }}>
-                            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                            <XAxis type="number" allowDecimals={false} />
-                            <YAxis dataKey="name" type="category" width={100} />
+                        <BarChart data={chartData} margin={{ left: -20, right: 20 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="name" tick={false} />
+                            <YAxis allowDecimals={false} />
                             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
-                            <Bar dataKey="count" name="Times Used" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="count" name="Times Used" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
