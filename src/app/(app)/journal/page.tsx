@@ -74,7 +74,6 @@ export type JournalEntry = {
   emotion?: Emotion;
   isImported?: boolean;
   createdAt?: any;
-  strategy?: string;
 };
 
 
@@ -151,7 +150,6 @@ export default function JournalPage() {
         screenshotBefore: currentEntry.screenshotBefore,
         screenshotAfter: currentEntry.screenshotAfter,
         emotion: currentEntry.emotion,
-        strategy: currentEntry.strategy,
     };
 
     const finalEntry: Partial<Omit<JournalEntry, 'id'>> = { ...baseEntry };
@@ -514,23 +512,6 @@ export default function JournalPage() {
                             <SelectItem value="Anxious">Anxious</SelectItem>
                             <SelectItem value="Patient">Patient</SelectItem>
                             <SelectItem value="Neutral">Neutral</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="strategy">Strategy</Label>
-                    <Select
-                        value={currentEntry.strategy}
-                        onValueChange={(value: string) => setCurrentEntry({ ...currentEntry, strategy: value })}
-                    >
-                        <SelectTrigger id="strategy">
-                        <SelectValue placeholder="Select strategy" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="None">None</SelectItem>
-                            {checklists.map(cl => (
-                                <SelectItem key={cl.id} value={cl.title}>{cl.title}</SelectItem>
-                            ))}
                         </SelectContent>
                     </Select>
                 </div>

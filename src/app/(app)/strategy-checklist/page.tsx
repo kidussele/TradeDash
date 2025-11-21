@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -24,14 +24,13 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { collection, doc, increment } from 'firebase/firestore';
 import { Confetti } from '@/components/ui/confetti';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StrategyPerformanceChart } from '@/components/strategy-performance-chart';
-import type { JournalEntry } from '@/app/(app)/journal/page';
+import { StrategyUsageChart } from '@/components/strategy-usage-chart';
 
 export type ChecklistItem = {
   id: string;
@@ -48,6 +47,7 @@ export type Checklist = {
   description?: string;
   narrative: Narrative;
   items: ChecklistItem[];
+  useCount?: number;
 };
 
 export default function StrategyChecklistPage() {
@@ -59,12 +59,6 @@ export default function StrategyChecklistPage() {
   , [user, firestore]);
   
   const { data: checklists = [], isLoading: isLoadingChecklists } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
-
-  const journalEntriesRef = useMemoFirebase(() =>
-    user ? collection(firestore, 'users', user.uid, 'journalEntries') : null,
-  [user, firestore]);
-
-  const { data: journalEntries = [], isLoading: isLoadingEntries } = useCollection<Omit<JournalEntry, 'id'>>(journalEntriesRef);
 
   const [narrative, setNarrative] = useState<Narrative>('Bullish');
   
@@ -86,7 +80,7 @@ export default function StrategyChecklistPage() {
   const handleSaveChecklist = () => {
     if (!currentChecklist.title?.trim() || !user || !checklistsRef) return;
     
-    const checklistData = {
+    const checklistData: Partial<Checklist> = {
       title: currentChecklist.title,
       description: currentChecklist.description || '',
       narrative: currentChecklist.narrative || 'Bullish',
@@ -96,7 +90,9 @@ export default function StrategyChecklistPage() {
       const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', editingChecklistId);
       setDocumentNonBlocking(docRef, checklistData, { merge: true });
     } else {
-      addDocumentNonBlocking(checklistsRef, { ...checklistData, items: [] });
+      checklistData.items = [];
+      checklistData.useCount = 0;
+      addDocumentNonBlocking(checklistsRef, checklistData);
     }
     setIsChecklistDialog(false);
     setCurrentChecklist({});
@@ -177,7 +173,7 @@ export default function StrategyChecklistPage() {
     setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
   };
   
-  const handleCheckChange = (checklistId: string, itemId: string) => {
+  const handleCheckChange = (checklistId: string, itemId: string, isChecked: boolean) => {
     if (!user || !checklists) return;
     const checklist = checklists.find(c => c.id === checklistId);
     if (!checklist) return;
@@ -185,17 +181,22 @@ export default function StrategyChecklistPage() {
     const wasAllChecked = checklist.items.length > 0 && checklist.items.every(item => item.isChecked);
 
     const newItems = checklist.items.map(item =>
-        item.id === itemId ? { ...item, isChecked: !item.isChecked } : item
+        item.id === itemId ? { ...item, isChecked } : item
       );
     
-    const isAllChecked = newItems.length > 0 && newItems.every(item => item.isChecked);
+    const isAllCheckedNow = newItems.length > 0 && newItems.every(item => item.isChecked);
 
-    if (isAllChecked && !wasAllChecked) {
-        setShowConfettiFor(checklistId);
-    }
-    
     const docRef = doc(firestore, 'users', user.uid, 'strategyChecklists', checklistId);
-    setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
+    
+    if (isAllCheckedNow && !wasAllChecked) {
+        setShowConfettiFor(checklistId);
+        updateDocumentNonBlocking(docRef, { 
+            items: newItems,
+            useCount: increment(1)
+        });
+    } else {
+        setDocumentNonBlocking(docRef, { items: newItems }, { merge: true });
+    }
   };
   
   const handleResetChecks = (checklistId: string) => {
@@ -210,7 +211,7 @@ export default function StrategyChecklistPage() {
   
   const filteredChecklists = (checklists || []).filter(cl => cl.narrative === narrative);
 
-  const isLoading = isLoadingChecklists || isLoadingEntries;
+  const isLoading = isLoadingChecklists;
 
   if (isLoading) {
     return <div>Loading...</div>; // Or a loading spinner
@@ -362,7 +363,7 @@ export default function StrategyChecklistPage() {
                                     <Checkbox
                                     id={`item-${item.id}`}
                                     checked={item.isChecked}
-                                    onCheckedChange={() => handleCheckChange(cl.id, item.id)}
+                                    onCheckedChange={(checked) => handleCheckChange(cl.id, item.id, Boolean(checked))}
                                     className="size-5"
                                     />
                                     <label
@@ -416,7 +417,7 @@ export default function StrategyChecklistPage() {
             )}
         </TabsContent>
         <TabsContent value="analysis">
-            <StrategyPerformanceChart strategies={checklists as Checklist[]} journalEntries={journalEntries as JournalEntry[]} />
+            <StrategyUsageChart strategies={checklists as Checklist[]} />
         </TabsContent>
       </Tabs>
       
