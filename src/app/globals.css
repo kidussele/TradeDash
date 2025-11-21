@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -138,6 +139,28 @@ body {
     --ring: 217 91% 60%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-accent: 217.2 32.6% 17.5%;
+  }
+
+  .theme-green {
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 142.1 76.2% 96.3%;
+    --sidebar-primary: 142.1 76.2% 36.3%;
+  }
+  .dark.theme-green {
+    --primary: 142.1 70.2% 46.3%;
+    --primary-foreground: 142.1 70.2% 96.3%;
+    --sidebar-primary: 142.1 70.2% 46.3%;
+  }
+
+  .theme-orange {
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --sidebar-primary: 24.6 95% 53.1%;
+  }
+  .dark.theme-orange {
+    --primary: 20.5 90.2% 48.2%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --sidebar-primary: 20.5 90.2% 48.2%;
   }
 }
 

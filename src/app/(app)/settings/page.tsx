@@ -42,7 +42,7 @@ const ThemeSwitcher = () => {
     const { colorTheme, setColorTheme } = useAppTheme();
     return (
         <div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {themes.map((t) => (
                 <div key={t.name}>
                 <Button

@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -20,6 +21,16 @@ export const themes = [
     name: "blue",
     label: "Blue",
     color: "hsl(217 91% 60%)",
+  },
+  {
+    name: "green",
+    label: "Green",
+    color: "hsl(142.1 76.2% 36.3%)",
+  },
+    {
+    name: "orange",
+    label: "Orange",
+    color: "hsl(24.6 95% 53.1%)",
   },
 ]
 
