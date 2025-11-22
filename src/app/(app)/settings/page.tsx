@@ -25,6 +25,7 @@ import { updateProfile as updateFirestoreProfile } from './actions';
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Laptop, Moon, Sun } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
 
 const profileFormSchema = z.object({
