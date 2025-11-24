@@ -136,7 +136,7 @@ export function ChatWidget() {
     const messageText = newMessage.trim();
     if ((!messageText && !imageUrlToSend) || !user || !activeRoomId || !activeRoom) return;
 
-    const messagePayload: Omit<ChatMessage, 'id' | 'timestamp'> = {
+    const messagePayload: Omit<ChatMessage, 'id' | 'timestamp'> & { replyTo?: ReplyContext } = {
       senderId: user.uid,
       members: activeRoom.members,
     };
@@ -153,12 +153,17 @@ export function ChatWidget() {
     }
     
     if (replyTo) {
-      messagePayload.replyTo = {
-        messageId: replyTo.id,
-        senderId: replyTo.senderId,
-        text: replyTo.text,
-        imageUrl: replyTo.imageUrl
-      };
+        const replyContext: ReplyContext = {
+            messageId: replyTo.id,
+            senderId: replyTo.senderId,
+        };
+        if (replyTo.text) {
+            replyContext.text = replyTo.text;
+        }
+        if (replyTo.imageUrl) {
+            replyContext.imageUrl = replyTo.imageUrl;
+        }
+        messagePayload.replyTo = replyContext;
     }
     
     const messagesColRef = collection(firestore, 'chatRooms', activeRoomId, 'messages');
