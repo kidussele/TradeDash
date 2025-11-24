@@ -349,7 +349,7 @@ export function ChatWidget() {
         className={cn("w-full h-full flex flex-col shadow-lg bg-cover bg-center relative overflow-hidden", !isExpanded && "h-14")}
         style={{ backgroundImage: "url('https://i.pinimg.com/564x/f9/72/46/f97246ee37ec2482753e83ec5b629fc5.jpg')"}}
       >
-        <div className="absolute inset-0 bg-black/60 z-0"/>
+        <div className="absolute inset-0 bg-black/50 z-0 backdrop-blur-md"/>
         <div className="relative z-10 flex flex-col h-full">
 
         <CardHeader className="flex flex-row items-center justify-between p-3 border-b border-white/10 bg-black/20">
