@@ -8,11 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Expand, X, Users, MessageCircle, Paperclip, Pencil, Minus } from 'lucide-react';
+import { MessageSquare, Expand, X, Users, MessageCircle, Paperclip, Pencil, Minus, Smile, Reply } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
 
 type UserProfile = {
   id: string;
@@ -35,6 +38,13 @@ type ChatRoom = {
   lastMessage?: { text: string; timestamp: Timestamp, senderId: string };
 };
 
+type ReplyContext = {
+    messageId: string;
+    senderId: string;
+    text?: string;
+    imageUrl?: string;
+}
+
 type ChatMessage = {
   id: string;
   text?: string;
@@ -42,6 +52,7 @@ type ChatMessage = {
   senderId: string;
   timestamp: any;
   members: string[]; // Denormalized for security rules
+  replyTo?: ReplyContext;
 };
 
 const isImageUrl = (url: string) => {
@@ -63,6 +74,7 @@ export function ChatWidget() {
   const [isUploading, setIsUploading] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   
   // --- Data Fetching ---
   const usersRef = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
@@ -140,6 +152,15 @@ export function ChatWidget() {
       messagePayload.imageUrl = imageUrlToSend;
     }
     
+    if (replyTo) {
+      messagePayload.replyTo = {
+        messageId: replyTo.id,
+        senderId: replyTo.senderId,
+        text: replyTo.text,
+        imageUrl: replyTo.imageUrl
+      };
+    }
+    
     const messagesColRef = collection(firestore, 'chatRooms', activeRoomId, 'messages');
     await addDocumentNonBlocking(messagesColRef, { ...messagePayload, timestamp: serverTimestamp() });
     
@@ -158,6 +179,7 @@ export function ChatWidget() {
     }, { merge: true });
 
     setNewMessage('');
+    setReplyTo(null);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -284,6 +306,14 @@ export function ChatWidget() {
         });
     }
   };
+  
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    setNewMessage(prev => prev + emojiData.emoji);
+  }
+
+  const handleDoubleClick = (message: ChatMessage) => {
+    setReplyTo(message);
+  }
 
   if (!user) return null;
 
@@ -423,7 +453,7 @@ export function ChatWidget() {
                     const isEditing = editingMessageId === message.id;
 
                     return (
-                      <div key={message.id} className={cn("flex items-end gap-2 group", isCurrentUser ? "justify-end" : "justify-start")}>
+                      <div key={message.id} className={cn("flex items-end gap-2 group", isCurrentUser ? "justify-end" : "justify-start")} onDoubleClick={() => handleDoubleClick(message as ChatMessage)}>
                         {!isCurrentUser && (
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={sender?.photoURL} />
@@ -435,34 +465,43 @@ export function ChatWidget() {
                                 <Pencil className="h-4 w-4" />
                             </Button>
                         )}
-                        <div className={cn("max-w-xs rounded-lg text-sm whitespace-pre-wrap", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted", isEditing ? "w-full" : "p-2")}>
-                          {!isCurrentUser && <p className="font-bold mb-1 p-2">{sender?.displayName}</p>}
+                        <div className={cn("max-w-xs rounded-lg text-sm", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted", isEditing ? "w-full" : "p-2")}>
+                           {!isCurrentUser && sender && <p className="font-bold mb-1 px-2 pt-2">{sender.displayName}</p>}
+                           
+                           {message.replyTo && (
+                             <div className="bg-black/20 p-2 rounded-md mb-2 text-xs opacity-80">
+                               <p className="font-semibold">{getSender(message.replyTo.senderId)?.displayName}</p>
+                               <p className="truncate">{message.replyTo.text || "Image"}</p>
+                             </div>
+                           )}
                           
-                          {isEditing ? (
-                             <div className="p-1">
-                                <Input 
-                                    value={editingText} 
-                                    onChange={(e) => setEditingText(e.target.value)}
-                                    className="h-8"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleSaveEdit();
-                                        if (e.key === 'Escape') handleCancelEdit();
-                                    }}
-                                />
-                                <div className="text-xs mt-1.5 flex justify-end gap-2">
-                                     <button onClick={handleCancelEdit} className="hover:underline">Cancel</button>
-                                     <button onClick={handleSaveEdit} className="font-semibold hover:underline">Save</button>
-                                </div>
-                            </div>
-                          ) : (
-                            <>
-                                {message.text && <p>{message.text}</p>}
-                                {message.imageUrl && (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={message.imageUrl} alt="Shared image" className="mt-2 rounded-md max-w-full h-auto cursor-pointer" onClick={() => window.open(message.imageUrl, '_blank')} />
-                                )}
-                            </>
-                          )}
+                           <div className={cn(!isCurrentUser && 'px-2 pb-2')}>
+                            {isEditing ? (
+                               <div className="p-1">
+                                  <Input 
+                                      value={editingText} 
+                                      onChange={(e) => setEditingText(e.target.value)}
+                                      className="h-8"
+                                      onKeyDown={(e) => {
+                                          if (e.key === 'Enter') handleSaveEdit();
+                                          if (e.key === 'Escape') handleCancelEdit();
+                                      }}
+                                  />
+                                  <div className="text-xs mt-1.5 flex justify-end gap-2">
+                                       <button onClick={handleCancelEdit} className="hover:underline">Cancel</button>
+                                       <button onClick={handleSaveEdit} className="font-semibold hover:underline">Save</button>
+                                  </div>
+                              </div>
+                            ) : (
+                              <>
+                                  {message.text && <p className="whitespace-pre-wrap">{message.text}</p>}
+                                  {message.imageUrl && (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img src={message.imageUrl} alt="Shared image" className="mt-2 rounded-md max-w-full h-auto cursor-pointer" onClick={() => window.open(message.imageUrl, '_blank')} />
+                                  )}
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -470,6 +509,22 @@ export function ChatWidget() {
                 </div>
                 <div ref={messagesEndRef} />
               </ScrollArea>
+              
+               {replyTo && (
+                <div className="p-2 border-t text-xs bg-muted/50 flex justify-between items-center">
+                    <div className="flex items-center gap-2 truncate">
+                        <Reply className="h-4 w-4 flex-shrink-0" />
+                        <div className="truncate">
+                            <p className="font-semibold">Replying to {getSender(replyTo.senderId)?.displayName}</p>
+                            <p className="text-muted-foreground truncate">{replyTo.text || "Image"}</p>
+                        </div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setReplyTo(null)}>
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+              )}
+
               <CardFooter className="p-2 border-t flex items-start gap-2">
                  <input
                     type="file"
@@ -479,20 +534,32 @@ export function ChatWidget() {
                     accept="image/png, image/jpeg, image/gif"
                     disabled={isUploading}
                  />
-                <Textarea 
-                    value={newMessage} 
-                    onChange={e => setNewMessage(e.target.value)} 
-                    placeholder="Type a message..."
-                    onKeyDown={handleKeyDown}
-                    disabled={isUploading}
-                    className="flex-grow resize-none min-h-[initial] h-9"
-                    rows={1}
-                />
+                <div className="flex-grow relative">
+                    <Textarea 
+                        value={newMessage} 
+                        onChange={e => setNewMessage(e.target.value)} 
+                        placeholder="Type a message..."
+                        onKeyDown={handleKeyDown}
+                        disabled={isUploading}
+                        className="flex-grow resize-none min-h-[initial] h-9 pr-10"
+                        rows={1}
+                    />
+                    <Popover>
+                        <PopoverTrigger asChild>
+                             <Button variant="ghost" size="icon" className="absolute right-1 bottom-1 h-7 w-7">
+                                <Smile className="h-5 w-5"/>
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 border-0 mb-2">
+                             <EmojiPicker onEmojiClick={handleEmojiClick} />
+                        </PopoverContent>
+                    </Popover>
+                </div>
                   <div className="flex flex-col gap-1">
                     <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
                         <Paperclip className="h-5 w-5" />
                     </Button>
-                    <Button type="submit" size="icon" onClick={() => handleSendMessage()} disabled={isUploading || (!newMessage.trim())}>
+                    <Button type="submit" size="icon" onClick={() => handleSendMessage()} disabled={isUploading || (!newMessage.trim() && !replyTo)}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-send-horizontal"><path d="m3 3 3 9-3 9 19-9Z"/><path d="M6 12h16"/></svg>
                     </Button>
                  </div>
@@ -504,10 +571,3 @@ export function ChatWidget() {
     </div>
   );
 }
-
-    
-    
-
-    
-
-    

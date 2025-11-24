@@ -163,7 +163,15 @@
         "senderId": { "type": "string" },
         "timestamp": { "type": "string", "format": "date-time" },
         "members": { "type": "array", "items": { "type": "string" } },
-        "imageUrl": { "type": "string", "format": "uri" }
+        "imageUrl": { "type": "string", "format": "uri" },
+        "replyTo": {
+            "type": "object",
+            "properties": {
+                "messageId": { "type": "string" },
+                "senderId": { "type": "string" },
+                "text": { "type": "string" }
+            }
+        }
       },
       "required": ["id", "senderId", "timestamp", "members"]
     }
