@@ -69,7 +69,7 @@ export function ChatWidget() {
   const [activeRoomId, setActiveRoomId] = useState<string | null>('general');
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [lastReadTimestamps, setLastReadTimestamps]_useState<Record<string, Timestamp>>({});
+  const [lastReadTimestamps, setLastReadTimestamps] = useState<Record<string, Timestamp>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
@@ -347,7 +347,7 @@ export function ChatWidget() {
     <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[480px] h-[450px]" : "w-auto")}>
        <Card 
         className={cn("w-full h-full flex flex-col shadow-lg bg-cover bg-center relative overflow-hidden", !isExpanded && "h-14")}
-        style={{ backgroundImage: "url('https://i.ibb.co/VMyw2kP/Gemini-Generated-Image-1g20f81g20f81g20.png')"}}
+        style={{ backgroundImage: "url('https://i.ibb.co/V9qLgL3/Gemini-Generated-Image-1.png')"}}
       >
         <div className="absolute inset-0 bg-black/60 z-0"/>
         <div className="relative z-10 flex flex-col h-full">
@@ -585,4 +585,6 @@ export function ChatWidget() {
 }
 
     
+    
+
     
