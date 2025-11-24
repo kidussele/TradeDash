@@ -583,8 +583,3 @@ export function ChatWidget() {
     </div>
   );
 }
-
-    
-    
-
-    
