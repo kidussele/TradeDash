@@ -347,7 +347,7 @@ export function ChatWidget() {
     <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[480px] h-[450px]" : "w-auto")}>
        <Card 
         className={cn("w-full h-full flex flex-col shadow-lg bg-cover bg-center relative overflow-hidden", !isExpanded && "h-14")}
-        style={{ backgroundImage: "url('https://i.ibb.co/V9qLgL3/Gemini-Generated-Image-1.png')"}}
+        style={{ backgroundImage: "url('https://i.pinimg.com/564x/f9/72/46/f97246ee37ec2482753e83ec5b629fc5.jpg')"}}
       >
         <div className="absolute inset-0 bg-black/60 z-0"/>
         <div className="relative z-10 flex flex-col h-full">
