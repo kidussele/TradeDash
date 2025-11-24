@@ -1,8 +1,9 @@
 
 'use client';
 import { useEffect } from 'react';
-import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, serverTimestamp, onDisconnect, set, ref, getDatabase } from 'firebase/database';
+import { setDoc, getDoc } from 'firebase/firestore';
 
 export function PresenceIndicator() {
   const { user } = useUser();
@@ -11,33 +12,68 @@ export function PresenceIndicator() {
   useEffect(() => {
     if (!user) return;
 
-    const userStatusRef = doc(firestore, 'userStatus', user.uid);
+    // Use the Realtime Database for presence because it has onDisconnect
+    const db = getDatabase(firestore.app);
+    const userStatusDatabaseRef = ref(db, 'status/' + user.uid);
+    const userStatusFirestoreRef = doc(firestore, 'userStatus', user.uid);
+
+    // Firestore timestamp for last seen
+    const isOfflineForFirestore = {
+        online: false,
+        lastChanged: serverTimestamp(),
+    };
+
+    const isOnlineForFirestore = {
+        online: true,
+        lastChanged: serverTimestamp(),
+    };
+
+    // Realtime Database timestamp for last seen
+    const isOfflineForDatabase = {
+        online: false,
+        lastChanged: {'.sv': 'timestamp'}, // RTDB server value
+    };
+
+    const isOnlineForDatabase = {
+        online: true,
+        lastChanged: {'.sv': 'timestamp'},
+    };
+    
+    // Create a reference to the special '.info/connected' path
+    const connectedRef = ref(db, '.info/connected');
+    let unsubscribe: () => void;
+
+    onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
+        set(userStatusDatabaseRef, isOnlineForDatabase);
+        setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true });
+    });
+    
+    // Also create user profile if it doesn't exist.
     const userProfileRef = doc(firestore, 'users', user.uid);
-
-    // Using a non-blocking set to update presence and user profile.
-    // This is useful for "fire-and-forget" updates like presence.
-    setDocumentNonBlocking(userStatusRef, { online: true, lastChanged: serverTimestamp() }, { merge: true });
-
-    // Set user profile info if it doesn't exist, helpful for anonymous users
-    setDocumentNonBlocking(userProfileRef, {
-        displayName: user.displayName || 'Anonymous User',
-        email: user.email || 'anonymous@example.com',
-        photoURL: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
-        createdAt: serverTimestamp()
-    }, { merge: true });
+    getDoc(userProfileRef).then(docSnap => {
+        if (!docSnap.exists()) {
+            setDoc(userProfileRef, {
+                displayName: user.displayName || 'Anonymous User',
+                email: user.email || 'anonymous@example.com',
+                photoURL: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+                createdAt: serverTimestamp()
+            }, { merge: true });
+        }
+    });
 
     const handleBeforeUnload = () => {
-      setDocumentNonBlocking(userStatusRef, { online: false, lastChanged: serverTimestamp() }, { merge: true });
+      set(userStatusDatabaseRef, isOfflineForDatabase);
+      setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true });
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      // Set offline on unmount/cleanup
-      setDocumentNonBlocking(userStatusRef, { online: false, lastChanged: serverTimestamp() }, { merge: true });
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+        handleBeforeUnload();
+        window.removeEventListener('beforeunload', handleBeforeUnload);
     };
+
   }, [user, firestore]);
 
-  return null; // This component does not render anything
+  return null;
 }

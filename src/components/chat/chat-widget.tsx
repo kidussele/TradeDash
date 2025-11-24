@@ -200,17 +200,19 @@ export function ChatWidget() {
     const memberIds = [user.uid, targetUser.id].sort();
     const roomId = memberIds.join('_');
     
+    const roomRef = doc(firestore, 'chatRooms', roomId);
     const existingRoom = chatRooms?.find(r => r.id === roomId);
 
     if (existingRoom) {
       handleRoomSelect(existingRoom.id);
     } else {
-      const newRoomRef = doc(firestore, 'chatRooms', roomId);
-      await setDocumentNonBlocking(newRoomRef, {
-        name: ``,
+      await setDocumentNonBlocking(roomRef, {
+        name: ``, // Private chats don't need a name
         type: 'private',
         members: memberIds,
       });
+      // The useCollection hook for chat rooms will automatically pick up the new room.
+      // We can then select it.
       handleRoomSelect(roomId);
     }
     setActiveTab('chats');
