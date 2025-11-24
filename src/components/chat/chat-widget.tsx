@@ -136,7 +136,7 @@ export function ChatWidget() {
     const messageText = newMessage.trim();
     if ((!messageText && !imageUrlToSend) || !user || !activeRoomId || !activeRoom) return;
 
-    const messagePayload: Omit<ChatMessage, 'id' | 'timestamp'> & { replyTo?: ReplyContext } = {
+    const messagePayload: Partial<Omit<ChatMessage, 'id' | 'timestamp'>> & { replyTo?: Partial<ReplyContext> } = {
       senderId: user.uid,
       members: activeRoom.members,
     };
@@ -153,7 +153,7 @@ export function ChatWidget() {
     }
     
     if (replyTo) {
-        const replyContext: ReplyContext = {
+        const replyContext: Partial<ReplyContext> = {
             messageId: replyTo.id,
             senderId: replyTo.senderId,
         };
@@ -345,14 +345,20 @@ export function ChatWidget() {
 
   return (
     <div className={cn("fixed bottom-4 right-4 z-50 transition-all", isExpanded ? "w-[480px] h-[450px]" : "w-auto")}>
-      <Card className={cn("w-full h-full flex flex-col shadow-lg", !isExpanded && "h-14")}>
-        <CardHeader className="flex flex-row items-center justify-between p-3 border-b bg-blue-500/10">
-          <CardTitle className="text-lg font-semibold">{activeRoom ? getRoomDisplayName(activeRoom) : 'Chat'}</CardTitle>
+       <Card 
+        className={cn("w-full h-full flex flex-col shadow-lg bg-cover bg-center relative overflow-hidden", !isExpanded && "h-14")}
+        style={{ backgroundImage: "url('https://i.ibb.co/S43wJjCz/Gemini-Generated-Image-njuz27njuz27njuz.png')"}}
+      >
+        <div className="absolute inset-0 bg-black/60 z-0"/>
+        <div className="relative z-10 flex flex-col h-full">
+
+        <CardHeader className="flex flex-row items-center justify-between p-3 border-b border-white/10 bg-black/20">
+          <CardTitle className="text-lg font-semibold text-white">{activeRoom ? getRoomDisplayName(activeRoom) : 'Chat'}</CardTitle>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsExpanded(!isExpanded)}>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-white/80 hover:text-white hover:bg-white/10" onClick={() => setIsExpanded(!isExpanded)}>
               {isExpanded ? <Minus className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsOpen(false)}>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-white/80 hover:text-white hover:bg-white/10" onClick={() => setIsOpen(false)}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -361,19 +367,19 @@ export function ChatWidget() {
         {isExpanded && (
           <div className="flex flex-grow min-h-0">
             {/* Sidebar */}
-             <div className="w-[72px] border-r flex flex-col items-center">
-              <div className="p-2 border-b">
-                 <div className="flex flex-col gap-1 rounded-md bg-muted p-1">
+             <div className="w-[72px] border-r border-white/10 bg-black/20 flex flex-col items-center">
+              <div className="p-2 border-b border-white/10">
+                 <div className="flex flex-col gap-1 rounded-md bg-white/5 p-1">
                     <TooltipProvider>
                        <Tooltip>
                          <TooltipTrigger asChild>
-                           <Button size="sm" variant={activeTab === 'chats' ? 'secondary': 'ghost'} className="h-9 w-9 p-0" onClick={() => setActiveTab('chats')}><MessageCircle /></Button>
+                           <Button size="sm" variant={activeTab === 'chats' ? 'secondary': 'ghost'} className="h-9 w-9 p-0 text-white/80 hover:text-white hover:bg-white/10 data-[state=active]:bg-white/20" onClick={() => setActiveTab('chats')}><MessageCircle /></Button>
                          </TooltipTrigger>
                          <TooltipContent side="right"><p>Chats</p></TooltipContent>
                        </Tooltip>
                        <Tooltip>
                          <TooltipTrigger asChild>
-                           <Button size="sm" variant={activeTab === 'users' ? 'secondary': 'ghost'} className="h-9 w-9 p-0" onClick={() => setActiveTab('users')}><Users/></Button>
+                           <Button size="sm" variant={activeTab === 'users' ? 'secondary': 'ghost'} className="h-9 w-9 p-0 text-white/80 hover:text-white hover:bg-white/10 data-[state=active]:bg-white/20" onClick={() => setActiveTab('users')}><Users/></Button>
                          </TooltipTrigger>
                          <TooltipContent side="right"><p>Users</p></TooltipContent>
                        </Tooltip>
@@ -466,17 +472,17 @@ export function ChatWidget() {
                           </Avatar>
                         )}
                          {isCurrentUser && message.text && !isEditing && (
-                            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => handleStartEdit(message as ChatMessage)}>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-white/80 hover:text-white hover:bg-white/10" onClick={() => handleStartEdit(message as ChatMessage)}>
                                 <Pencil className="h-4 w-4" />
                             </Button>
                         )}
-                        <div className={cn("max-w-xs rounded-lg text-sm", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted", isEditing ? "w-full" : "p-2")}>
-                           {!isCurrentUser && sender && <p className="font-bold mb-1 px-2 pt-2">{sender.displayName}</p>}
+                        <div className={cn("max-w-xs rounded-lg text-sm", isCurrentUser ? "bg-primary text-primary-foreground" : "bg-white/10 text-white", isEditing ? "w-full" : "p-2")}>
+                           {!isCurrentUser && sender && <p className="font-bold mb-1 px-2 pt-2 text-primary">{sender.displayName}</p>}
                            
                            {message.replyTo && (
                              <div className="bg-black/20 p-2 rounded-md mb-2 text-xs opacity-80">
-                               <p className="font-semibold">{getSender(message.replyTo.senderId)?.displayName}</p>
-                               <p className="truncate">{message.replyTo.text || "Image"}</p>
+                               <p className="font-semibold text-white/80">{getSender(message.replyTo.senderId)?.displayName}</p>
+                               <p className="truncate text-white/60">{message.replyTo.text || "Image"}</p>
                              </div>
                            )}
                           
@@ -486,13 +492,13 @@ export function ChatWidget() {
                                   <Input 
                                       value={editingText} 
                                       onChange={(e) => setEditingText(e.target.value)}
-                                      className="h-8"
+                                      className="h-8 bg-black/50 border-white/20 text-white"
                                       onKeyDown={(e) => {
                                           if (e.key === 'Enter') handleSaveEdit();
                                           if (e.key === 'Escape') handleCancelEdit();
                                       }}
                                   />
-                                  <div className="text-xs mt-1.5 flex justify-end gap-2">
+                                  <div className="text-xs mt-1.5 flex justify-end gap-2 text-white/80">
                                        <button onClick={handleCancelEdit} className="hover:underline">Cancel</button>
                                        <button onClick={handleSaveEdit} className="font-semibold hover:underline">Save</button>
                                   </div>
@@ -516,21 +522,21 @@ export function ChatWidget() {
               </ScrollArea>
               
                {replyTo && (
-                <div className="p-2 border-t text-xs bg-muted/50 flex justify-between items-center">
+                <div className="p-2 border-t border-white/10 text-xs bg-black/30 flex justify-between items-center text-white">
                     <div className="flex items-center gap-2 truncate">
                         <Reply className="h-4 w-4 flex-shrink-0" />
                         <div className="truncate">
                             <p className="font-semibold">Replying to {getSender(replyTo.senderId)?.displayName}</p>
-                            <p className="text-muted-foreground truncate">{replyTo.text || "Image"}</p>
+                            <p className="text-white/60 truncate">{replyTo.text || "Image"}</p>
                         </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setReplyTo(null)}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-white/80 hover:text-white" onClick={() => setReplyTo(null)}>
                         <X className="h-4 w-4" />
                     </Button>
                 </div>
               )}
 
-              <CardFooter className="p-2 border-t flex items-start gap-2">
+              <CardFooter className="p-2 border-t border-white/10 bg-black/20 flex items-start gap-2">
                  <input
                     type="file"
                     ref={fileInputRef}
@@ -546,12 +552,12 @@ export function ChatWidget() {
                         placeholder="Type a message..."
                         onKeyDown={handleKeyDown}
                         disabled={isUploading}
-                        className="flex-grow resize-none min-h-[initial] h-9 pr-10"
+                        className="flex-grow resize-none min-h-[initial] h-9 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50"
                         rows={1}
                     />
                     <Popover>
                         <PopoverTrigger asChild>
-                             <Button variant="ghost" size="icon" className="absolute right-1 bottom-1 h-7 w-7">
+                             <Button variant="ghost" size="icon" className="absolute right-1 bottom-1 h-7 w-7 text-white/80 hover:text-white">
                                 <Smile className="h-5 w-5"/>
                             </Button>
                         </PopoverTrigger>
@@ -561,7 +567,7 @@ export function ChatWidget() {
                     </Popover>
                 </div>
                   <div className="flex flex-col gap-1">
-                    <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                    <Button type="button" variant="ghost" size="icon" className="text-white/80 hover:text-white" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
                         <Paperclip className="h-5 w-5" />
                     </Button>
                     <Button type="submit" size="icon" onClick={() => handleSendMessage()} disabled={isUploading || (!newMessage.trim() && !replyTo)}>
@@ -572,7 +578,10 @@ export function ChatWidget() {
             </div>
           </div>
         )}
+        </div>
       </Card>
     </div>
   );
 }
+
+    
