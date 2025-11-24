@@ -2,8 +2,8 @@
 'use client';
 import { useEffect } from 'react';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, serverTimestamp, onDisconnect, set, ref, getDatabase } from 'firebase/database';
-import { setDoc, getDoc } from 'firebase/firestore';
+import { onDisconnect, set, ref, getDatabase } from 'firebase/database';
+import { setDoc, getDoc, doc, serverTimestamp } from 'firebase/firestore';
 
 export function PresenceIndicator() {
   const { user } = useUser();
