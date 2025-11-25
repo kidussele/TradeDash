@@ -2,7 +2,7 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, doc, getDocs, serverTimestamp, orderBy, Timestamp, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, getDocs, serverTimestamp, orderBy, Timestamp, updateDoc, arrayUnion } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -115,18 +115,16 @@ export function ChatWidget() {
   }, [sortedMessages]);
 
   useEffect(() => {
-    // Create 'general' chat room if it doesn't exist for the user
-    if (user && chatRooms && !chatRooms.find(r => r.id === 'general')) {
+    // Ensure user is part of the 'general' chat room.
+    if (user && firestore) {
         const generalRoomRef = doc(firestore, 'chatRooms', 'general');
-        // The room might exist, but the current user isn't a member yet.
-        // We set it with merge:true to create it or add the user to members.
         setDocumentNonBlocking(generalRoomRef, {
             name: 'General',
             type: 'group',
-            members: [user.uid], // just add current user
+            members: arrayUnion(user.uid), // Use arrayUnion to add user if not present.
         }, { merge: true });
     }
-}, [user, firestore, chatRooms]);
+}, [user, firestore]);
 
 
   // --- Event Handlers ---

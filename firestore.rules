@@ -41,7 +41,7 @@ service cloud.firestore {
       // Only members of the parent room can send messages.
       match /messages/{messageId} {
         allow read: if isAuthenticated();
-        allow write: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.members;
+        allow write: if isAuthenticated() && get(/databases/$(database)/documents/chatRooms/$(roomId)).data.members.hasAny([request.auth.uid]);
       }
     }
   }
