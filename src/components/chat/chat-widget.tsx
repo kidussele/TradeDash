@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, doc, getDocs, serverTimestamp, orderBy, Timestamp, updateDoc, arrayUnion } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -298,19 +298,24 @@ export function ChatWidget() {
 
   const handleSaveEdit = async () => {
     if (!editingMessageId || !activeRoomId) return;
-    
+
     const messageRef = doc(firestore, 'chatRooms', activeRoomId, 'messages', editingMessageId);
-    try {
-        await updateDoc(messageRef, { text: editingText });
+    const data = { text: editingText };
+    
+    updateDoc(messageRef, data)
+      .then(() => {
         handleCancelEdit();
-    } catch (error) {
-        console.error("Error updating message:", error);
-        toast({
-            variant: 'destructive',
-            title: 'Update Failed',
-            description: 'Could not save your changes.',
-        });
-    }
+      })
+      .catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: messageRef.path,
+            operation: 'update',
+            requestResourceData: data,
+          })
+        )
+      });
   };
   
   const handleEmojiClick = (emojiData: EmojiClickData) => {
