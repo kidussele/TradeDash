@@ -206,7 +206,7 @@ export function ChatWidget() {
         name: ``, // Private chats don't need a name
         type: 'private',
         members: memberIds,
-      });
+      }, { merge: true });
       // The useCollection hook for chat rooms will automatically pick up the new room.
       // We can then select it.
       handleRoomSelect(roomId);
@@ -474,7 +474,7 @@ export function ChatWidget() {
                                 <Pencil className="h-4 w-4" />
                             </Button>
                         )}
-                        <div className={cn("max-w-xs rounded-lg text-sm", isCurrentUser ? "bg-white/20 text-white" : "bg-white/10 text-white", isEditing ? "w-full" : "p-2")}>
+                        <div className={cn("max-w-xs rounded-lg text-sm", isCurrentUser ? "bg-white/20 text-white" : "bg-black/20 text-white", isEditing ? "w-full" : "p-2")}>
                            {!isCurrentUser && sender && <p className="font-bold mb-1 px-2 pt-2 text-primary">{sender.displayName}</p>}
                            
                            {message.replyTo && (
@@ -581,3 +581,5 @@ export function ChatWidget() {
     </div>
   );
 }
+
+    

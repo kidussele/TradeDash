@@ -31,11 +31,10 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
-    // Chat rooms can be read by any authenticated user.
-    // Only members can create or update a chat room.
+    // Chat rooms can be read and written to by any authenticated user.
+    // This allows users to join rooms.
     match /chatRooms/{roomId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.auth.uid in resource.data.members;
+      allow read, write: if isAuthenticated();
 
       // Messages can be read by any authenticated user.
       // Only members of the parent room can send messages.
@@ -46,3 +45,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
