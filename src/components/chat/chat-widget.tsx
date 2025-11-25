@@ -125,17 +125,7 @@ export function ChatWidget() {
             type: 'group',
             members: arrayUnion(user.uid),
         }
-        setDoc(generalRoomRef, data, { merge: true })
-        .catch(error => {
-          errorEmitter.emit(
-            'permission-error',
-            new FirestorePermissionError({
-              path: generalRoomRef.path,
-              operation: 'write',
-              requestResourceData: data,
-            })
-          )
-        });
+        setDocumentNonBlocking(generalRoomRef, data, { merge: true });
     }
 }, [user, firestore]);
 
