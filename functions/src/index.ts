@@ -5,7 +5,6 @@ import * as admin from "firebase-admin";
 admin.initializeApp();
 
 const firestore = admin.firestore();
-const rtdb = admin.database();
 
 /**
  * A Cloud Function that triggers when a user's Realtime Database
