@@ -15,6 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 type UserProfile = {
@@ -118,11 +120,22 @@ export function ChatWidget() {
     // Ensure user is part of the 'general' chat room.
     if (user && firestore) {
         const generalRoomRef = doc(firestore, 'chatRooms', 'general');
-        setDocumentNonBlocking(generalRoomRef, {
+        const data = {
             name: 'General',
             type: 'group',
-            members: arrayUnion(user.uid), // Use arrayUnion to add user if not present.
-        }, { merge: true });
+            members: arrayUnion(user.uid),
+        }
+        setDoc(generalRoomRef, data, { merge: true })
+        .catch(error => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: generalRoomRef.path,
+              operation: 'write',
+              requestResourceData: data,
+            })
+          )
+        });
     }
 }, [user, firestore]);
 
