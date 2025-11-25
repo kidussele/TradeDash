@@ -31,13 +31,17 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
-    // Chat rooms can be read and written by any authenticated user who is a member.
+    // Chat rooms can be read by any authenticated user.
+    // Only members can create or update a chat room.
     match /chatRooms/{roomId} {
-      allow read, write: if isAuthenticated() && request.auth.uid in resource.data.members;
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid in resource.data.members;
 
-      // Messages can be read and written by any authenticated user who is a member of the room.
+      // Messages can be read by any authenticated user.
+      // Only members of the parent room can send messages.
       match /messages/{messageId} {
-        allow read, write: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.members;
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.members;
       }
     }
   }

@@ -116,20 +116,18 @@ export function ChatWidget() {
 
   useEffect(() => {
     // Create 'general' chat room if it doesn't exist for the user
-    if (user && chatRooms && allUsers.length > 0 && !chatRooms.find(r => r.id === 'general')) {
-      const generalRoomRef = doc(firestore, 'chatRooms', 'general');
-      const allUserIds = allUsers.map(u => u.id);
-      // Ensure the current user is included if not already in allUsers
-      if (!allUserIds.includes(user.uid)) {
-        allUserIds.push(user.uid);
-      }
-      setDocumentNonBlocking(generalRoomRef, {
-          name: 'General',
-          type: 'group',
-          members: allUserIds,
-      }, { merge: true });
+    if (user && chatRooms && !chatRooms.find(r => r.id === 'general')) {
+        const generalRoomRef = doc(firestore, 'chatRooms', 'general');
+        // The room might exist, but the current user isn't a member yet.
+        // We set it with merge:true to create it or add the user to members.
+        setDocumentNonBlocking(generalRoomRef, {
+            name: 'General',
+            type: 'group',
+            members: [user.uid], // just add current user
+        }, { merge: true });
     }
-  }, [chatRooms, user, firestore, allUsers]);
+}, [user, firestore, chatRooms]);
+
 
   // --- Event Handlers ---
   const handleSendMessage = async (imageUrlToSend?: string) => {
