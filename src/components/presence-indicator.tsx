@@ -1,8 +1,7 @@
-
 'use client';
 import { useEffect } from 'react';
 import { useUser, useFirestore } from '@/firebase';
-import { onDisconnect, set, ref, getDatabase, onValue } from 'firebase/database';
+import { onDisconnect, set, ref, getDatabase, onValue, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
 import { setDoc, getDoc, doc, serverTimestamp } from 'firebase/firestore';
 
 export function PresenceIndicator() {
@@ -32,9 +31,7 @@ export function PresenceIndicator() {
         // When the client disconnects, set the user's presence status to a server timestamp.
         // This will be picked up by our Cloud Function, which will then update the
         // Firestore document.
-        onDisconnect(userStatusDatabaseRef).set({
-            lastChanged: admin.database.ServerValue.TIMESTAMP,
-        });
+        onDisconnect(userStatusDatabaseRef).set(rtdbServerTimestamp());
         
         // Also update the Firestore document directly for immediate feedback.
         setDoc(userStatusFirestoreRef, {

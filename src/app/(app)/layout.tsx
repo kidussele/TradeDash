@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
@@ -46,7 +45,6 @@ export default function AppLayout({
     }, 1500); // Show loader for 1.5 seconds
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   if (isUserLoading) {
