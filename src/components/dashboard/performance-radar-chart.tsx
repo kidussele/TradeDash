@@ -28,14 +28,14 @@ function KilaLogo() {
       >
         <path
           d="M8 40H17.2929C17.6834 40 18.0584 39.842 18.3414 39.5589L39.5589 18.3414C39.842 18.0584 40 17.6834 40 17.2929V8"
-          stroke="hsl(var(--foreground))"
+          stroke="white"
           strokeWidth="4"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d="M24 12V24H36"
-          stroke="hsl(var(--foreground))"
+          stroke="white"
           strokeWidth="4"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -101,7 +101,7 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
   }, [entries]);
 
   return (
-    <Card className="flex flex-col h-full bg-primary/20 text-foreground">
+    <Card className="flex flex-col h-full bg-[#338cf2] text-white">
       <CardHeader className="flex flex-row items-center justify-start pb-0">
         <CardTitle className="flex items-center gap-2 text-lg"><KilaLogo /> Score</CardTitle>
       </CardHeader>
@@ -122,11 +122,11 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
                     />
                     }
                 />
-                <PolarGrid className="fill-foreground/20 stroke-foreground/40" />
-                <PolarAngleAxis dataKey="metric" className="fill-foreground text-xs" />
+                <PolarGrid className="fill-white/20 stroke-white/40" />
+                <PolarAngleAxis dataKey="metric" className="fill-white text-xs" />
                 <Radar
                     dataKey="value"
-                    stroke="hsl(var(--foreground))"
+                    stroke="hsl(var(--primary-foreground))"
                 />
                 </RadarChart>
             </ChartContainer>
@@ -136,7 +136,7 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
             <span className="text-5xl font-bold tracking-tight">
                 {performanceScore.toFixed(2)}
             </span>
-            <span className="text-base text-foreground/80">R</span>
+            <span className="text-base text-white/80">R</span>
         </div>
       </CardFooter>
     </Card>
