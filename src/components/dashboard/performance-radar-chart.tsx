@@ -1,6 +1,6 @@
 
 'use client';
-import { TrendingUp, Activity } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { PolarGrid, PolarAngleAxis, Radar, RadarChart } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -10,7 +10,7 @@ import { useMemo } from 'react';
 const chartConfig = {
   score: {
     label: 'Score',
-    color: 'hsl(var(--primary))',
+    color: 'hsl(var(--primary-foreground))',
   },
 };
 
@@ -20,16 +20,15 @@ type PerformanceRadarChartProps = {
 
 export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
   const { chartData, performanceScore } = useMemo(() => {
-    const closedTrades = (entries || []).filter(e => e.result !== 'Ongoing' && e.pnl !== undefined);
+    const closedTrades = (entries || []).filter(e => e.result !== 'Ongoing');
     
-    if (closedTrades.length < 5) {
+    if (closedTrades.length === 0) {
       return { 
         chartData: [
             { metric: 'Win Rate', value: 0 },
-            { metric: 'R/R Ratio', value: 0 },
-            { metric: 'Discipline', value: 0 },
+            { metric: 'RR', value: 0 },
+            { metric: 'SL usage', value: 0 },
             { metric: 'Consistency', value: 0 },
-            { metric: 'Profit Factor', value: 0 },
         ], 
         performanceScore: 0 
       };
@@ -37,8 +36,8 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
 
     // 1. Win Rate (scaled 0-100)
     const wins = closedTrades.filter(t => t.result === 'Win').length;
-    const totalClosed = closedTrades.length;
-    const winRate = totalClosed > 0 ? (wins / totalClosed) * 100 : 0;
+    const tradesWithOutcome = closedTrades.filter(t => t.result === 'Win' || t.result === 'Loss').length;
+    const winRate = tradesWithOutcome > 0 ? (wins / tradesWithOutcome) : 0;
 
     // 2. Average R/R Ratio (scaled, target is 2:1)
     const rRatios = closedTrades.map(t => {
@@ -47,54 +46,43 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
         return risk > 0 ? reward / risk : 0;
     }).filter(r => r > 0);
     const avgRR = rRatios.length > 0 ? rRatios.reduce((a, b) => a + b, 0) / rRatios.length : 0;
-    const rrScore = Math.min(100, (avgRR / 2) * 100);
+    const rrScore = avgRR / 2; // Normalize against a target of 2
 
-    // 3. Discipline (Adherence to plan)
-    const followedPlanCount = closedTrades.filter(t => t.adherenceToPlan === 'Yes').length;
-    const partialPlanCount = closedTrades.filter(t => t.adherenceToPlan === 'Partial').length;
-    const disciplineScore = totalClosed > 0 ? ((followedPlanCount + partialPlanCount * 0.5) / totalClosed) * 100 : 0;
+    // 3. SL Usage
+    const slSetCount = closedTrades.filter(t => t.stopLoss > 0).length;
+    const slUsage = closedTrades.length > 0 ? slSetCount / closedTrades.length : 0;
 
     // 4. Consistency (Sharpe Ratio, normalized)
-    const pnlValues = closedTrades.map(t => t.pnl || 0);
-    const meanPnl = pnlValues.reduce((a, b) => a + b, 0) / pnlValues.length;
-    const stdDev = Math.sqrt(pnlValues.map(x => Math.pow(x - meanPnl, 2)).reduce((a, b) => a + b) / pnlValues.length);
+    const pnlValues = closedTrades.map(t => t.pnl || 0).filter(pnl => pnl !== 0);
+    const meanPnl = pnlValues.length > 0 ? pnlValues.reduce((a, b) => a + b, 0) / pnlValues.length : 0;
+    const stdDev = pnlValues.length > 0 ? Math.sqrt(pnlValues.map(x => Math.pow(x - meanPnl, 2)).reduce((a, b) => a + b) / pnlValues.length) : 0;
     const sharpeRatio = stdDev > 0 ? meanPnl / stdDev : 0;
-    const consistencyScore = Math.min(100, Math.max(0, (sharpeRatio + 1) * 50)); // Normalize sharpe to 0-100 scale
-
-    // 5. Profit Factor
-    const grossProfit = closedTrades.filter(t => t.pnl! > 0).reduce((sum, t) => sum + t.pnl!, 0);
-    const grossLoss = Math.abs(closedTrades.filter(t => t.pnl! < 0).reduce((sum, t) => sum + t.pnl!, 0));
-    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 100 : 0;
-    const profitFactorScore = Math.min(100, (profitFactor / 3) * 100); // Target a 3:1 profit factor
+    const consistencyScore = (sharpeRatio + 1) / 2; // Normalize sharpe to 0-1 scale, assuming sharpe is between -1 and 1
 
     const finalChartData = [
-      { metric: 'Win Rate', value: winRate },
-      { metric: 'R/R Ratio', value: rrScore },
-      { metric: 'Discipline', value: disciplineScore },
-      { metric: 'Consistency', value: consistencyScore },
-      { metric: 'Profit Factor', value: profitFactorScore },
+      { metric: 'WR', value: winRate * 100 },
+      { metric: 'RR', value: rrScore * 100 },
+      { metric: 'SL usage', value: slUsage * 100 },
+      { metric: 'Consistency', value: consistencyScore * 100 },
     ];
     
-    const overallScore = finalChartData.reduce((acc, item) => acc + item.value, 0) / finalChartData.length;
+    // The main score is the average of the R-multiples
+    const rMultiples = closedTrades.map(e => e.rMultiple).filter((r): r is number => r !== undefined && r !== null);
+    const overallScore = rMultiples.length > 0 ? rMultiples.reduce((a, b) => a + b, 0) / rMultiples.length : 0;
+
 
     return { chartData: finalChartData, performanceScore: overallScore };
   }, [entries]);
 
-  const hasData = entries.length >= 5;
-
   return (
     <Card className="flex flex-col h-full bg-primary/90 text-primary-foreground dark:bg-primary/50 dark:border-primary/20">
-      <CardHeader className="items-center pb-0">
-        <CardTitle className="flex items-center gap-2"><Activity /> Performance Score</CardTitle>
-        <CardDescription className="text-primary-foreground/80">
-          Your trading skills at a glance.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between pb-0">
+        <CardTitle className="flex items-center gap-2"><Activity /> Score</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col items-center justify-center pb-0">
-        {hasData ? (
             <ChartContainer
                 config={chartConfig}
-                className="mx-auto aspect-square h-full max-h-[250px]"
+                className="mx-auto aspect-square h-full w-full max-w-[250px]"
             >
                 <RadarChart data={chartData}>
                 <ChartTooltip
@@ -104,6 +92,7 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
                         indicator="line"
                         labelKey="value"
                         labelFormatter={(_, payload) => payload[0]?.payload.metric}
+                        formatter={(value) => `${(value as number).toFixed(0)}%`}
                     />
                     }
                 />
@@ -117,18 +106,13 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
                 />
                 </RadarChart>
             </ChartContainer>
-        ) : (
-            <div className="flex-1 flex items-center justify-center text-center text-primary-foreground/70 text-sm">
-                Not enough data. <br/> At least 5 trades are needed for analysis.
-            </div>
-        )}
       </CardContent>
-      <CardFooter className="flex-col gap-2 border-t border-primary-foreground/20 pt-4">
+      <CardFooter>
         <div className="flex items-baseline gap-2">
             <span className="text-5xl font-bold tracking-tight">
                 {performanceScore.toFixed(2)}
             </span>
-            <span className="text-base text-primary-foreground/80">/ 100</span>
+            <span className="text-base text-primary-foreground/80">R</span>
         </div>
       </CardFooter>
     </Card>

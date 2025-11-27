@@ -12,6 +12,7 @@ import { EmotionAnalysisChart } from '@/components/dashboard/emotion-analysis-ch
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { WinRateRRCard } from '@/components/dashboard/win-rate-rr-card';
+import { PerformanceRadarChart } from '@/components/dashboard/performance-radar-chart';
 
 export type StatCardData = {
   title: string;
@@ -144,22 +145,25 @@ export default function DashboardPage() {
     <div key="worstday" className="col-span-4 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '400ms' }}>
       <StatCard {...statsData.worstDay} />
     </div>,
-    <div key="cumpnl" className="col-span-4 lg:col-span-3 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '500ms' }}>
+    <div key="cumpnl" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '500ms' }}>
       <CumulativePnlChart entries={journalEntries as JournalEntry[]} />
     </div>,
     <div key="qscore" className="col-span-4 lg:col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '600ms' }}>
       <QuantumScore entries={journalEntries as JournalEntry[]} />
     </div>,
-    <div key="recent" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '700ms' }}>
+     <div key="radar" className="col-span-4 lg:col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '700ms' }}>
+      <PerformanceRadarChart entries={journalEntries as JournalEntry[]} />
+    </div>,
+    <div key="recent" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '800ms' }}>
       <RecentTrades entries={journalEntries as JournalEntry[]} />
     </div>,
-    <div key="dailypnl" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '800ms' }}>
+    <div key="dailypnl" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '900ms' }}>
       <DailyPnlChart entries={journalEntries as JournalEntry[]} />
     </div>,
-    <div key="emotion" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '900ms' }}>
+    <div key="emotion" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '1000ms' }}>
       <EmotionAnalysisChart entries={journalEntries as JournalEntry[]} />
     </div>,
-    <div key="calendar" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '1000ms' }}>
+    <div key="calendar" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '1100ms' }}>
       <TradingCalendar entries={journalEntries as JournalEntry[]} />
     </div>
   ];
