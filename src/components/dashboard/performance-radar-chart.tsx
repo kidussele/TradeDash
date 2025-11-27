@@ -122,7 +122,7 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
                     />
                     }
                 />
-                <PolarGrid className="fill-white/20 stroke-white/40" />
+                <PolarGrid className="stroke-white/40" />
                 <PolarAngleAxis dataKey="metric" className="fill-white text-xs" />
                 <Radar
                     dataKey="value"
