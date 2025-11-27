@@ -84,7 +84,7 @@ export function QuantumScore({ entries }: QuantumScoreProps) {
         {hasData ? (
           <ChartContainer
             config={chartConfig}
-            className="mx-auto aspect-square h-full max-h-[250px] relative"
+            className="mx-auto aspect-square h-full max-w-[250px] relative"
           >
             <RadialBarChart
               data={chartData}
