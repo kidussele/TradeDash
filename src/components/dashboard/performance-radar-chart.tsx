@@ -125,8 +125,6 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
                 <PolarAngleAxis dataKey="metric" className="fill-primary-foreground text-xs" />
                 <Radar
                     dataKey="value"
-                    fill="hsl(var(--primary-foreground))"
-                    fillOpacity={0.1}
                     stroke="hsl(var(--primary-foreground))"
                 />
                 </RadarChart>
