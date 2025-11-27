@@ -1,15 +1,15 @@
 
 'use client';
-import { TrendingUp, Activity } from 'lucide-react';
-import { PolarGrid, PolarAngleAxis, Radar, RadarChart } from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Activity } from 'lucide-react';
+import { RadialBarChart, RadialBar, PolarAngleAxis, Tooltip } from 'recharts';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import type { JournalEntry } from '@/app/(app)/journal/page';
 import { useMemo } from 'react';
 
 const chartConfig = {
   score: {
-    label: 'Score',
+    label: 'Kila Score',
     color: 'hsl(var(--primary))',
   },
 };
@@ -19,20 +19,11 @@ type QuantumScoreProps = {
 };
 
 export function QuantumScore({ entries }: QuantumScoreProps) {
-  const { chartData, kilaScore } = useMemo(() => {
+  const { kilaScore } = useMemo(() => {
     const closedTrades = (entries || []).filter(e => e.result !== 'Ongoing' && e.pnl !== undefined);
     
     if (closedTrades.length < 5) {
-      return { 
-        chartData: [
-            { metric: 'Win Rate', value: 0 },
-            { metric: 'R/R Ratio', value: 0 },
-            { metric: 'Discipline', value: 0 },
-            { metric: 'Consistency', value: 0 },
-            { metric: 'Profit Factor', value: 0 },
-        ], 
-        kilaScore: 0 
-      };
+      return { kilaScore: 0 };
     }
 
     // 1. Win Rate (scaled 0-100)
@@ -77,60 +68,56 @@ export function QuantumScore({ entries }: QuantumScoreProps) {
     
     const overallScore = finalChartData.reduce((acc, item) => acc + item.value, 0) / finalChartData.length;
 
-    return { chartData: finalChartData, kilaScore: overallScore };
+    return { kilaScore: overallScore };
   }, [entries]);
 
+  const chartData = [{ name: 'score', value: kilaScore, fill: 'var(--color-score)' }];
   const hasData = entries.length >= 5;
 
   return (
-    <Card className="flex flex-col h-full bg-primary/90 text-primary-foreground dark:bg-primary/50 dark:border-primary/20">
+    <Card className="flex flex-col h-full">
       <CardHeader className="items-center pb-0">
-        <CardTitle className="flex items-center gap-2"><Activity /> Kila Score</CardTitle>
-        <CardDescription className="text-primary-foreground/80">
-          Your trading skills at a glance.
-        </CardDescription>
+        <CardTitle>Kila Score</CardTitle>
+        <CardDescription>Overall trading performance</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col items-center justify-center pb-0">
         {hasData ? (
-            <ChartContainer
-                config={chartConfig}
-                className="mx-auto aspect-square h-full max-h-[250px]"
+          <ChartContainer
+            config={chartConfig}
+            className="mx-auto aspect-square h-full max-h-[250px]"
+          >
+            <RadialBarChart
+              data={chartData}
+              startAngle={90}
+              endAngle={-270}
+              innerRadius="70%"
+              outerRadius="100%"
+              barSize={20}
             >
-                <RadarChart data={chartData}>
-                <ChartTooltip
-                    cursor={false}
-                    content={
-                    <ChartTooltipContent
-                        indicator="line"
-                        labelKey="value"
-                        labelFormatter={(_, payload) => payload[0]?.payload.metric}
-                    />
-                    }
-                />
-                <PolarGrid className="fill-primary-foreground/20 stroke-primary-foreground/40" />
-                <PolarAngleAxis dataKey="metric" className="fill-primary-foreground text-xs" />
-                <Radar
-                    dataKey="value"
-                    fill="hsl(var(--primary-foreground))"
-                    fillOpacity={0.4}
-                    stroke="hsl(var(--primary-foreground))"
-                />
-                </RadarChart>
-            </ChartContainer>
-        ) : (
-            <div className="flex-1 flex items-center justify-center text-center text-primary-foreground/70 text-sm">
-                Not enough data. <br/> At least 5 trades are needed for analysis.
+              <PolarAngleAxis
+                type="number"
+                domain={[0, 100]}
+                dataKey="value"
+                tick={false}
+              />
+              <RadialBar
+                dataKey="value"
+                background={{ fill: 'hsla(var(--muted))' }}
+                cornerRadius={10}
+              />
+              <Tooltip content={<ChartTooltipContent nameKey="name" />} />
+            </RadialBarChart>
+             <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <p className="text-5xl font-bold">{kilaScore.toFixed(0)}</p>
+                <p className="text-muted-foreground">/ 100</p>
             </div>
+          </ChartContainer>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-center text-muted-foreground text-sm p-4">
+            Not enough data. <br /> At least 5 trades are needed to calculate your score.
+          </div>
         )}
       </CardContent>
-      <CardFooter className="flex-col gap-2 border-t border-primary-foreground/20 pt-4">
-        <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-bold tracking-tight">
-                {kilaScore.toFixed(2)}
-            </span>
-            <span className="text-base text-primary-foreground/80">/ 100</span>
-        </div>
-      </CardFooter>
     </Card>
   );
 }
