@@ -1,3 +1,4 @@
+
 'use client';
 import { PolarGrid, PolarAngleAxis, Radar, RadarChart } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { useMemo } from 'react';
 const chartConfig = {
   score: {
     label: 'Score',
-    color: 'hsl(var(--primary-foreground))',
+    color: 'hsl(var(--foreground))',
   },
 };
 
@@ -27,14 +28,14 @@ function KilaLogo() {
       >
         <path
           d="M8 40H17.2929C17.6834 40 18.0584 39.842 18.3414 39.5589L39.5589 18.3414C39.842 18.0584 40 17.6834 40 17.2929V8"
-          stroke="hsl(var(--primary-foreground))"
+          stroke="hsl(var(--foreground))"
           strokeWidth="4"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d="M24 12V24H36"
-          stroke="hsl(var(--primary-foreground))"
+          stroke="hsl(var(--foreground))"
           strokeWidth="4"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -100,7 +101,7 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
   }, [entries]);
 
   return (
-    <Card className="flex flex-col h-full bg-primary text-primary-foreground">
+    <Card className="flex flex-col h-full bg-primary/20 text-foreground">
       <CardHeader className="flex flex-row items-center justify-start pb-0">
         <CardTitle className="flex items-center gap-2 text-lg"><KilaLogo /> Score</CardTitle>
       </CardHeader>
@@ -121,11 +122,11 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
                     />
                     }
                 />
-                <PolarGrid className="fill-primary-foreground/20 stroke-primary-foreground/40" />
-                <PolarAngleAxis dataKey="metric" className="fill-primary-foreground text-xs" />
+                <PolarGrid className="fill-foreground/20 stroke-foreground/40" />
+                <PolarAngleAxis dataKey="metric" className="fill-foreground text-xs" />
                 <Radar
                     dataKey="value"
-                    stroke="hsl(var(--primary-foreground))"
+                    stroke="hsl(var(--foreground))"
                 />
                 </RadarChart>
             </ChartContainer>
@@ -135,7 +136,7 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
             <span className="text-5xl font-bold tracking-tight">
                 {performanceScore.toFixed(2)}
             </span>
-            <span className="text-base text-primary-foreground/80">R</span>
+            <span className="text-base text-foreground/80">R</span>
         </div>
       </CardFooter>
     </Card>
