@@ -101,6 +101,7 @@ export function QuantumScore({ entries }: QuantumScoreProps) {
                 tick={false}
               />
               <RadialBar
+                data={chartData}
                 dataKey="value"
                 background={{ fill: 'hsla(var(--muted))' }}
                 cornerRadius={10}
