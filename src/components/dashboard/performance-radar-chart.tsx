@@ -1,6 +1,4 @@
-
 'use client';
-import { Activity } from 'lucide-react';
 import { PolarGrid, PolarAngleAxis, Radar, RadarChart } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -17,6 +15,33 @@ const chartConfig = {
 type PerformanceRadarChartProps = {
   entries: JournalEntry[];
 };
+
+function KilaLogo() {
+    return (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 48 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M8 40H17.2929C17.6834 40 18.0584 39.842 18.3414 39.5589L39.5589 18.3414C39.842 18.0584 40 17.6834 40 17.2929V8"
+          stroke="hsl(var(--primary-foreground))"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M24 12V24H36"
+          stroke="hsl(var(--primary-foreground))"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
 
 export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
   const { chartData, performanceScore } = useMemo(() => {
@@ -75,9 +100,9 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
   }, [entries]);
 
   return (
-    <Card className="flex flex-col h-full bg-primary/90 text-primary-foreground dark:bg-primary/50 dark:border-primary/20">
-      <CardHeader className="flex flex-row items-center justify-between pb-0">
-        <CardTitle className="flex items-center gap-2"><Activity /> Score</CardTitle>
+    <Card className="flex flex-col h-full bg-primary text-primary-foreground">
+      <CardHeader className="flex flex-row items-center justify-start pb-0">
+        <CardTitle className="flex items-center gap-2 text-lg"><KilaLogo /> Score</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col items-center justify-center pb-0">
             <ChartContainer
@@ -101,7 +126,7 @@ export function PerformanceRadarChart({ entries }: PerformanceRadarChartProps) {
                 <Radar
                     dataKey="value"
                     fill="hsl(var(--primary-foreground))"
-                    fillOpacity={0.4}
+                    fillOpacity={0.1}
                     stroke="hsl(var(--primary-foreground))"
                 />
                 </RadarChart>
