@@ -40,6 +40,7 @@ import type { TradingSession } from '@/app/(app)/journal/page';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import type { Checklist } from '@/app/(app)/strategy-checklist/page';
+import { BacktestStrategyPerformance } from '@/components/dashboard/backtest-strategy-performance';
 
 
 export type BacktestJournalEntry = {
@@ -580,11 +581,11 @@ export default function BacktestJournalPage() {
          <TabsContent value="dashboard">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in-0 duration-300">
                 {statsData.map((stat, index) => (
-                    <div key={stat.title} className="col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+                    <div key={stat.title} className="col-span-1 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
                         <StatCard {...stat} />
                     </div>
                 ))}
-                <Card className="col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '300ms' }}>
+                <Card className="col-span-1 sm:col-span-2 lg:col-span-1 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '300ms' }}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Advanced Stats</CardTitle>
                     </CardHeader>
@@ -616,6 +617,9 @@ export default function BacktestJournalPage() {
 
                 <div className="col-span-1 sm:col-span-2 lg:col-span-4 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '400ms' }}>
                     <CumulativePnlChart entries={chartEntries as any[]} />
+                </div>
+                 <div className="col-span-1 sm:col-span-2 lg:col-span-4 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '500ms' }}>
+                    <BacktestStrategyPerformance entries={entries as BacktestJournalEntry[]} strategies={checklists as Checklist[]} />
                 </div>
             </div>
         </TabsContent>
