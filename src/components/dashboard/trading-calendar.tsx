@@ -3,12 +3,14 @@
 
 import * as React from 'react';
 import { DayPicker, type DayContentProps } from 'react-day-picker';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, getISOWeek, getYear, startOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import type { JournalEntry } from '@/app/(app)/journal/page';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 type TradingCalendarProps = {
   entries: JournalEntry[];
@@ -32,7 +34,7 @@ function DayContent(props: DayContentProps & { calendarData: Record<string, { pn
 }
 
 export function TradingCalendar({ entries }: TradingCalendarProps) {
-  const calendarData = (entries || [])
+  const calendarData = React.useMemo(() => (entries || [])
     .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined && (entry.entryTime || entry.date))
     .reduce((acc, entry) => {
         const dateStr = new Date(entry.date).toISOString().split('T')[0];
@@ -41,7 +43,25 @@ export function TradingCalendar({ entries }: TradingCalendarProps) {
         }
         acc[dateStr].pnl += entry.pnl!;
         return acc;
-    }, {} as Record<string, { pnl: number }>);
+    }, {} as Record<string, { pnl: number }>), [entries]);
+    
+  const weeklyPnl = React.useMemo(() => {
+    const weeklyData: Record<string, number> = {};
+    (entries || [])
+      .filter(entry => entry.result !== 'Ongoing' && entry.pnl !== undefined)
+      .forEach(entry => {
+        const date = new Date(entry.date);
+        const year = getYear(date);
+        const week = getISOWeek(date);
+        const weekKey = `${year}-W${String(week).padStart(2, '0')}`;
+        
+        if (!weeklyData[weekKey]) {
+          weeklyData[weekKey] = 0;
+        }
+        weeklyData[weekKey] += entry.pnl!;
+      });
+      return Object.entries(weeklyData).sort(([keyA], [keyB]) => keyB.localeCompare(keyA));
+  }, [entries]);
 
   const profitableDays = Object.keys(calendarData)
     .filter((d) => calendarData[d].pnl > 0)
@@ -52,7 +72,7 @@ export function TradingCalendar({ entries }: TradingCalendarProps) {
     .map((d) => new Date(d.replace(/-/g, '/')));
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Trading Calendar</CardTitle>        
         <CardDescription>Your performance at a glance.</CardDescription>
@@ -96,8 +116,23 @@ export function TradingCalendar({ entries }: TradingCalendarProps) {
           }}
         />
       </CardContent>
+      {weeklyPnl.length > 0 && (
+         <CardFooter className="flex-col items-start border-t p-4 mt-auto">
+            <h3 className="font-semibold text-sm mb-2">Weekly Summary</h3>
+            <ScrollArea className="h-24 w-full">
+                <div className="space-y-2 pr-4">
+                    {weeklyPnl.map(([weekKey, pnl]) => (
+                        <div key={weekKey} className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">{weekKey.replace('-', ' ')}</span>
+                            <span className={cn('font-semibold', pnl >= 0 ? 'text-positive' : 'text-negative')}>
+                                {pnl.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </ScrollArea>
+        </CardFooter>
+      )}
     </Card>
   );
 }
-
-    
