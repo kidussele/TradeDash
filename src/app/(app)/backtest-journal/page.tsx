@@ -41,6 +41,7 @@ import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBl
 import { collection, doc } from 'firebase/firestore';
 import type { Checklist } from '@/app/(app)/strategy-checklist/page';
 import { BacktestStrategyPerformance } from '@/components/dashboard/backtest-strategy-performance';
+import { SessionPerformance } from '@/components/dashboard/session-performance';
 
 
 export type BacktestJournalEntry = {
@@ -620,6 +621,9 @@ export default function BacktestJournalPage() {
                 </div>
                  <div className="col-span-1 sm:col-span-2 lg:col-span-4 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '500ms' }}>
                     <BacktestStrategyPerformance entries={entries as BacktestJournalEntry[]} strategies={checklists as Checklist[]} />
+                </div>
+                 <div className="col-span-1 sm:col-span-2 lg:col-span-4 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '600ms' }}>
+                    <SessionPerformance entries={entries as any[]} />
                 </div>
             </div>
         </TabsContent>
