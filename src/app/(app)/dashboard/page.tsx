@@ -8,12 +8,14 @@ import { QuantumScore } from '@/components/dashboard/quantum-score';
 import { RecentTrades } from '@/components/dashboard/recent-trades';
 import { TradingCalendar } from '@/components/dashboard/trading-calendar';
 import type { JournalEntry } from '../journal/page';
+import type { Checklist } from '../strategy-checklist/page';
 import { EmotionAnalysisChart } from '@/components/dashboard/emotion-analysis-chart';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { WinRateRRCard } from '@/components/dashboard/win-rate-rr-card';
 import { PerformanceBreakdown } from '@/components/dashboard/performance-breakdown';
 import { SessionPerformance } from '@/components/dashboard/session-performance';
+import { StrategyPerformance } from '@/components/dashboard/strategy-performance';
 
 
 export type StatCardData = {
@@ -83,7 +85,12 @@ export default function DashboardPage() {
     user ? collection(firestore, 'users', user.uid, 'journalEntries') : null
   , [user, firestore]);
   
-  const { data: journalEntries = [], isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
+  const { data: journalEntries = [], isLoading: isLoadingEntries } = useCollection<Omit<JournalEntry, 'id'>>(entriesRef);
+
+  const checklistsRef = useMemoFirebase(() =>
+    user ? collection(firestore, 'users', user.uid, 'strategyChecklists') : null
+  , [user, firestore]);
+  const { data: strategies = [], isLoading: isLoadingStrategies } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
 
   const [statsData, setStatsData] = useState<DashboardStats | null>(null);
 
@@ -130,7 +137,7 @@ export default function DashboardPage() {
     }
   }, [journalEntries]);
 
-  if (isLoading || !statsData) {
+  if (isLoadingEntries || isLoadingStrategies || !statsData) {
       return null;
   }
 
@@ -155,6 +162,9 @@ export default function DashboardPage() {
     </div>,
     <div key="perfbreakdown" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '700ms' }}>
       <PerformanceBreakdown entries={journalEntries as JournalEntry[]} />
+    </div>,
+     <div key="strategyperf" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '725ms' }}>
+      <StrategyPerformance entries={journalEntries as JournalEntry[]} strategies={strategies as Checklist[]} />
     </div>,
      <div key="sessionperf" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '750ms' }}>
       <SessionPerformance entries={journalEntries as JournalEntry[]} />
