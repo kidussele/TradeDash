@@ -29,9 +29,11 @@ function DayContent(props: DayContentProps & { calendarData: Record<string, { pn
       <div>{format(props.date, 'd')}</div>
       {dayData && (
         <div className={cn(
-            "absolute bottom-1.5 h-1.5 w-1.5 rounded-full", 
-            dayData.pnl > 0 ? "bg-positive" : "bg-destructive"
-        )} />
+            "text-xs font-bold", 
+            dayData.pnl > 0 ? "text-positive" : "text-destructive"
+        )}>
+            {Math.abs(dayData.pnl).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+        </div>
       )}
     </div>
   );
@@ -127,8 +129,8 @@ export function TradingCalendar({ entries }: TradingCalendarProps) {
                 losing: losingDays,
             }}
             modifiersClassNames={{
-                profitable: '', // Handled by dot indicator
-                losing: '', // Handled by dot indicator
+                profitable: '', // Handled by day content
+                losing: '', // Handled by day content
                 selected: 'border-primary',
             }}
             components={{
