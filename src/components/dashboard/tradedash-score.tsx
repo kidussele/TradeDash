@@ -1,3 +1,4 @@
+
 'use client';
 import { Activity } from 'lucide-react';
 import { PolarGrid, PolarAngleAxis, Radar, RadarChart } from 'recharts';
