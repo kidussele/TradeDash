@@ -12,6 +12,7 @@ import { EmotionAnalysisChart } from '@/components/dashboard/emotion-analysis-ch
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { WinRateRRCard } from '@/components/dashboard/win-rate-rr-card';
+import { PerformanceBreakdown } from '@/components/dashboard/performance-breakdown';
 
 export type StatCardData = {
   title: string;
@@ -149,6 +150,9 @@ export default function DashboardPage() {
     </div>,
     <div key="qscore" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '600ms' }}>
       <QuantumScore entries={journalEntries as JournalEntry[]} />
+    </div>,
+     <div key="perfbreakdown" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '700ms' }}>
+      <PerformanceBreakdown entries={journalEntries as JournalEntry[]} />
     </div>,
     <div key="recent" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '800ms' }}>
       <RecentTrades entries={journalEntries as JournalEntry[]} />
