@@ -64,7 +64,9 @@
             "notes": { "type": "string" },
             "screenshotBefore": { "type": "string", "format": "uri" },
             "screenshotAfter": { "type": "string", "format": "uri" },
-            "adherenceToPlan": { "type": "string", "enum": ["Yes", "No", "Partial"] }
+            "adherenceToPlan": { "type": "string", "enum": ["Yes", "No", "Partial"] },
+            "strategyId": { "type": "string" },
+            "strategyTitle": { "type": "string" }
         },
         "required": ["id", "date", "currencyPair", "direction", "entryPrice", "stopLoss", "takeProfit", "positionSize", "result", "notes", "adherenceToPlan"]
     },

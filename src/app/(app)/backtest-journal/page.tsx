@@ -39,6 +39,7 @@ import type { StatCardData } from '@/app/(app)/dashboard/page';
 import type { TradingSession } from '@/app/(app)/journal/page';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
+import type { Checklist } from '@/app/(app)/strategy-checklist/page';
 
 
 export type BacktestJournalEntry = {
@@ -60,6 +61,8 @@ export type BacktestJournalEntry = {
   screenshotBefore?: string;
   screenshotAfter?: string;
   adherenceToPlan: 'Yes' | 'No' | 'Partial';
+  strategyId?: string;
+  strategyTitle?: string;
 };
 
 type AdvancedStats = {
@@ -113,6 +116,12 @@ export default function BacktestJournalPage() {
   , [user, firestore]);
   
   const { data: entries = [], isLoading } = useCollection<Omit<BacktestJournalEntry, 'id'>>(entriesRef);
+
+  const checklistsRef = useMemoFirebase(() =>
+    user ? collection(firestore, 'users', user.uid, 'strategyChecklists') : null
+  , [user, firestore]);
+
+  const { data: checklists = [] } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<Partial<BacktestJournalEntry>>({});
@@ -184,6 +193,12 @@ export default function BacktestJournalPage() {
     return '0.00';
   }, [currentEntry.entryPrice, currentEntry.stopLoss, currentEntry.takeProfit]);
 
+  const availableStrategies = useMemo(() => {
+    if (!checklists) return [];
+    const narrative = currentEntry.direction === 'Long' ? 'Bullish' : 'Bearish';
+    return checklists.filter(c => c.narrative === narrative);
+  }, [checklists, currentEntry.direction]);
+
 
   const handleSave = () => {
     if (!user || !entriesRef) return;
@@ -194,6 +209,8 @@ export default function BacktestJournalPage() {
         rMultiple = currentEntry.pnl / (risk * (currentEntry.positionSize || 1));
     }
     
+    const selectedStrategy = checklists.find(c => c.id === currentEntry.strategyId);
+
     const baseEntry = {
       date: currentEntry.date || new Date().toISOString(),
       currencyPair: currentEntry.currencyPair || '',
@@ -215,6 +232,8 @@ export default function BacktestJournalPage() {
         rMultiple: rMultiple,
         screenshotBefore: currentEntry.screenshotBefore,
         screenshotAfter: currentEntry.screenshotAfter,
+        strategyId: currentEntry.strategyId,
+        strategyTitle: selectedStrategy?.title,
     };
 
     const finalEntry: Partial<Omit<BacktestJournalEntry, 'id'>> = { ...baseEntry };
@@ -350,7 +369,7 @@ export default function BacktestJournalPage() {
                         <Label htmlFor="direction">Direction</Label>
                         <Select
                             value={currentEntry.direction}
-                            onValueChange={(value: 'Long' | 'Short') => setCurrentEntry({ ...currentEntry, direction: value })}
+                            onValueChange={(value: 'Long' | 'Short') => setCurrentEntry({ ...currentEntry, direction: value, strategyId: undefined })}
                         >
                             <SelectTrigger id="direction">
                             <SelectValue placeholder="Select direction" />
@@ -358,6 +377,23 @@ export default function BacktestJournalPage() {
                             <SelectContent>
                             <SelectItem value="Long">Long</SelectItem>
                             <SelectItem value="Short">Short</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="space-y-2 col-span-2">
+                        <Label htmlFor="strategy">Strategy</Label>
+                        <Select
+                            value={currentEntry.strategyId}
+                            onValueChange={(value: string) => setCurrentEntry({ ...currentEntry, strategyId: value })}
+                            disabled={availableStrategies.length === 0}
+                        >
+                            <SelectTrigger id="strategy">
+                            <SelectValue placeholder={availableStrategies.length === 0 ? `No ${currentEntry.direction === 'Long' ? 'bullish' : 'bearish'} strategies` : "Select a strategy"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {availableStrategies.map(strategy => (
+                                    <SelectItem key={strategy.id} value={strategy.id}>{strategy.title}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
@@ -488,6 +524,7 @@ export default function BacktestJournalPage() {
                     <TableHead>Date</TableHead>
                     <TableHead>Pair</TableHead>
                     <TableHead>Direction</TableHead>
+                    <TableHead>Strategy</TableHead>
                     <TableHead>P&L</TableHead>
                     <TableHead>Result</TableHead>
                     <TableHead>Before</TableHead>
@@ -501,6 +538,7 @@ export default function BacktestJournalPage() {
                     <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
                     <TableCell className="font-medium">{entry.currencyPair}</TableCell>
                     <TableCell>{entry.direction}</TableCell>
+                    <TableCell>{entry.strategyTitle || 'N/A'}</TableCell>
                     <TableCell className={getResultColor(entry.result)}>
                         {entry.pnl?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) ?? 'N/A'}
                     </TableCell>
