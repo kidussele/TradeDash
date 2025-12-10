@@ -1,10 +1,9 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { CumulativePnlChart } from '@/components/dashboard/cumulative-pnl-chart';
 import { DailyPnlChart } from '@/components/dashboard/daily-pnl-chart';
-import { QuantumScore } from '@/components/dashboard/quantum-score';
+import { TradedashScore } from '@/components/dashboard/tradedash-score';
 import { RecentTrades } from '@/components/dashboard/recent-trades';
 import { TradingCalendar } from '@/components/dashboard/trading-calendar';
 import type { JournalEntry } from '../journal/page';
@@ -13,6 +12,8 @@ import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebas
 import { collection } from 'firebase/firestore';
 import { WinRateRRCard } from '@/components/dashboard/win-rate-rr-card';
 import { PerformanceBreakdown } from '@/components/dashboard/performance-breakdown';
+import { SessionPerformance } from '@/components/dashboard/session-performance';
+
 
 export type StatCardData = {
   title: string;
@@ -149,10 +150,10 @@ export default function DashboardPage() {
       <CumulativePnlChart entries={journalEntries as JournalEntry[]} />
     </div>,
     <div key="qscore" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '600ms' }}>
-      <QuantumScore entries={journalEntries as JournalEntry[]} />
+      <TradedashScore entries={journalEntries as JournalEntry[]} />
     </div>,
-     <div key="perfbreakdown" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '700ms' }}>
-      <PerformanceBreakdown entries={journalEntries as JournalEntry[]} />
+     <div key="perfbreakdown" className="col-span-4 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '700ms' }}>
+      <SessionPerformance entries={journalEntries as JournalEntry[]} />
     </div>,
     <div key="recent" className="col-span-4 lg:col-span-2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-500" style={{ animationDelay: '800ms' }}>
       <RecentTrades entries={journalEntries as JournalEntry[]} />

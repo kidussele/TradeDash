@@ -1,6 +1,6 @@
 
 'use client';
-import { TrendingUp, Activity } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { PolarGrid, PolarAngleAxis, Radar, RadarChart } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -18,20 +18,47 @@ type TradedashScoreProps = {
   entries: JournalEntry[];
 };
 
+function KilaLogo() {
+    return (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 48 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="text-primary-foreground"
+      >
+        <path
+          d="M8 40H17.2929C17.6834 40 18.0584 39.842 18.3414 39.5589L39.5589 18.3414C39.842 18.0584 40 17.6834 40 17.2929V8"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M24 12V24H36"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
 export function TradedashScore({ entries }: TradedashScoreProps) {
-  const { chartData, kilaScore } = useMemo(() => {
+  const { chartData, rMultiple } = useMemo(() => {
     const closedTrades = (entries || []).filter(e => e.result !== 'Ongoing' && e.pnl !== undefined);
     
-    if (closedTrades.length < 5) {
+    if (closedTrades.length < 3) {
       return { 
         chartData: [
             { metric: 'Win Rate', value: 0 },
             { metric: 'R/R Ratio', value: 0 },
             { metric: 'Discipline', value: 0 },
             { metric: 'Consistency', value: 0 },
-            { metric: 'Profit Factor', value: 0 },
         ], 
-        kilaScore: 0 
+        rMultiple: 0 
       };
     }
 
@@ -45,7 +72,7 @@ export function TradedashScore({ entries }: TradedashScoreProps) {
         const risk = Math.abs(t.entryPrice - t.stopLoss);
         const reward = Math.abs(t.takeProfit - t.entryPrice);
         return risk > 0 ? reward / risk : 0;
-    }).filter(r => r > 0);
+    }).filter(r => r > 0 && r < 100); // Filter out outliers
     const avgRR = rRatios.length > 0 ? rRatios.reduce((a, b) => a + b, 0) / rRatios.length : 0;
     const rrScore = Math.min(100, (avgRR / 2) * 100);
 
@@ -61,31 +88,25 @@ export function TradedashScore({ entries }: TradedashScoreProps) {
     const sharpeRatio = stdDev > 0 ? meanPnl / stdDev : 0;
     const consistencyScore = Math.min(100, Math.max(0, (sharpeRatio + 1) * 50)); // Normalize sharpe to 0-100 scale
 
-    // 5. Profit Factor
-    const grossProfit = closedTrades.filter(t => t.pnl! > 0).reduce((sum, t) => sum + t.pnl!, 0);
-    const grossLoss = Math.abs(closedTrades.filter(t => t.pnl! < 0).reduce((sum, t) => sum + t.pnl!, 0));
-    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 100 : 0;
-    const profitFactorScore = Math.min(100, (profitFactor / 3) * 100); // Target a 3:1 profit factor
-
     const finalChartData = [
       { metric: 'Win Rate', value: winRate },
       { metric: 'R/R Ratio', value: rrScore },
       { metric: 'Discipline', value: disciplineScore },
       { metric: 'Consistency', value: consistencyScore },
-      { metric: 'Profit Factor', value: profitFactorScore },
     ];
     
-    const overallScore = finalChartData.reduce((acc, item) => acc + item.value, 0) / finalChartData.length;
+     const rMultiples = closedTrades.map(t => t.rMultiple).filter((r): r is number => r !== undefined);
+     const avgRMultiple = rMultiples.length > 0 ? rMultiples.reduce((acc, r) => acc + r, 0) / rMultiples.length : 0;
 
-    return { chartData: finalChartData, kilaScore: overallScore };
+    return { chartData: finalChartData, rMultiple: avgRMultiple };
   }, [entries]);
 
-  const hasData = entries.length >= 5;
+  const hasData = entries.length >= 3;
 
   return (
     <Card className="flex flex-col h-full bg-primary/90 text-primary-foreground dark:bg-primary/50 dark:border-primary/20">
       <CardHeader className="items-center pb-0">
-        <CardTitle className="flex items-center gap-2"><Activity /> Kila Score</CardTitle>
+        <CardTitle className="flex items-center gap-2"><KilaLogo /> Kila Score</CardTitle>
         <CardDescription className="text-primary-foreground/80">
           Your trading skills at a glance.
         </CardDescription>
@@ -119,16 +140,16 @@ export function TradedashScore({ entries }: TradedashScoreProps) {
             </ChartContainer>
         ) : (
             <div className="flex-1 flex items-center justify-center text-center text-primary-foreground/70 text-sm">
-                Not enough data. <br/> At least 5 trades are needed for analysis.
+                Not enough data. <br/> At least 3 trades are needed for analysis.
             </div>
         )}
       </CardContent>
-      <CardFooter className="flex-col gap-2 border-t border-primary-foreground/20 pt-4">
+      <CardFooter className="flex-col items-start gap-2 border-t border-primary-foreground/20 pt-4">
         <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-bold tracking-tight">
-                {kilaScore.toFixed(2)}
+            <span className="text-3xl font-bold tracking-tight">
+                {rMultiple.toFixed(2)}R
             </span>
-            <span className="text-base text-primary-foreground/80">/ 100</span>
+            <span className="text-base text-primary-foreground/80">Avg. R-Multiple</span>
         </div>
       </CardFooter>
     </Card>

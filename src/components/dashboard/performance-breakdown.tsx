@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { BarChart3 } from 'lucide-react';
 import type { JournalEntry } from '@/app/(app)/journal/page';
+import { cn } from '@/lib/utils';
 
 type PerformanceBreakdownProps = {
   entries: JournalEntry[];
@@ -57,15 +58,15 @@ export function PerformanceBreakdown({ entries }: PerformanceBreakdownProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-lg p-4 bg-positive/10 border border-positive/30">
-                <p className="text-sm text-positive">Long Trades</p>
-                <p className="text-2xl font-bold text-positive">{stats.longWinRate.toFixed(1)}%</p>
-                <p className="text-xs text-positive/80">Win Rate</p>
+            <div className={cn("rounded-lg p-4", stats.longWinRate > 50 ? "bg-positive/10 border border-positive/30" : "bg-secondary")}>
+                <p className={cn("text-sm", stats.longWinRate > 50 ? "text-positive" : "text-muted-foreground")}>Long Trades</p>
+                <p className={cn("text-2xl font-bold", stats.longWinRate > 50 ? "text-positive" : "")}>{stats.longWinRate.toFixed(1)}%</p>
+                <p className={cn("text-xs", stats.longWinRate > 50 ? "text-positive/80" : "text-muted-foreground")}>Win Rate</p>
             </div>
-            <div className="rounded-lg p-4 bg-destructive/10 border border-destructive/30">
-                 <p className="text-sm text-destructive">Short Trades</p>
-                <p className="text-2xl font-bold text-destructive">{stats.shortWinRate.toFixed(1)}%</p>
-                <p className="text-xs text-destructive/80">Win Rate</p>
+            <div className={cn("rounded-lg p-4", stats.shortWinRate > 50 ? "bg-positive/10 border border-positive/30" : "bg-secondary")}>
+                 <p className={cn("text-sm", stats.shortWinRate > 50 ? "text-positive" : "text-muted-foreground")}>Short Trades</p>
+                <p className={cn("text-2xl font-bold", stats.shortWinRate > 50 ? "text-positive" : "")}>{stats.shortWinRate.toFixed(1)}%</p>
+                <p className={cn("text-xs", stats.shortWinRate > 50 ? "text-positive/80" : "text-muted-foreground")}>Win Rate</p>
             </div>
         </div>
 
