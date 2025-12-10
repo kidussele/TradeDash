@@ -29,7 +29,7 @@ function DayContent(props: DayContentProps & { calendarData: Record<string, { pn
       <div>{format(props.date, 'd')}</div>
       {dayData && (
         <div className={cn(
-            "text-xs font-bold", 
+            "text-xs font-bold",
             dayData.pnl > 0 ? "text-positive" : "text-destructive"
         )}>
             {Math.abs(dayData.pnl).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -110,7 +110,7 @@ export function TradingCalendar({ entries }: TradingCalendarProps) {
     .map((d) => new Date(d.replace(/-/g, '/')));
 
   const losingDays = Object.keys(calendarData)
-    .filter((d) => calendarData[d].pnl <= 0)
+    .filter((d) => calendarData[d].pnl < 0)
     .map((d) => new Date(d.replace(/-/g, '/')));
 
   return (
@@ -129,8 +129,8 @@ export function TradingCalendar({ entries }: TradingCalendarProps) {
                 losing: losingDays,
             }}
             modifiersClassNames={{
-                profitable: '', // Handled by day content
-                losing: '', // Handled by day content
+                profitable: 'bg-positive/20 text-positive-foreground',
+                losing: 'bg-destructive/20 text-destructive-foreground',
                 selected: 'border-primary',
             }}
             components={{
