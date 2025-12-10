@@ -72,6 +72,8 @@ export type JournalEntry = {
   screenshotAfter?: string;
   adherenceToPlan: 'Yes' | 'No' | 'Partial';
   emotion?: Emotion;
+  strategyId?: string;
+  strategyTitle?: string;
   isImported?: boolean;
   createdAt?: any;
 };
@@ -118,6 +120,12 @@ export default function JournalPage() {
     return '0.00';
   }, [currentEntry.entryPrice, currentEntry.stopLoss, currentEntry.takeProfit]);
 
+  const availableStrategies = useMemo(() => {
+    if (!checklists) return [];
+    const narrative = currentEntry.direction === 'Long' ? 'Bullish' : 'Bearish';
+    return checklists.filter(c => c.narrative === narrative);
+  }, [checklists, currentEntry.direction]);
+
 
   const handleSave = () => {
     if (!user || !entriesRef) return;
@@ -127,6 +135,8 @@ export default function JournalPage() {
     if (risk > 0 && currentEntry.pnl) {
         rMultiple = currentEntry.pnl / (risk * (currentEntry.positionSize || 1));
     }
+
+    const selectedStrategy = checklists.find(c => c.id === currentEntry.strategyId);
 
     const baseEntry = {
       date: currentEntry.date || new Date().toISOString(),
@@ -150,6 +160,8 @@ export default function JournalPage() {
         screenshotBefore: currentEntry.screenshotBefore,
         screenshotAfter: currentEntry.screenshotAfter,
         emotion: currentEntry.emotion,
+        strategyId: currentEntry.strategyId,
+        strategyTitle: selectedStrategy?.title,
     };
 
     const finalEntry: Partial<Omit<JournalEntry, 'id'>> = { ...baseEntry };
@@ -428,7 +440,7 @@ export default function JournalPage() {
                   <Label htmlFor="direction">Direction</Label>
                   <Select
                     value={currentEntry.direction}
-                    onValueChange={(value: 'Long' | 'Short') => setCurrentEntry({ ...currentEntry, direction: value })}
+                    onValueChange={(value: 'Long' | 'Short') => setCurrentEntry({ ...currentEntry, direction: value, strategyId: undefined })}
                   >
                     <SelectTrigger id="direction">
                       <SelectValue placeholder="Select direction" />
@@ -438,6 +450,23 @@ export default function JournalPage() {
                       <SelectItem value="Short">Short</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                 <div className="space-y-2 col-span-2">
+                    <Label htmlFor="strategy">Strategy</Label>
+                    <Select
+                        value={currentEntry.strategyId}
+                        onValueChange={(value: string) => setCurrentEntry({ ...currentEntry, strategyId: value })}
+                        disabled={availableStrategies.length === 0}
+                    >
+                        <SelectTrigger id="strategy">
+                        <SelectValue placeholder={availableStrategies.length === 0 ? `No ${currentEntry.direction === 'Long' ? 'bullish' : 'bearish'} strategies` : "Select a strategy"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableStrategies.map(strategy => (
+                                <SelectItem key={strategy.id} value={strategy.id}>{strategy.title}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="entry-price">Entry Price</Label>
@@ -585,6 +614,7 @@ export default function JournalPage() {
             <TableHead>Date</TableHead>
             <TableHead>Pair</TableHead>
             <TableHead>Direction</TableHead>
+            <TableHead>Strategy</TableHead>
             <TableHead>P&amp;L</TableHead>
             <TableHead>Emotion</TableHead>
             <TableHead>Result</TableHead>
@@ -600,6 +630,7 @@ export default function JournalPage() {
               <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
               <TableCell className="font-medium">{entry.currencyPair}</TableCell>
               <TableCell>{entry.direction}</TableCell>
+              <TableCell>{entry.strategyTitle || 'N/A'}</TableCell>
               <TableCell className={getResultColor(entry.result)}>
                 {entry.pnl?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) ?? 'N/A'}
               </TableCell>
