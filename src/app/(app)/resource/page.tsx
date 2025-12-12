@@ -166,68 +166,75 @@ function MyLibraryTab() {
        </div>
        {isLoading ? (
             <p>Loading your library...</p>
-       ) : userBooks && userBooks.length === 0 ? (
+       ) : userBooks.length === 0 ? (
             <div className="text-center py-24 border-2 border-dashed rounded-lg">
                 <h2 className="text-xl font-semibold text-muted-foreground">Your Library is Empty</h2>
                 <p className="text-muted-foreground mt-2">Click "Add Book" to start building your personal library.</p>
             </div>
        ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {sortedUserBooks.map((book, index) => (
-            <div key={book.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
-                <Card className="flex flex-col h-full">
-                    <div className="relative aspect-[3/4] w-full">
-                      <Image 
-                        src={book.coverImageUrl} 
-                        alt={book.title} 
-                        fill
-                        className="rounded-t-lg object-cover"
-                      />
-                    </div>
-                    <CardHeader>
-                        <CardTitle>{book.title}</CardTitle>
-                        <CardDescription>by {book.author}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                        <p className="text-sm text-muted-foreground">{book.description}</p>
-                    </CardContent>
-                    <CardFooter className="flex-col items-stretch gap-2">
-                         <Button asChild className="w-full">
-                            <Link href={book.bookUrl} target="_blank" rel="noopener noreferrer">
-                                Read / View
-                                <Book className="ml-2 h-4 w-4" />
-                            </Link>
-                        </Button>
-                        <div className="flex gap-2">
-                             <Button onClick={() => handleEdit(book as BookResource)} variant="outline" className="w-full">
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                            </Button>
-                             <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" className="w-full">
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently delete this book from your library.
-                                    </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete(book.id)}>Delete</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </div>
-                    </CardFooter>
-                </Card>
-            </div>
-            ))}
+          {sortedUserBooks.map((book, index) => {
+             const isPdf = book.bookUrl.toLowerCase().endsWith('.pdf');
+             const readLink = isPdf 
+                ? `/resource/book-preview?url=${encodeURIComponent(book.bookUrl)}`
+                : book.bookUrl;
+
+            return (
+              <div key={book.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+                  <Card className="flex flex-col h-full">
+                      <div className="relative aspect-[3/4] w-full">
+                        <Image 
+                          src={book.coverImageUrl} 
+                          alt={book.title} 
+                          fill
+                          className="rounded-t-lg object-cover"
+                        />
+                      </div>
+                      <CardHeader>
+                          <CardTitle>{book.title}</CardTitle>
+                          <CardDescription>by {book.author}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex-grow">
+                          <p className="text-sm text-muted-foreground">{book.description}</p>
+                      </CardContent>
+                      <CardFooter className="flex-col items-stretch gap-2">
+                           <Button asChild className="w-full">
+                              <Link href={readLink} target={isPdf ? '_self' : '_blank'} rel="noopener noreferrer">
+                                  Read / View
+                                  <Book className="ml-2 h-4 w-4" />
+                              </Link>
+                          </Button>
+                          <div className="flex gap-2">
+                               <Button onClick={() => handleEdit(book as BookResource)} variant="outline" className="w-full">
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit
+                              </Button>
+                               <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                      <Button variant="destructive" className="w-full">
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          Delete
+                                      </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                          This action cannot be undone. This will permanently delete this book from your library.
+                                      </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(book.id)}>Delete</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                  </AlertDialogContent>
+                              </AlertDialog>
+                          </div>
+                      </CardFooter>
+                  </Card>
+              </div>
+              )
+            })}
         </div>
        )}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
