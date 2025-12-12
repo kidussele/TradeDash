@@ -121,7 +121,7 @@ export default function AuthPage() {
 
 
   return (
-    <Tabs defaultValue="login" className="w-full animate-in fade-in-0 zoom-in-95 duration-500">
+    <div className="animate-in fade-in-0 zoom-in-95 duration-500">
       <div className="flex justify-center mb-6">
         <Link href="/" className="flex items-center gap-2 text-foreground">
           <Activity className="size-7 shrink-0 text-primary" />
@@ -130,76 +130,78 @@ export default function AuthPage() {
           </h1>
         </Link>
       </div>
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="login">Login</TabsTrigger>
-        <TabsTrigger value="signup">Sign Up</TabsTrigger>
-      </TabsList>
-      <TabsContent value="login">
-        <Card>
-          <CardHeader>
-            <CardTitle>Login to your account</CardTitle>
-            <CardDescription>
-              Welcome back! Please enter your details.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-             <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
-                <Input id="login-email" type="email" placeholder="name@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
-                <Input id="login-password" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
-            </div>
-          </CardContent>
-          <CardFooter className="flex-col gap-4">
-            <Button className="w-full" onClick={handleLogin} type="button">Login</Button>
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or
-                </span>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-4 w-full">
-               <Button variant="outline" onClick={handleGuestLogin} type="button">
-                 <User className="mr-2 h-4 w-4" />
-                 Login as a guest
-               </Button>
-            </div>
-          </CardFooter>
-        </Card>
-      </TabsContent>
-      <TabsContent value="signup">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create an account</CardTitle>
-            <CardDescription>
-              Enter your details below to create your account.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="signup-name">Name</Label>
-                <Input id="signup-name" placeholder="Your Name" value={signupName} onChange={(e) => setSignupName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input id="signup-email" type="email" placeholder="name@example.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input id="signup-password" type="password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} />
-            </div>
-          </CardContent>
-          <CardFooter className="flex-col gap-4">
-            <Button className="w-full" onClick={handleSignup} type="button">Create Account</Button>
-          </CardFooter>
-        </Card>
-      </TabsContent>
-    </Tabs>
+      <Card className="bg-card/60 backdrop-blur-lg border-white/10">
+      <Tabs defaultValue="login" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 bg-transparent p-0">
+          <TabsTrigger value="login" className="data-[state=active]:bg-background/50 data-[state=active]:shadow-none rounded-t-lg rounded-b-none py-3">Login</TabsTrigger>
+          <TabsTrigger value="signup" className="data-[state=active]:bg-background/50 data-[state=active]:shadow-none rounded-t-lg rounded-b-none py-3">Sign Up</TabsTrigger>
+        </TabsList>
+        <div className="p-6">
+          <TabsContent value="login">
+              <CardHeader className="p-0 text-center mb-6">
+                <CardTitle>Welcome Back</CardTitle>
+                <CardDescription>
+                  Login to your account to continue your journey.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0 space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input id="login-email" type="email" placeholder="name@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="bg-background/50 focus:bg-background/80 transition-colors" />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="login-password">Password</Label>
+                    <Input id="login-password" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="bg-background/50 focus:bg-background/80 transition-colors" />
+                </div>
+              </CardContent>
+              <CardFooter className="p-0 pt-6 flex-col gap-4">
+                <Button className="w-full" onClick={handleLogin} type="button">Login</Button>
+                <div className="relative w-full">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card/60 px-2 text-muted-foreground backdrop-blur-lg">
+                      Or
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 w-full">
+                  <Button variant="outline" onClick={handleGuestLogin} type="button" className="bg-secondary/50 hover:bg-secondary/80 transition-colors">
+                    <User className="mr-2 h-4 w-4" />
+                    Continue as a guest
+                  </Button>
+                </div>
+              </CardFooter>
+          </TabsContent>
+          <TabsContent value="signup">
+              <CardHeader className="p-0 text-center mb-6">
+                <CardTitle>Create an Account</CardTitle>
+                <CardDescription>
+                  Start your journey to disciplined trading today.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0 space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="signup-name">Name</Label>
+                    <Input id="signup-name" placeholder="Your Name" value={signupName} onChange={(e) => setSignupName(e.target.value)} className="bg-background/50 focus:bg-background/80 transition-colors" />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input id="signup-email" type="email" placeholder="name@example.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} className="bg-background/50 focus:bg-background/80 transition-colors" />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input id="signup-password" type="password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} className="bg-background/50 focus:bg-background/80 transition-colors" />
+                </div>
+              </CardContent>
+              <CardFooter className="p-0 pt-6 flex-col gap-4">
+                <Button className="w-full" onClick={handleSignup} type="button">Create Account</Button>
+              </CardFooter>
+          </TabsContent>
+        </div>
+      </Tabs>
+      </Card>
+    </div>
   )
 }

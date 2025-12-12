@@ -9,8 +9,8 @@
     {
       "id": "auth-background",
       "description": "Abstract background for authentication page",
-      "imageUrl": "https://images.unsplash.com/photo-1671716784499-a3d26826d844?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YWJzdHJhY3QlMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc2MjQzMzQzMHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "abstract background"
+      "imageUrl": "https://images.unsplash.com/photo-1533134486753-c833f0ed4866?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxkYXJrJTIwYWJzdHJhY3R8ZW58MHx8fHwxNzY1NTQ0MTAxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dark abstract"
     }
   ]
 }
