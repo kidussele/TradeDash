@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -112,7 +113,7 @@ function MyLibraryTab() {
   const { user } = useUser();
   const firestore = useFirestore();
   const bookResourcesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'bookResources') : null, [user, firestore]);
-  const { data: userBooks = [], isLoading } = useCollection<Omit<BookResource, 'id'>>(bookResourcesRef);
+  const { data: userBooks, isLoading } = useCollection<Omit<BookResource, 'id'>>(bookResourcesRef);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentBook, setCurrentBook] = useState<Partial<BookResource>>({});
@@ -163,7 +164,7 @@ function MyLibraryTab() {
        </div>
        {isLoading ? (
             <p>Loading your library...</p>
-       ) : userBooks.length === 0 ? (
+       ) : !userBooks || userBooks.length === 0 ? (
             <div className="text-center py-24 border-2 border-dashed rounded-lg">
                 <h2 className="text-xl font-semibold text-muted-foreground">Your Library is Empty</h2>
                 <p className="text-muted-foreground mt-2">Click "Add Book" to start building your personal library.</p>
