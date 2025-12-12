@@ -174,10 +174,13 @@ function MyLibraryTab() {
        ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {sortedUserBooks.map((book, index) => {
-             const isPdf = book.bookUrl.toLowerCase().endsWith('.pdf');
-             const readLink = isPdf 
-                ? `/resource/book-preview?url=${encodeURIComponent(book.bookUrl)}`
-                : book.bookUrl;
+            const isDirectPdf = book.bookUrl.toLowerCase().endsWith('.pdf');
+            const isExternalViewer = book.bookUrl.includes('drive.google.com') || book.bookUrl.includes('terabox.com');
+            const openInNewTab = isExternalViewer || !isDirectPdf;
+
+            const readLink = isDirectPdf
+              ? `/resource/book-preview?url=${encodeURIComponent(book.bookUrl)}`
+              : book.bookUrl;
 
             return (
               <div key={book.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
@@ -199,7 +202,7 @@ function MyLibraryTab() {
                       </CardContent>
                       <CardFooter className="flex-col items-stretch gap-2">
                            <Button asChild className="w-full">
-                              <Link href={readLink} target={isPdf ? '_self' : '_blank'} rel="noopener noreferrer">
+                              <Link href={readLink} target={openInNewTab ? '_blank' : '_self'} rel="noopener noreferrer">
                                   Read / View
                                   <Book className="ml-2 h-4 w-4" />
                               </Link>
