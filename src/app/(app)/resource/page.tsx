@@ -1,11 +1,18 @@
-
 'use client';
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ExternalLink, Link as LinkIcon, BookOpen } from 'lucide-react';
+import { ExternalLink, Link as LinkIcon, BookOpen, PlusCircle, Edit, Trash2, Library } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState } from 'react';
+import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const resources = [
   {
@@ -89,7 +96,169 @@ const books = [
     url: 'https://www.amazon.com/Atomic-Habits-Proven-Build-Break/dp/0735211299',
     category: 'Personal Development',
   },
-]
+];
+
+type BookResource = {
+  id: string;
+  title: string;
+  author: string;
+  description: string;
+  bookUrl: string;
+  coverImageUrl: string;
+  createdAt: any;
+};
+
+function MyLibraryTab() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const bookResourcesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'bookResources') : null, [user, firestore]);
+  const { data: userBooks = [], isLoading } = useCollection<Omit<BookResource, 'id'>>(bookResourcesRef);
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentBook, setCurrentBook] = useState<Partial<BookResource>>({});
+  const [editId, setEditId] = useState<string | null>(null);
+
+  const handleAddNew = () => {
+    setEditId(null);
+    setCurrentBook({});
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (book: BookResource) => {
+    setEditId(book.id);
+    setCurrentBook(book);
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (bookId: string) => {
+    if (!user) return;
+    deleteDocumentNonBlocking(doc(firestore, 'users', user.uid, 'bookResources', bookId));
+  };
+
+  const handleSave = () => {
+    if (!user || !bookResourcesRef) return;
+    const { id, createdAt, ...bookData } = currentBook;
+    const finalBook = { ...bookData };
+
+    if (editId) {
+      setDocumentNonBlocking(doc(firestore, 'users', user.uid, 'bookResources', editId), finalBook, { merge: true });
+    } else {
+      addDocumentNonBlocking(bookResourcesRef, { ...finalBook, createdAt: serverTimestamp() });
+    }
+
+    setIsDialogOpen(false);
+    setCurrentBook({});
+    setEditId(null);
+  };
+
+  const sortedUserBooks = [...userBooks].sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+  return (
+    <div className="space-y-6">
+       <div className="flex justify-end items-center">
+            <Button onClick={handleAddNew}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Book
+            </Button>
+       </div>
+       {isLoading ? (
+            <p>Loading your library...</p>
+       ) : userBooks.length === 0 ? (
+            <div className="text-center py-24 border-2 border-dashed rounded-lg">
+                <h2 className="text-xl font-semibold text-muted-foreground">Your Library is Empty</h2>
+                <p className="text-muted-foreground mt-2">Click "Add Book" to start building your personal library.</p>
+            </div>
+       ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {sortedUserBooks.map((book, index) => (
+            <div key={book.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+                <Card className="flex flex-col h-full">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={book.coverImageUrl} alt={book.title} className="rounded-t-lg object-cover aspect-[3/4]"/>
+                    <CardHeader>
+                        <CardTitle>{book.title}</CardTitle>
+                        <CardDescription>by {book.author}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <p className="text-sm text-muted-foreground">{book.description}</p>
+                    </CardContent>
+                    <CardFooter className="flex-col items-stretch gap-2">
+                         <Button asChild className="w-full">
+                            <Link href={book.bookUrl} target="_blank" rel="noopener noreferrer">
+                                Read / View
+                                <ExternalLink className="ml-2 h-4 w-4" />
+                            </Link>
+                        </Button>
+                        <div className="flex gap-2">
+                             <Button onClick={() => handleEdit(book as BookResource)} variant="outline" className="w-full">
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                            </Button>
+                             <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" className="w-full">
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete this book from your library.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(book.id)}>Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
+                    </CardFooter>
+                </Card>
+            </div>
+            ))}
+        </div>
+       )}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{editId ? 'Edit' : 'Add'} Book to Library</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="book-title">Title</Label>
+                        <Input id="book-title" value={currentBook.title || ''} onChange={e => setCurrentBook({...currentBook, title: e.target.value})} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="book-author">Author</Label>
+                        <Input id="book-author" value={currentBook.author || ''} onChange={e => setCurrentBook({...currentBook, author: e.target.value})} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="book-desc">Description</Label>
+                        <Textarea id="book-desc" value={currentBook.description || ''} onChange={e => setCurrentBook({...currentBook, description: e.target.value})} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="book-url">Book URL (PDF, link, etc.)</Label>
+                        <Input id="book-url" placeholder="https://" value={currentBook.bookUrl || ''} onChange={e => setCurrentBook({...currentBook, bookUrl: e.target.value})} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="cover-url">Cover Image URL</Label>
+                        <Input id="cover-url" placeholder="https://" value={currentBook.coverImageUrl || ''} onChange={e => setCurrentBook({...currentBook, coverImageUrl: e.target.value})} />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleSave}>Save</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    </div>
+  );
+}
 
 export default function ResourcePage() {
   return (
@@ -105,6 +274,7 @@ export default function ResourcePage() {
         <TabsList className="animate-in fade-in-0 slide-in-from-left-4 duration-500">
             <TabsTrigger value="websites"><LinkIcon className="mr-2 h-4 w-4"/>Websites</TabsTrigger>
             <TabsTrigger value="books"><BookOpen className="mr-2 h-4 w-4"/>Books</TabsTrigger>
+            <TabsTrigger value="library"><Library className="mr-2 h-4 w-4"/>My Library</TabsTrigger>
         </TabsList>
         <TabsContent value="websites" className="animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '200ms' }}>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
@@ -120,14 +290,14 @@ export default function ResourcePage() {
                     <CardContent className="flex-grow">
                         <p className="text-sm text-muted-foreground">{resource.description}</p>
                     </CardContent>
-                    <CardContent>
+                    <CardFooter>
                         <Button asChild variant="outline" className="w-full">
                             <Link href={resource.url} target="_blank" rel="noopener noreferrer">
                                 Visit Site
                                 <ExternalLink className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>
-                    </CardContent>
+                    </CardFooter>
                     </Card>
                 </div>
                 ))}
@@ -150,18 +320,21 @@ export default function ResourcePage() {
                     <CardContent className="flex-grow">
                         <p className="text-sm text-muted-foreground">{book.description}</p>
                     </CardContent>
-                    <CardContent>
+                    <CardFooter>
                         <Button asChild variant="outline" className="w-full">
                             <Link href={book.url} target="_blank" rel="noopener noreferrer">
                                 Find on Amazon
                                 <ExternalLink className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>
-                    </CardContent>
+                    </CardFooter>
                     </Card>
                 </div>
                 ))}
             </div>
+        </TabsContent>
+        <TabsContent value="library" className="mt-6">
+            <MyLibraryTab />
         </TabsContent>
       </Tabs>
     </div>

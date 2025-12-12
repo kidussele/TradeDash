@@ -178,6 +178,21 @@
         }
       },
       "required": ["id", "senderId", "timestamp", "members"]
+    },
+    "BookResource": {
+      "title": "BookResource",
+      "type": "object",
+      "description": "A user-saved book resource.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "description": { "type": "string" },
+        "bookUrl": { "type": "string", "format": "uri" },
+        "coverImageUrl": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "author", "bookUrl", "coverImageUrl", "createdAt"]
     }
   },
   "auth": {
@@ -223,6 +238,10 @@
     "/chatRooms/{roomId}/messages/{messageId}": {
       "schema": { "$ref": "#/entities/ChatMessage" },
       "description": "Messages within a specific chat room."
+    },
+    "/users/{userId}/bookResources/{bookId}": {
+        "schema": { "$ref": "#/entities/BookResource" },
+        "description": "User's saved book resources."
     }
   }
 }
