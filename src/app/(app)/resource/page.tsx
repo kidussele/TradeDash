@@ -193,7 +193,7 @@ function MyLibraryTab() {
                     </CardContent>
                     <CardFooter className="flex-col items-stretch gap-2">
                          <Button asChild className="w-full">
-                            <Link href={`/resource/book-preview?url=${encodeURIComponent(book.bookUrl)}`}>
+                            <Link href={book.bookUrl} target="_blank" rel="noopener noreferrer">
                                 Read / View
                                 <Book className="ml-2 h-4 w-4" />
                             </Link>
