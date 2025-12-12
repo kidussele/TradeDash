@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import Image from 'next/image';
 
 const resources = [
   {
@@ -114,8 +115,7 @@ function MyLibraryTab() {
   const firestore = useFirestore();
   const bookResourcesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'bookResources') : null, [user, firestore]);
   const { data: userBooksData, isLoading } = useCollection<Omit<BookResource, 'id'>>(bookResourcesRef);
-  const userBooks = userBooksData || [];
-
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentBook, setCurrentBook] = useState<Partial<BookResource>>({});
   const [editId, setEditId] = useState<string | null>(null);
@@ -153,6 +153,7 @@ function MyLibraryTab() {
     setEditId(null);
   };
 
+  const userBooks = userBooksData || [];
   const sortedUserBooks = [...userBooks].sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
 
   return (
@@ -165,7 +166,7 @@ function MyLibraryTab() {
        </div>
        {isLoading ? (
             <p>Loading your library...</p>
-       ) : userBooks.length === 0 ? (
+       ) : userBooks && userBooks.length === 0 ? (
             <div className="text-center py-24 border-2 border-dashed rounded-lg">
                 <h2 className="text-xl font-semibold text-muted-foreground">Your Library is Empty</h2>
                 <p className="text-muted-foreground mt-2">Click "Add Book" to start building your personal library.</p>
@@ -175,8 +176,14 @@ function MyLibraryTab() {
           {sortedUserBooks.map((book, index) => (
             <div key={book.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
                 <Card className="flex flex-col h-full">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={book.coverImageUrl} alt={book.title} className="rounded-t-lg object-cover aspect-[3/4]"/>
+                    <div className="relative aspect-[3/4] w-full">
+                      <Image 
+                        src={book.coverImageUrl} 
+                        alt={book.title} 
+                        fill
+                        className="rounded-t-lg object-cover"
+                      />
+                    </div>
                     <CardHeader>
                         <CardTitle>{book.title}</CardTitle>
                         <CardDescription>by {book.author}</CardDescription>
