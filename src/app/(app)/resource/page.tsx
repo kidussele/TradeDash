@@ -175,12 +175,22 @@ function MyLibraryTab() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {sortedUserBooks.map((book, index) => {
             const isDirectPdf = book.bookUrl.toLowerCase().endsWith('.pdf');
-            const isExternalViewer = book.bookUrl.includes('drive.google.com') || book.bookUrl.includes('terabox.com');
-            const openInNewTab = isExternalViewer || !isDirectPdf;
+            const isGoogleDrive = book.bookUrl.includes('drive.google.com');
 
-            const readLink = isDirectPdf
-              ? `/resource/book-preview?url=${encodeURIComponent(book.bookUrl)}`
-              : book.bookUrl;
+            let readLink = book.bookUrl;
+            let openInNewTab = true;
+
+            if (isDirectPdf) {
+              readLink = `/resource/book-preview?url=${encodeURIComponent(book.bookUrl)}`;
+              openInNewTab = false;
+            } else if (isGoogleDrive) {
+              // Transform Google Drive link to an embeddable preview link
+              const embeddableUrl = book.bookUrl.replace('/view', '/preview');
+              readLink = `/resource/book-preview?url=${encodeURIComponent(embeddableUrl)}`;
+              openInNewTab = false; // We will attempt to open it in the previewer
+            }
+            
+            // For other links (like Terabox), default is to open in a new tab.
 
             return (
               <div key={book.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
@@ -359,3 +369,5 @@ export default function ResourcePage() {
     </div>
   );
 }
+
+    
