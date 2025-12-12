@@ -18,6 +18,7 @@ const pathToTitle: { [key: string]: string } = {
   '/goals': 'Goals',
   '/settings': 'Settings',
   '/heatmap': 'Forex Heatmap',
+  '/resource': 'Resource',
 };
 
 export function Header() {

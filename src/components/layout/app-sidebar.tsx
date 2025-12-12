@@ -21,7 +21,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -46,6 +45,7 @@ const menuItems = [
   { href: '/report', label: 'Reports', icon: FileText },
   { href: '/news', label: 'News', icon: Newspaper },
   { href: '/heatmap', label: 'Forex Heatmap', icon: Flame },
+  { href: '/resource', label: 'Resource', icon: Share2 },
 ];
 
 const bottomMenuItems: { href: string; label: string; icon: React.ElementType }[] = [];
