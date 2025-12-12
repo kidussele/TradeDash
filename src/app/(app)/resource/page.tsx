@@ -151,7 +151,7 @@ function MyLibraryTab() {
     setEditId(null);
   };
 
-  const sortedUserBooks = [...userBooks].sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+  const sortedUserBooks = (userBooks || []).sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
 
   return (
     <div className="space-y-6">
