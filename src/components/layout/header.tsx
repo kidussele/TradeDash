@@ -19,6 +19,7 @@ const pathToTitle: { [key: string]: string } = {
   '/settings': 'Settings',
   '/heatmap': 'Forex Heatmap',
   '/resource': 'Resource',
+  '/resource/book-preview': 'Book Preview',
 };
 
 export function Header() {
@@ -27,7 +28,7 @@ export function Header() {
   const cleanPathname = pathname.replace(/^\/app/, '') || '/';
   const title = pathToTitle[cleanPathname] || 'Page';
   
-  if (pathname === '/image-preview') {
+  if (pathname === '/image-preview' || pathname === '/resource/book-preview') {
     return null;
   }
 

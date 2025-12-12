@@ -4,7 +4,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ExternalLink, Link as LinkIcon, BookOpen, PlusCircle, Edit, Trash2, Library } from 'lucide-react';
+import { ExternalLink, Link as LinkIcon, BookOpen, PlusCircle, Edit, Trash2, Library, Book } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
@@ -113,7 +113,8 @@ function MyLibraryTab() {
   const { user } = useUser();
   const firestore = useFirestore();
   const bookResourcesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'bookResources') : null, [user, firestore]);
-  const { data: userBooks, isLoading } = useCollection<Omit<BookResource, 'id'>>(bookResourcesRef);
+  const { data: userBooksData, isLoading } = useCollection<Omit<BookResource, 'id'>>(bookResourcesRef);
+  const userBooks = userBooksData || [];
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentBook, setCurrentBook] = useState<Partial<BookResource>>({});
@@ -152,7 +153,7 @@ function MyLibraryTab() {
     setEditId(null);
   };
 
-  const sortedUserBooks = (userBooks || []).sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+  const sortedUserBooks = [...userBooks].sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
 
   return (
     <div className="space-y-6">
@@ -164,7 +165,7 @@ function MyLibraryTab() {
        </div>
        {isLoading ? (
             <p>Loading your library...</p>
-       ) : !userBooks || userBooks.length === 0 ? (
+       ) : userBooks.length === 0 ? (
             <div className="text-center py-24 border-2 border-dashed rounded-lg">
                 <h2 className="text-xl font-semibold text-muted-foreground">Your Library is Empty</h2>
                 <p className="text-muted-foreground mt-2">Click "Add Book" to start building your personal library.</p>
@@ -185,9 +186,9 @@ function MyLibraryTab() {
                     </CardContent>
                     <CardFooter className="flex-col items-stretch gap-2">
                          <Button asChild className="w-full">
-                            <Link href={book.bookUrl} target="_blank" rel="noopener noreferrer">
+                            <Link href={`/resource/book-preview?url=${encodeURIComponent(book.bookUrl)}`}>
                                 Read / View
-                                <ExternalLink className="ml-2 h-4 w-4" />
+                                <Book className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>
                         <div className="flex gap-2">
