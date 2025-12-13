@@ -1,12 +1,12 @@
 
 'use server';
 
-import { auth } from 'firebase-admin';
-import { initializeFirebaseAdmin } from '@/firebase/firebase-admin';
+import { auth, functions } from '@/firebase/firebase-admin';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import type { UserRecord } from 'firebase-admin/auth';
+import { initializeFirebaseAdmin } from '@/firebase/firebase-admin';
 
 // Initialize the admin app right away in the server action file.
-// This will only be executed when the server action is called.
 initializeFirebaseAdmin();
 
 export type AdminUser = {
@@ -18,22 +18,13 @@ export type AdminUser = {
   creationTime: string;
 };
 
-function toAdminUser(userRecord: UserRecord): AdminUser {
-    return {
-        uid: userRecord.uid,
-        email: userRecord.email || 'N/A',
-        displayName: userRecord.displayName || 'No Name',
-        photoURL: userRecord.photoURL,
-        disabled: userRecord.disabled,
-        creationTime: new Date(userRecord.metadata.creationTime).toLocaleDateString(),
-    };
-}
-
-
 export async function listAllUsers(): Promise<{ success: boolean; users?: AdminUser[]; error?: string; }> {
   try {
-    const userRecords = await auth().listUsers();
-    const users = userRecords.users.map(toAdminUser);
+    const app = initializeFirebaseAdmin();
+    const functionsInstance = getFunctions(app);
+    const listUsersFunction = httpsCallable(functionsInstance, 'listUsers');
+    const result = await listUsersFunction();
+    const users = (result.data as any).users;
     return { success: true, users };
   } catch (error) {
     console.error('Error listing users:', error);

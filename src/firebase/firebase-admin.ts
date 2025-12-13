@@ -1,5 +1,7 @@
 
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFunctions } from 'firebase/functions';
 
 /**
  * Initializes the Firebase Admin SDK.
@@ -29,3 +31,6 @@ export function initializeFirebaseAdmin(): App {
 
   return initializeApp({ credential });
 }
+
+export const auth = getAuth;
+export const functions = getFunctions;
