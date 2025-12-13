@@ -6,6 +6,7 @@ import { initializeFirebaseAdmin } from '@/firebase/firebase-admin';
 import type { UserRecord } from 'firebase-admin/auth';
 
 // Initialize the admin app right away in the server action file.
+// This will only be executed when the server action is called.
 initializeFirebaseAdmin();
 
 export type AdminUser = {
