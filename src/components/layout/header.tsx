@@ -20,6 +20,7 @@ const pathToTitle: { [key: string]: string } = {
   '/heatmap': 'Forex Heatmap',
   '/resource': 'Resource',
   '/resource/book-preview': 'Book Preview',
+  '/admin': 'Admin',
 };
 
 export function Header() {

@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical, LogIn, Sun, Moon, Laptop, FileText, Newspaper, BookCopy, ClipboardCheck, Smile, Target, Lightbulb, Flame, Share2 } from 'lucide-react';
+import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical, LogIn, Sun, Moon, Laptop, FileText, Newspaper, BookCopy, ClipboardCheck, Smile, Target, Lightbulb, Flame, Share2, Shield } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -74,6 +74,8 @@ export function AppSidebar() {
   const displayName = userProfile?.displayName || user?.displayName || user?.email || 'User';
   const displayAvatar = userProfile?.photoURL || user?.photoURL || userAvatar?.imageUrl;
   const displayFallback = displayName[0]?.toUpperCase() ?? 'U';
+  
+  const isAdmin = user?.email === 'kiyuenterprise@gmail.com';
 
   return (
     <Sidebar>
@@ -107,6 +109,21 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+          {isAdmin && (
+             <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/admin'}
+                  onClick={() => setOpenMobile(false)}
+                  tooltip={{ children: 'Admin' }}
+                >
+                  <Link href="/admin">
+                    <Shield />
+                    <span>Admin</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+          )}
         </SidebarMenu>
         <SidebarMenu className="mt-auto">
             {bottomMenuItems.map((item) => (
