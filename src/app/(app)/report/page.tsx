@@ -283,7 +283,10 @@ const AnalysisReportGenerator = () => {
   
     const handleExportPDF = async () => {
         setIsGenerating(true);
-        const doc = new jsPDF();
+        const doc = new jsPDF({ putOnlyUsedFonts: true });
+        // It's important to set a font that supports a wide range of characters.
+        doc.setFont('Helvetica');
+
         const pageMargin = 14;
         const pageContentWidth = doc.internal.pageSize.getWidth() - pageMargin * 2;
         let yPos = 22;
