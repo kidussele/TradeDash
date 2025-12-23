@@ -23,11 +23,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PlusCircle, Edit, Trash2, X } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, X, CalendarDays, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc, Timestamp } from 'firebase/firestore';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { cn } from '@/lib/utils';
+
 
 type ChecklistItem = {
   id: string;
@@ -223,14 +226,14 @@ export default function PlanPage() {
             <p className="text-muted-foreground mt-2">Click "New Plan" to get started.</p>
          </div>
       ) : (
-        <Accordion type="single" collapsible className="w-full space-y-4">
+        <Accordion type="single" collapsible className="w-full space-y-4" defaultValue={sortedPlans[0]?.id}>
           {sortedPlans.map((plan) => {
             const totalItems = plan.items?.length || 0;
             const completedItems = plan.items?.filter(item => item.isChecked).length || 0;
             const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
             
             return (
-              <Card key={plan.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+              <Card key={plan.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 overflow-hidden">
                 <AccordionItem value={plan.id} className="border-b-0">
                   <CardHeader>
                       <div className="flex justify-between items-start">
@@ -274,25 +277,46 @@ export default function PlanPage() {
                                   <PlusCircle className="mr-2 h-4 w-4"/> Add Progress
                               </Button>
                           </div>
-                          <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-                            {(plan.progressEntries || []).map(entry => (
-                              <Card key={entry.id} className="bg-muted/50">
-                                  <CardContent className="p-4 flex gap-4">
-                                      <button onClick={() => setPreviewImageUrl(entry.imageUrl)} className="w-24 h-24 flex-shrink-0">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={entry.imageUrl} alt="Progress" className="w-full h-full object-cover rounded-md" />
-                                      </button>
-                                      <div className="flex-1">
-                                          <p className="text-xs text-muted-foreground">{entry.date?.toDate().toLocaleDateString()}</p>
-                                          <p className="text-sm mt-1">{entry.notes}</p>
+
+                          {(plan.progressEntries || []).length === 0 ? (
+                              <div className="h-full flex items-center justify-center text-sm text-muted-foreground text-center py-8 border rounded-lg bg-muted/30">
+                                No progress entries yet.
+                              </div>
+                          ) : (
+                            <Carousel
+                                opts={{
+                                align: "start",
+                                }}
+                                className="w-full"
+                            >
+                                <CarouselContent>
+                                {(plan.progressEntries || []).map((entry) => (
+                                    <CarouselItem key={entry.id} className="md:basis-1/2 lg:basis-1/3">
+                                      <div className="p-1">
+                                        <Card
+                                            className="overflow-hidden group cursor-pointer"
+                                            onClick={() => setPreviewImageUrl(entry.imageUrl)}
+                                        >
+                                            <CardContent className="p-0 aspect-square relative">
+                                                <img src={entry.imageUrl} alt="Progress" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                                                <div className="absolute bottom-0 left-0 p-4 text-white">
+                                                    <div className="flex items-center gap-2 text-xs">
+                                                        <CalendarDays className="size-3" />
+                                                        <span>{entry.date?.toDate().toLocaleDateString()}</span>
+                                                    </div>
+                                                    <p className="text-sm font-semibold mt-1 line-clamp-2">{entry.notes}</p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
                                       </div>
-                                  </CardContent>
-                              </Card>
-                            ))}
-                            {(plan.progressEntries || []).length === 0 && (
-                              <p className="text-sm text-muted-foreground text-center py-8">No progress entries yet.</p>
-                            )}
-                          </div>
+                                    </CarouselItem>
+                                ))}
+                                </CarouselContent>
+                                <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                                <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                            </Carousel>
+                          )}
                       </div>
                     </CardContent>
                   </AccordionContent>
@@ -394,3 +418,5 @@ export default function PlanPage() {
     </div>
   );
 }
+
+    
