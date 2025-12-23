@@ -23,10 +23,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload, X } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, X } from 'lucide-react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc, Timestamp } from 'firebase/firestore';
-import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
 
@@ -55,7 +54,6 @@ export type Plan = {
 export default function PlanPage() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { toast } = useToast();
 
   const plansRef = useMemoFirebase(() => 
     user ? collection(firestore, 'users', user.uid, 'plans') : null
@@ -75,8 +73,6 @@ export default function PlanPage() {
 
   const [isProgressDialog, setIsProgressDialog] = useState(false);
   const [currentProgress, setCurrentProgress] = useState<Partial<Omit<ProgressEntry, 'id' | 'date'>>>({});
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
 
@@ -173,26 +169,6 @@ export default function PlanPage() {
   };
   
   // --- Progress Entry Handlers ---
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (!response.ok) throw new Error('Upload failed');
-      const { url } = await response.json();
-      setCurrentProgress(prev => ({ ...prev, imageUrl: url }));
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Upload Failed', description: (error as Error).message });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const handleSaveProgress = () => {
     if (!currentProgress.imageUrl || !activePlanId || !user) return;
     
@@ -365,37 +341,34 @@ export default function PlanPage() {
 
       {/* Progress Dialog */}
       <Dialog open={isProgressDialog} onOpenChange={setIsProgressDialog}>
-          <DialogContent>
-              <DialogHeader><DialogTitle>Add Progress Check-in</DialogTitle></DialogHeader>
-              <div className="space-y-4 py-2">
-                  <div className="space-y-2">
-                      <Label>Image</Label>
-                      {currentProgress.imageUrl ? (
-                        <div className="relative">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={currentProgress.imageUrl} alt="upload preview" className="w-full h-48 object-cover rounded-md"/>
-                            <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => setCurrentProgress({...currentProgress, imageUrl: undefined})}><X className="h-4 w-4"/></Button>
-                        </div>
-                      ) : (
-                        <Card className="flex flex-col items-center justify-center p-8 border-2 border-dashed">
-                            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-                            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                                <Upload className="mr-2 h-4 w-4"/> {isUploading ? 'Uploading...' : 'Upload Image'}
-                            </Button>
-                            <p className="text-xs text-muted-foreground mt-2">Max 1MB.</p>
-                        </Card>
-                      )}
-                  </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="progress-notes">Notes</Label>
-                      <Textarea id="progress-notes" value={currentProgress.notes || ''} onChange={e => setCurrentProgress({...currentProgress, notes: e.target.value})} />
-                  </div>
-              </div>
-              <DialogFooter>
-                  <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                  <Button onClick={handleSaveProgress} disabled={!currentProgress.imageUrl}>Save Progress</Button>
-              </DialogFooter>
-          </DialogContent>
+        <DialogContent>
+            <DialogHeader><DialogTitle>Add Progress Check-in</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                    <Label htmlFor="progress-image-url">Image URL</Label>
+                    <Input 
+                        id="progress-image-url"
+                        value={currentProgress.imageUrl || ''} 
+                        onChange={e => setCurrentProgress({...currentProgress, imageUrl: e.target.value})}
+                        placeholder="https://example.com/image.png"
+                    />
+                </div>
+                {currentProgress.imageUrl && (
+                    <div className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={currentProgress.imageUrl} alt="upload preview" className="w-full h-48 object-cover rounded-md"/>
+                    </div>
+                )}
+                <div className="space-y-2">
+                    <Label htmlFor="progress-notes">Notes</Label>
+                    <Textarea id="progress-notes" value={currentProgress.notes || ''} onChange={e => setCurrentProgress({...currentProgress, notes: e.target.value})} />
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                <Button onClick={handleSaveProgress} disabled={!currentProgress.imageUrl}>Save Progress</Button>
+            </DialogFooter>
+        </DialogContent>
       </Dialog>
 
       {previewImageUrl && (
