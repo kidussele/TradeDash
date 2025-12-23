@@ -25,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload, X } from 'lucide-react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -37,7 +37,7 @@ type ChecklistItem = {
 
 type ProgressEntry = {
   id: string;
-  date: any;
+  date: Timestamp;
   notes: string;
   imageUrl: string;
 };
@@ -60,7 +60,8 @@ export default function PlanPage() {
     user ? collection(firestore, 'users', user.uid, 'plans') : null
   , [user, firestore]);
   
-  const { data: plans = [], isLoading } = useCollection<Omit<Plan, 'id'>>(plansRef);
+  const { data: plansData, isLoading } = useCollection<Omit<Plan, 'id'>>(plansRef);
+  const plans = plansData || [];
 
   const [isPlanDialog, setIsPlanDialog] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<Partial<Plan>>({});
@@ -120,7 +121,7 @@ export default function PlanPage() {
 
   // --- Checklist Item Handlers ---
   const handleSaveItem = () => {
-    if (!currentItem.text?.trim() || !activePlanId || !user || !plans) return;
+    if (!currentItem.text?.trim() || !activePlanId || !user) return;
 
     const plan = plans.find(p => p.id === activePlanId);
     if (!plan) return;
@@ -150,7 +151,7 @@ export default function PlanPage() {
   };
 
   const handleCheckChange = (planId: string, itemId: string, isChecked: boolean) => {
-    if (!user || !plans) return;
+    if (!user) return;
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
 
@@ -160,7 +161,7 @@ export default function PlanPage() {
   };
 
   const handleDeleteItem = (planId: string, itemId: string) => {
-    if (!user || !plans) return;
+    if (!user) return;
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
 
@@ -191,14 +192,14 @@ export default function PlanPage() {
   };
 
   const handleSaveProgress = () => {
-    if (!currentProgress.imageUrl || !activePlanId || !user || !plans) return;
+    if (!currentProgress.imageUrl || !activePlanId || !user) return;
     
     const plan = plans.find(p => p.id === activePlanId);
     if (!plan) return;
 
     const newEntry: ProgressEntry = {
       id: String(Date.now()),
-      date: serverTimestamp(),
+      date: Timestamp.now(),
       notes: currentProgress.notes || '',
       imageUrl: currentProgress.imageUrl,
     };
@@ -223,7 +224,7 @@ export default function PlanPage() {
     return <div>Loading plans...</div>;
   }
 
-  const sortedPlans = [...(plans || [])].sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+  const sortedPlans = [...plans].sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
 
   return (
     <div className="space-y-6">
