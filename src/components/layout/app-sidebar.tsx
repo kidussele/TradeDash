@@ -109,21 +109,6 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
-          {isAdmin && (
-             <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/admin'}
-                  onClick={() => setOpenMobile(false)}
-                  tooltip={{ children: 'Admin' }}
-                >
-                  <Link href="/admin">
-                    <Shield />
-                    <span>Admin</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-          )}
         </SidebarMenu>
         <SidebarMenu className="mt-auto">
             {bottomMenuItems.map((item) => (
