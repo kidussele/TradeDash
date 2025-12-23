@@ -30,6 +30,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Progress } from '@/components/ui/progress';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 
 type ChecklistItem = {
@@ -231,6 +232,7 @@ export default function PlanPage() {
             const totalItems = plan.items?.length || 0;
             const completedItems = plan.items?.filter(item => item.isChecked).length || 0;
             const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+            const itemsLeft = totalItems - completedItems;
             
             return (
               <Card key={plan.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 overflow-hidden">
@@ -246,9 +248,15 @@ export default function PlanPage() {
                           </div>
                       </div>
                     <CardDescription>{plan.description}</CardDescription>
-                     <div className="flex items-center gap-3 pt-2">
-                        <Progress value={progress} className="w-full" />
-                        <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">{Math.round(progress)}%</span>
+                    <div className="border rounded-lg p-2 space-y-2 mt-2">
+                        <div className="flex items-center gap-3 px-1">
+                            <Badge variant="destructive" className="bg-pink-500 hover:bg-pink-500 text-white">
+                                {Math.round(progress)}%
+                            </Badge>
+                            <span className="text-sm font-medium text-pink-600">Update in progress..</span>
+                            <span className="ml-auto text-sm text-muted-foreground">{itemsLeft} left</span>
+                        </div>
+                        <Progress value={progress} className="h-2 [&>div]:bg-pink-500" />
                     </div>
                   </CardHeader>
                   <AccordionContent>
