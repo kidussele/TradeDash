@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical, LogIn, Sun, Moon, Laptop, FileText, Newspaper, BookCopy, ClipboardCheck, Smile, Target, Lightbulb, Flame, Share2, Shield } from 'lucide-react';
+import { Activity, LayoutDashboard, Sparkles, Settings, BookText, FlaskConical, LogIn, Sun, Moon, Laptop, FileText, Newspaper, BookCopy, ClipboardCheck, Smile, Target, Lightbulb, Flame, Share2, Shield, ListChecks } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -43,6 +43,7 @@ const menuItems = [
   { href: '/strategy-checklist', label: 'Strategy Checklist', icon: ClipboardCheck },
   { href: '/self-development', label: 'Self Development', icon: Smile },
   { href: '/goals', label: 'Goals', icon: Target },
+  { href: '/plan', label: 'Plan', icon: ListChecks },
   { href: '/report', label: 'Reports', icon: FileText },
   { href: '/news', label: 'News', icon: Newspaper },
   { href: '/heatmap', label: 'Forex Heatmap', icon: Flame },

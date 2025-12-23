@@ -16,6 +16,7 @@ const pathToTitle: { [key: string]: string } = {
   '/self-development': 'Self Development',
   '/image-preview': 'Image Preview',
   '/goals': 'Goals',
+  '/plan': 'Plans',
   '/settings': 'Settings',
   '/heatmap': 'Forex Heatmap',
   '/resource': 'Resource',

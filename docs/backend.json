@@ -127,6 +127,43 @@
         },
         "required": ["id", "title", "items", "narrative"]
     },
+    "Plan": {
+        "title": "Plan",
+        "type": "object",
+        "description": "A user's plan with a checklist and progress tracking.",
+        "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "items": { 
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string" },
+                        "text": { "type": "string" },
+                        "isChecked": { "type": "boolean" }
+                    },
+                    "required": ["id", "text", "isChecked"]
+                }
+            },
+            "progressEntries": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string" },
+                        "date": { "type": "string", "format": "date-time" },
+                        "notes": { "type": "string" },
+                        "imageUrl": { "type": "string", "format": "uri" }
+                    },
+                    "required": ["id", "date", "imageUrl"]
+                }
+            }
+        },
+        "required": ["id", "title", "createdAt", "items"]
+    },
     "UserStatus": {
       "title": "UserStatus",
       "type": "object",
@@ -214,6 +251,10 @@
     "/users/{userId}/goals/{goalId}": {
         "schema": { "$ref": "#/entities/Goal" },
         "description": "User's motivational goals."
+    },
+    "/users/{userId}/plans/{planId}": {
+        "schema": { "$ref": "#/entities/Plan" },
+        "description": "User's plans with checklists and progress tracking."
     },
     "/users/{userId}/notebookNotes/{noteId}": {
         "schema": { "$ref": "#/entities/Note" },
