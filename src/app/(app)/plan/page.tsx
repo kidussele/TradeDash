@@ -233,6 +233,7 @@ export default function PlanPage() {
             const completedItems = plan.items?.filter(item => item.isChecked).length || 0;
             const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
             const itemsLeft = totalItems - completedItems;
+            const isCompleted = progress === 100;
             
             return (
               <Card key={plan.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 overflow-hidden">
@@ -250,13 +251,17 @@ export default function PlanPage() {
                     <CardDescription>{plan.description}</CardDescription>
                     <div className="border rounded-lg p-2 space-y-2 mt-2">
                         <div className="flex items-center gap-3 px-1">
-                            <Badge variant="destructive" className="bg-pink-500 hover:bg-pink-500 text-white">
+                            <Badge variant={isCompleted ? "positive" : "destructive"} className={cn("text-white", isCompleted ? "bg-green-500 hover:bg-green-500" : "bg-pink-500 hover:bg-pink-500")}>
                                 {Math.round(progress)}%
                             </Badge>
-                            <span className="text-sm font-medium text-pink-600">Update in progress..</span>
+                            {isCompleted ? (
+                                <span className="text-sm font-medium text-green-600">Congratulations!</span>
+                            ) : (
+                                <span className="text-sm font-medium text-pink-600">Update in progress..</span>
+                            )}
                             <span className="ml-auto text-sm text-muted-foreground">{itemsLeft} left</span>
                         </div>
-                        <Progress value={progress} className="h-2 [&>div]:bg-pink-500" />
+                        <Progress value={progress} className={cn("h-2", isCompleted ? "[&>div]:bg-green-500" : "[&>div]:bg-pink-500")} />
                     </div>
                   </CardHeader>
                   <AccordionContent>
@@ -426,5 +431,3 @@ export default function PlanPage() {
     </div>
   );
 }
-
-    
