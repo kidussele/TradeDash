@@ -137,8 +137,8 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
         { Metric: 'Total Trades', Value: summary.totalTrades },
         { Metric: 'Net P&L', Value: summary.totalPnl },
         { Metric: 'Win Rate (%)', Value: summary.winRate.toFixed(2) },
-        { Metric: 'Wins', summary.wins },
-        { Metric: 'Losses', summary.losses },
+        { Metric: 'Wins', Value: summary.wins },
+        { Metric: 'Losses', Value: summary.losses },
         { Metric: 'Breakevens', Value: summary.breakevens },
     ];
     
@@ -284,7 +284,6 @@ const AnalysisReportGenerator = () => {
     const handleExportPDF = async () => {
         setIsGenerating(true);
         const doc = new jsPDF();
-        const generationDate = new Date();
         const pageMargin = 14;
         const pageContentWidth = doc.internal.pageSize.getWidth() - pageMargin * 2;
         let yPos = 22;
@@ -304,6 +303,7 @@ const AnalysisReportGenerator = () => {
         const dateRangeStr = dateRange?.from ? `${format(dateRange.from, "LLL dd, y")} to ${dateRange.to ? format(dateRange.to, "LLL dd, y") : 'present'}` : 'All time';
         doc.text(`Date Range: ${dateRangeStr}`, pageMargin, yPos);
         yPos += 8;
+        const generationDate = new Date();
         doc.text(`Generated on: ${generationDate.toLocaleString()}`, pageMargin, yPos);
         yPos += 15;
     
