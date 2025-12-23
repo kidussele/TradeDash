@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useRef } from 'react';
 import {
@@ -24,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PlusCircle, Edit, Trash2, Image as ImageIcon, Upload, X } from 'lucide-react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, doc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
@@ -76,6 +77,7 @@ export default function PlanPage() {
   const [currentProgress, setCurrentProgress] = useState<Partial<Omit<ProgressEntry, 'id' | 'date'>>>({});
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
 
   // --- Plan Handlers ---
@@ -91,7 +93,7 @@ export default function PlanPage() {
       const docRef = doc(firestore, 'users', user.uid, 'plans', editingPlanId);
       setDocumentNonBlocking(docRef, planData, { merge: true });
     } else {
-      planData.createdAt = serverTimestamp();
+      planData.createdAt = Timestamp.fromDate(new Date());
       planData.items = [];
       planData.progressEntries = [];
       addDocumentNonBlocking(plansRef, planData);
@@ -224,7 +226,7 @@ export default function PlanPage() {
     return <div>Loading plans...</div>;
   }
 
-  const sortedPlans = [...plans].sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+  const sortedPlans = [...(plans || [])].sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
 
   return (
     <div className="space-y-6">
@@ -300,8 +302,10 @@ export default function PlanPage() {
                             {(plan.progressEntries || []).map(entry => (
                               <Card key={entry.id} className="bg-muted/50">
                                   <CardContent className="p-4 flex gap-4">
-                                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                                      <img src={entry.imageUrl} alt="Progress" className="w-24 h-24 object-cover rounded-md" />
+                                      <button onClick={() => setPreviewImageUrl(entry.imageUrl)} className="w-24 h-24 flex-shrink-0">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={entry.imageUrl} alt="Progress" className="w-full h-full object-cover rounded-md" />
+                                      </button>
                                       <div className="flex-1">
                                           <p className="text-xs text-muted-foreground">{entry.date?.toDate().toLocaleDateString()}</p>
                                           <p className="text-sm mt-1">{entry.notes}</p>
@@ -393,6 +397,26 @@ export default function PlanPage() {
               </DialogFooter>
           </DialogContent>
       </Dialog>
+
+      {previewImageUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-in fade-in-0 duration-300" onClick={() => setPreviewImageUrl(null)}>
+            <Card className="w-[90vw] max-w-4xl h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                <CardContent className="p-2 relative w-full h-full">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-8 w-8 bg-background/50 hover:bg-background/80 z-10"
+                        onClick={() => setPreviewImageUrl(null)}
+                    >
+                        <X className="h-5 w-5" />
+                        <span className="sr-only">Close preview</span>
+                    </Button>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={previewImageUrl} alt="Progress preview" className="rounded-md object-contain w-full h-full" />
+                </CardContent>
+            </Card>
+        </div>
+      )}
 
     </div>
   );
