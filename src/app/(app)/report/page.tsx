@@ -268,6 +268,7 @@ const AnalysisReportGenerator = () => {
         }
 
         const filtered = safeEntries.filter(entry => {
+            if (!entry.createdAt?.toDate) return false;
             const entryDate = startOfDay(entry.createdAt.toDate());
             const from = dateRange.from ? startOfDay(dateRange.from) : null;
             const to = dateRange.to ? startOfDay(dateRange.to) : null;
@@ -322,24 +323,21 @@ const AnalysisReportGenerator = () => {
             doc.setTextColor(0);
             doc.setFontSize(12);
             const contentLines = doc.splitTextToSize(note.content, pageContentWidth);
-            addPageIfNeeded(contentLines.length * 5); // Approximate height
+            addPageIfNeeded(contentLines.length * 5 + 10); // Add buffer
             doc.text(contentLines, pageMargin, yPos);
             yPos += contentLines.length * 5 + 10;
 
             if (note.imageUrl) {
                 try {
-                    const response = await fetch(note.imageUrl);
-                    const blob = await response.blob();
-                    const reader = new FileReader();
+                    // Use the image proxy
+                    const proxyResponse = await fetch(`/api/image-proxy?url=${encodeURIComponent(note.imageUrl)}`);
+                    if (!proxyResponse.ok) {
+                        throw new Error(`Failed to proxy image: ${proxyResponse.statusText}`);
+                    }
+                    const { dataUrl } = await proxyResponse.json();
                     
-                    const imageData = await new Promise<string>((resolve, reject) => {
-                        reader.onloadend = () => resolve(reader.result as string);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(blob);
-                    });
-
                     const img = new Image();
-                    img.src = imageData;
+                    img.src = dataUrl;
                     await new Promise(resolve => img.onload = resolve);
                     
                     const imgWidth = img.width;
@@ -349,17 +347,17 @@ const AnalysisReportGenerator = () => {
                     let finalWidth = pageContentWidth;
                     let finalHeight = finalWidth / ratio;
                     
-                    if (finalHeight > 100) {
+                    if (finalHeight > 100) { // Limit image height
                         finalHeight = 100;
                         finalWidth = finalHeight * ratio;
                     }
                     
                     addPageIfNeeded(finalHeight + 10);
-                    doc.addImage(imageData, 'JPEG', pageMargin, yPos, finalWidth, finalHeight);
+                    doc.addImage(dataUrl, 'JPEG', pageMargin, yPos, finalWidth, finalHeight);
                     yPos += finalHeight + 15;
 
                 } catch (error) {
-                    console.error("Failed to load or add image:", error);
+                    console.error("Failed to load or add image via proxy:", error);
                     addPageIfNeeded(10);
                     doc.setTextColor(255, 0, 0);
                     doc.text('[Image could not be loaded]', pageMargin, yPos);
