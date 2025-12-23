@@ -137,8 +137,8 @@ const ReportGenerator = ({ journalType }: { journalType: 'live' | 'backtest' }) 
         { Metric: 'Total Trades', Value: summary.totalTrades },
         { Metric: 'Net P&L', Value: summary.totalPnl },
         { Metric: 'Win Rate (%)', Value: summary.winRate.toFixed(2) },
-        { Metric: 'Wins', Value: summary.wins },
-        { Metric: 'Losses', Value: summary.losses },
+        { Metric: 'Wins', summary.wins },
+        { Metric: 'Losses', summary.losses },
         { Metric: 'Breakevens', Value: summary.breakevens },
     ];
     
@@ -329,7 +329,6 @@ const AnalysisReportGenerator = () => {
 
             if (note.imageUrl) {
                 try {
-                    // Use the image proxy
                     const proxyResponse = await fetch(`/api/image-proxy?url=${encodeURIComponent(note.imageUrl)}`);
                     if (!proxyResponse.ok) {
                         throw new Error(`Failed to proxy image: ${proxyResponse.statusText}`);
@@ -338,7 +337,14 @@ const AnalysisReportGenerator = () => {
                     
                     const img = new Image();
                     img.src = dataUrl;
-                    await new Promise(resolve => img.onload = resolve);
+
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = (err) => {
+                            console.error("Image failed to load in promise", err);
+                            reject(new Error("Image failed to load"));
+                        };
+                    });
                     
                     const imgWidth = img.width;
                     const imgHeight = img.height;
