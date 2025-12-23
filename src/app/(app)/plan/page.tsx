@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useRef } from 'react';
 import {
@@ -28,6 +27,7 @@ import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBl
 import { collection, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Progress } from '@/components/ui/progress';
 
 type ChecklistItem = {
   id: string;
@@ -199,7 +199,7 @@ export default function PlanPage() {
 
     const newEntry: ProgressEntry = {
       id: String(Date.now()),
-      date: Timestamp.now(),
+      date: Timestamp.fromDate(new Date()),
       notes: currentProgress.notes || '',
       imageUrl: currentProgress.imageUrl,
     };
@@ -246,70 +246,80 @@ export default function PlanPage() {
          </div>
       ) : (
         <Accordion type="single" collapsible className="w-full space-y-4">
-          {sortedPlans.map((plan) => (
-            <Card key={plan.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-              <AccordionItem value={plan.id} className="border-b-0">
-                <CardHeader>
-                    <div className="flex justify-between items-start">
-                        <AccordionTrigger className="w-full text-left p-0 hover:no-underline">
-                             <CardTitle>{plan.title}</CardTitle>
-                        </AccordionTrigger>
-                        <div className="flex items-center gap-1 pl-4">
-                            <Button variant="ghost" size="icon" onClick={() => handleEditPlan(plan as Plan)}><Edit className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeletePlan(plan.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                        </div>
+          {sortedPlans.map((plan) => {
+            const totalItems = plan.items?.length || 0;
+            const completedItems = plan.items?.filter(item => item.isChecked).length || 0;
+            const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+            
+            return (
+              <Card key={plan.id} className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+                <AccordionItem value={plan.id} className="border-b-0">
+                  <CardHeader>
+                      <div className="flex justify-between items-start">
+                          <AccordionTrigger className="w-full text-left p-0 hover:no-underline">
+                              <CardTitle>{plan.title}</CardTitle>
+                          </AccordionTrigger>
+                          <div className="flex items-center gap-1 pl-4">
+                              <Button variant="ghost" size="icon" onClick={() => handleEditPlan(plan as Plan)}><Edit className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDeletePlan(plan.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </div>
+                      </div>
+                    <CardDescription>{plan.description}</CardDescription>
+                     <div className="flex items-center gap-3 pt-2">
+                        <Progress value={progress} className="w-full" />
+                        <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">{Math.round(progress)}%</span>
                     </div>
-                  <CardDescription>{plan.description}</CardDescription>
-                </CardHeader>
-                <AccordionContent>
-                  <CardContent className="grid md:grid-cols-2 gap-8">
-                    {/* Checklist Section */}
-                    <div>
-                        <h3 className="font-semibold mb-4">Checklist</h3>
-                        <div className="space-y-3">
-                        {(plan.items || []).map(item => (
-                            <div key={item.id} className="flex items-center gap-3">
-                            <Checkbox id={item.id} checked={item.isChecked} onCheckedChange={(checked) => handleCheckChange(plan.id, item.id, Boolean(checked))} />
-                            <label htmlFor={item.id} className="flex-1 text-sm font-medium">{item.text}</label>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteItem(plan.id, item.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
-                            </div>
-                        ))}
-                        </div>
-                        <Button variant="outline" size="sm" className="mt-4" onClick={() => handleAddNewItem(plan.id)}>
-                            <PlusCircle className="mr-2 h-4 w-4"/> Add Item
-                        </Button>
-                    </div>
-                    {/* Progress Section */}
-                    <div>
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-semibold">Progress Check-ins</h3>
-                             <Button size="sm" onClick={() => handleAddNewProgress(plan.id)}>
-                                <PlusCircle className="mr-2 h-4 w-4"/> Add Progress
-                            </Button>
-                        </div>
-                        <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-                           {(plan.progressEntries || []).map(entry => (
-                            <Card key={entry.id} className="bg-muted/50">
-                                <CardContent className="p-4 flex gap-4">
-                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                     <img src={entry.imageUrl} alt="Progress" className="w-24 h-24 object-cover rounded-md" />
-                                     <div className="flex-1">
-                                        <p className="text-xs text-muted-foreground">{entry.date?.toDate().toLocaleDateString()}</p>
-                                        <p className="text-sm mt-1">{entry.notes}</p>
-                                     </div>
-                                </CardContent>
-                            </Card>
-                           ))}
-                           {(plan.progressEntries || []).length === 0 && (
-                            <p className="text-sm text-muted-foreground text-center py-8">No progress entries yet.</p>
-                           )}
-                        </div>
-                    </div>
-                  </CardContent>
-                </AccordionContent>
-              </AccordionItem>
-            </Card>
-          ))}
+                  </CardHeader>
+                  <AccordionContent>
+                    <CardContent className="grid md:grid-cols-2 gap-8">
+                      {/* Checklist Section */}
+                      <div>
+                          <h3 className="font-semibold mb-4">Checklist</h3>
+                          <div className="space-y-3">
+                          {(plan.items || []).map(item => (
+                              <div key={item.id} className="flex items-center gap-3">
+                              <Checkbox id={item.id} checked={item.isChecked} onCheckedChange={(checked) => handleCheckChange(plan.id, item.id, Boolean(checked))} />
+                              <label htmlFor={item.id} className="flex-1 text-sm font-medium">{item.text}</label>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteItem(plan.id, item.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                              </div>
+                          ))}
+                          </div>
+                          <Button variant="outline" size="sm" className="mt-4" onClick={() => handleAddNewItem(plan.id)}>
+                              <PlusCircle className="mr-2 h-4 w-4"/> Add Item
+                          </Button>
+                      </div>
+                      {/* Progress Section */}
+                      <div>
+                          <div className="flex justify-between items-center mb-4">
+                              <h3 className="font-semibold">Progress Check-ins</h3>
+                              <Button size="sm" onClick={() => handleAddNewProgress(plan.id)}>
+                                  <PlusCircle className="mr-2 h-4 w-4"/> Add Progress
+                              </Button>
+                          </div>
+                          <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                            {(plan.progressEntries || []).map(entry => (
+                              <Card key={entry.id} className="bg-muted/50">
+                                  <CardContent className="p-4 flex gap-4">
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img src={entry.imageUrl} alt="Progress" className="w-24 h-24 object-cover rounded-md" />
+                                      <div className="flex-1">
+                                          <p className="text-xs text-muted-foreground">{entry.date?.toDate().toLocaleDateString()}</p>
+                                          <p className="text-sm mt-1">{entry.notes}</p>
+                                      </div>
+                                  </CardContent>
+                              </Card>
+                            ))}
+                            {(plan.progressEntries || []).length === 0 && (
+                              <p className="text-sm text-muted-foreground text-center py-8">No progress entries yet.</p>
+                            )}
+                          </div>
+                      </div>
+                    </CardContent>
+                  </AccordionContent>
+                </AccordionItem>
+              </Card>
+            )
+          })}
         </Accordion>
       )}
 
