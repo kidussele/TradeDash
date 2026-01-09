@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {Trash2, Edit, PlusCircle, Image as ImageIcon, X, FileUp, Eye} from 'lucide-react';
+import {Trash2, Edit, PlusCircle, Image as ImageIcon, X, FileUp, Eye, ArrowUpDown} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUser, useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
@@ -85,6 +85,7 @@ export default function JournalPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const entriesRef = useMemoFirebase(
     () => (user ? collection(firestore, 'users', user.uid, 'journalEntries') : null),
@@ -98,11 +99,11 @@ export default function JournalPage() {
   const { data: checklists = [] } = useCollection<Omit<Checklist, 'id'>>(checklistsRef);
 
   const entriesQuery = useMemoFirebase(() =>
-    entriesRef ? query(entriesRef, orderBy('date', 'asc')) : null,
-    [entriesRef]
+    entriesRef ? query(entriesRef, orderBy('date', sortOrder)) : null,
+    [entriesRef, sortOrder]
   );
   
-  const { data: entries = [], isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesQuery);
+  const { data: entries, isLoading } = useCollection<Omit<JournalEntry, 'id'>>(entriesQuery);
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<Partial<JournalEntry>>({});
@@ -363,16 +364,18 @@ export default function JournalPage() {
     };
     reader.readAsArrayBuffer(file);
   };
+  
+  const toggleSortOrder = () => {
+    setSortOrder(current => current === 'asc' ? 'desc' : 'asc');
+  };
+
+  const resetSortOrder = () => {
+    setSortOrder('desc');
+  };
 
   if (isLoading) {
-    return <div>Loading...</div>; 
+    return <div>Loading...</div>;
   }
-
-  const sortedEntries = [...(entries || [])].sort((a,b) => {
-    const dateA = a.createdAt?.toDate?.() || new Date(a.date);
-    const dateB = b.createdAt?.toDate?.() || new Date(b.date);
-    return dateB.getTime() - dateA.getTime();
-  });
 
   const hasImportedTrades = entries?.some(e => e.isImported);
 
@@ -637,6 +640,12 @@ export default function JournalPage() {
           </DialogContent>
         </Dialog>
       </div>
+      <div className="flex justify-end mb-4">
+        <Button variant="outline" onClick={resetSortOrder} className="mr-2">Reset Sort</Button>
+        <Button variant="outline" onClick={toggleSortOrder}>
+          Sort by Date <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
       <div className="animate-in fade-in-0 zoom-in-95 duration-500" style={{ animationDelay: '200ms' }}>
       <Table>
         <TableHeader>
@@ -655,7 +664,7 @@ export default function JournalPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedEntries.map((entry, index) => (
+          {(entries || []).map((entry, index) => (
             <TableRow key={entry.id} className="animate-in fade-in-0">
               <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
               <TableCell className="font-medium">{entry.currencyPair}</TableCell>
@@ -709,7 +718,7 @@ export default function JournalPage() {
              </DialogHeader>
              <TradeResultCard 
                 entry={cardPreviewEntry.entry} 
-                allEntries={entries as JournalEntry[]}
+                allEntries={(entries || []) as JournalEntry[]}
                 tradeIndex={cardPreviewEntry.index}
             />
           </DialogContent>
