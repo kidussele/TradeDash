@@ -267,7 +267,10 @@ export default function JournalPage() {
             const workbook = XLSX.read(data, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-            const json: any[] = XLSX.utils.sheet_to_json(worksheet);
+            const json: any[] = XLSX.utils.sheet_to_json(worksheet, {
+                raw: false, // This ensures dates are parsed as strings
+                defval: null // Use null for empty cells
+            });
 
             if (json.length === 0) {
               toast({ variant: 'destructive', title: 'Import Error', description: 'CSV file is empty or in the wrong format.' });
@@ -276,37 +279,61 @@ export default function JournalPage() {
 
             const batch = writeBatch(firestore);
             let importedCount = 0;
+            
+            // Normalize headers of the first row to create a map.
+            const originalHeaders = Object.keys(json[0] || {});
+            const normalizedHeaderMap: { [key: string]: string } = {};
+            originalHeaders.forEach(h => {
+                normalizedHeaderMap[h.trim().toLowerCase()] = h;
+            });
+
+            const getValue = (row: any, keys: string[]) => {
+                for (const key of keys) {
+                    const normalizedKey = key.trim().toLowerCase();
+                    const originalHeader = normalizedHeaderMap[normalizedKey];
+                    if (originalHeader && row[originalHeader] !== null && row[originalHeader] !== undefined) {
+                        return row[originalHeader];
+                    }
+                }
+                return undefined;
+            }
 
             json.forEach(row => {
-                // --- Column Mapping ---
-                // This is a flexible mapping to handle common CSV headers.
-                const pnl = parseFloat(row.profit_usd) || parseFloat(row.Profit) || parseFloat(row.pnl) || 0;
-                const entryPrice = parseFloat(row.opening_price) || parseFloat(row.Price) || parseFloat(row['Entry Price']) || 0;
-                const stopLoss = parseFloat(row.stop_loss) || parseFloat(row['S/L']) || 0;
-                const takeProfit = parseFloat(row.take_profit) || parseFloat(row['T/P']) || 0;
-                const positionSize = parseFloat(row.lots) || parseFloat(row.Size) || parseFloat(row.positionSize) || 0;
-                const direction = (row.type || row.Type || row.direction || '').toLowerCase();
-                const symbol = row.symbol || row.Symbol;
-                const openTime = row.opening_time_utc || row.Time;
+                // --- Flexible Column Mapping ---
+                const pnl = parseFloat(getValue(row, ['profit', 'profit_usd', 'pnl']));
+                const entryPrice = parseFloat(getValue(row, ['open price', 'opening_price', 'price', 'entry price']));
+                const stopLoss = parseFloat(getValue(row, ['sl', 's/l', 'stop_loss', 'stoploss']));
+                const takeProfit = parseFloat(getValue(row, ['tp', 't/p', 'take_profit', 'takeprofit']));
+                const positionSize = parseFloat(getValue(row, ['lots', 'volume', 'size', 'positionsize']));
+                const direction = (getValue(row, ['type', 'direction']) || '').toLowerCase();
+                const symbol = getValue(row, ['symbol']);
+                const openTime = getValue(row, ['open time', 'opening_time_utc', 'time']);
+                const ticketId = getValue(row, ['ticket id', 'ticket', 'order', 'id']);
+                const reason = getValue(row, ['reason', 'comment']);
+                
 
                 // Basic validation
-                if (!symbol || !direction || !entryPrice) {
-                    console.warn('Skipping invalid row:', row);
-                    return; // Skip invalid row
+                if (!symbol || !direction || entryPrice === undefined || entryPrice === null) {
+                    console.warn('Skipping invalid row (missing symbol, direction, or entry price):', row);
+                    return;
                 }
+
+                let notes = `Imported trade.`;
+                if (ticketId) notes += ` Order #${ticketId}.`;
+                if (reason) notes += ` Reason: ${reason}.`;
 
                 const newEntry: Omit<JournalEntry, 'id'> = {
                     date: openTime ? new Date(openTime).toISOString() : new Date().toISOString(),
                     currencyPair: symbol,
                     direction: direction.includes('buy') ? 'Long' : 'Short',
                     entryPrice,
-                    stopLoss,
-                    takeProfit,
-                    positionSize: positionSize,
-                    pnl,
-                    result: pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'Breakeven',
-                    notes: `Imported trade. Order #${row.ticket || row.Order || row.id || 'N/A'}.`,
-                    adherenceToPlan: 'Yes', // Default value
+                    stopLoss: stopLoss || 0,
+                    takeProfit: takeProfit || 0,
+                    positionSize: positionSize || 0,
+                    pnl: isNaN(pnl) ? 0 : pnl,
+                    result: (pnl > 0) ? 'Win' : (pnl < 0) ? 'Loss' : 'Breakeven',
+                    notes: notes,
+                    adherenceToPlan: 'Yes',
                     isImported: true,
                     createdAt: serverTimestamp()
                 };
@@ -327,7 +354,6 @@ export default function JournalPage() {
             console.error("CSV Import Error:", error);
             toast({ variant: 'destructive', title: 'Import Failed', description: 'There was an error processing your file.' });
         } finally {
-            // Reset file input to allow re-uploading the same file
             if(fileInputRef.current) fileInputRef.current.value = '';
         }
     };

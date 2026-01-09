@@ -28,6 +28,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle as AlertDialogTitleComponent,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
@@ -283,14 +284,17 @@ export default function JournalPage() {
             // Normalize headers of the first row to create a map.
             const originalHeaders = Object.keys(json[0] || {});
             const normalizedHeaderMap: { [key: string]: string } = {};
+            const rowHeaderMap: { [key: string]: string } = {};
             originalHeaders.forEach(h => {
-                normalizedHeaderMap[h.trim().toLowerCase()] = h;
+                const normalizedKey = h.trim().toLowerCase();
+                normalizedHeaderMap[normalizedKey] = h;
+                rowHeaderMap[h] = normalizedKey;
             });
 
             const getValue = (row: any, keys: string[]) => {
                 for (const key of keys) {
-                    const normalizedKey = key.trim().toLowerCase();
-                    const originalHeader = normalizedHeaderMap[normalizedKey];
+                    // key is already normalized
+                    const originalHeader = normalizedHeaderMap[key];
                     if (originalHeader && row[originalHeader] !== null && row[originalHeader] !== undefined) {
                         return row[originalHeader];
                     }
@@ -301,14 +305,14 @@ export default function JournalPage() {
             json.forEach(row => {
                 // --- Flexible Column Mapping ---
                 const pnl = parseFloat(getValue(row, ['profit', 'profit_usd', 'pnl']));
-                const entryPrice = parseFloat(getValue(row, ['open price', 'opening_price', 'price', 'entry price']));
-                const stopLoss = parseFloat(getValue(row, ['sl', 's/l', 'stop_loss', 'stoploss']));
-                const takeProfit = parseFloat(getValue(row, ['tp', 't/p', 'take_profit', 'takeprofit']));
-                const positionSize = parseFloat(getValue(row, ['lots', 'volume', 'size', 'positionsize']));
+                const entryPrice = parseFloat(getValue(row, ['open price', 'open_price', 'price', 'entry price', 'entry_price']));
+                const stopLoss = parseFloat(getValue(row, ['sl', 's/l', 'stop_loss', 'stoploss', 'stop loss']));
+                const takeProfit = parseFloat(getValue(row, ['tp', 't/p', 'take_profit', 'takeprofit', 'take profit']));
+                const positionSize = parseFloat(getValue(row, ['lots', 'volume', 'size', 'positionsize', 'position size']));
                 const direction = (getValue(row, ['type', 'direction']) || '').toLowerCase();
                 const symbol = getValue(row, ['symbol']);
-                const openTime = getValue(row, ['open time', 'opening_time_utc', 'time']);
-                const ticketId = getValue(row, ['ticket id', 'ticket', 'order', 'id']);
+                const openTime = getValue(row, ['open time', 'open_time', 'time']);
+                const ticketId = getValue(row, ['ticket id', 'ticket_id', 'ticket', 'order', 'id']);
                 const reason = getValue(row, ['reason', 'comment']);
                 
 
