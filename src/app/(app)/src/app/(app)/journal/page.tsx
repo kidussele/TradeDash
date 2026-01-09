@@ -277,18 +277,25 @@ export default function JournalPage() {
             const batch = writeBatch(firestore);
             let importedCount = 0;
 
+            const getValue = (row: any, keys: string[]) => {
+              for (const key of keys) {
+                if (row[key] !== undefined) return row[key];
+              }
+              return undefined;
+            }
+
             json.forEach(row => {
-                // --- Column Mapping ---
-                // This is a flexible mapping to handle common CSV headers.
-                const pnl = parseFloat(row.profit_usd) || parseFloat(row.Profit) || parseFloat(row.pnl) || 0;
-                const entryPrice = parseFloat(row.opening_price) || parseFloat(row.Price) || parseFloat(row['Entry Price']) || parseFloat(row['Open Price']) || 0;
-                const stopLoss = parseFloat(row.stop_loss) || parseFloat(row['S/L']) || parseFloat(row.SL) || 0;
-                const takeProfit = parseFloat(row.take_profit) || parseFloat(row['T/P']) || parseFloat(row.TP) || 0;
-                const positionSize = parseFloat(row.lots) || parseFloat(row.Size) || parseFloat(row.positionSize) || parseFloat(row.Volume) || 0;
-                const direction = (row.type || row.Type || row.direction || '').toLowerCase();
-                const symbol = row.symbol || row.Symbol;
-                const openTime = row.opening_time_utc || row.Time || row['Open Time'];
-                const ticketId = row.ticket || row.Order || row.id || row['Ticket ID'] || 'N/A';
+                // --- Flexible Column Mapping ---
+                const pnl = parseFloat(getValue(row, ['Profit', 'profit_usd', 'pnl']));
+                const entryPrice = parseFloat(getValue(row, ['Open Price', 'opening_price', 'Price', 'Entry Price']));
+                const stopLoss = parseFloat(getValue(row, ['SL', 'S/L', 'stop_loss']));
+                const takeProfit = parseFloat(getValue(row, ['TP', 'T/P', 'take_profit']));
+                const positionSize = parseFloat(getValue(row, ['Lots', 'Volume', 'Size', 'positionSize']));
+                const direction = (getValue(row, ['Type', 'type', 'direction']) || '').toLowerCase();
+                const symbol = getValue(row, ['Symbol', 'symbol']);
+                const openTime = getValue(row, ['Open Time', 'opening_time_utc', 'Time']);
+                const ticketId = getValue(row, ['Ticket ID', 'ticket', 'Order', 'id']);
+                const reason = getValue(row, ['Reason', 'reason']);
 
                 // Basic validation
                 if (!symbol || !direction || !entryPrice) {
@@ -296,17 +303,22 @@ export default function JournalPage() {
                     return; // Skip invalid row
                 }
 
+                let notes = `Imported trade.`;
+                if (ticketId) notes += ` Order #${ticketId}.`;
+                if (reason) notes += ` Reason: ${reason}.`;
+
+
                 const newEntry: Omit<JournalEntry, 'id'> = {
                     date: openTime ? new Date(openTime).toISOString() : new Date().toISOString(),
                     currencyPair: symbol,
                     direction: direction.includes('buy') ? 'Long' : 'Short',
                     entryPrice,
-                    stopLoss,
-                    takeProfit,
-                    positionSize: positionSize,
-                    pnl,
-                    result: pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'Breakeven',
-                    notes: `Imported trade. Order #${ticketId}. Reason: ${row.Reason || 'N/A'}`,
+                    stopLoss: stopLoss || 0,
+                    takeProfit: takeProfit || 0,
+                    positionSize: positionSize || 0,
+                    pnl: pnl || 0,
+                    result: (pnl > 0) ? 'Win' : (pnl < 0) ? 'Loss' : 'Breakeven',
+                    notes: notes,
                     adherenceToPlan: 'Yes', // Default value
                     isImported: true,
                     createdAt: serverTimestamp()
