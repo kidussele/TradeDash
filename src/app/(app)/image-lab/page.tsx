@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Camera, Sparkles, RefreshCcw, Wand2, Loader2, Download } from 'lucide-react';
-import { imageLabFlow } from '@/ai/flows/image-lab-flow';
 
 export default function ImageLabPage() {
   const { toast } = useToast();
@@ -95,12 +94,12 @@ export default function ImageLabPage() {
     setGeneratedImage(null);
 
     try {
-      const result = await imageLabFlow({ photoDataUri: capturedImage, prompt: prompt.trim() });
-      if (result.imageUrl) {
-        setGeneratedImage(result.imageUrl);
-      } else {
-        throw new Error('The AI did not return an image. Please try a different prompt.');
-      }
+      // const result = await imageLabFlow({ photoDataUri: capturedImage, prompt: prompt.trim() });
+      // if (result.imageUrl) {
+      //   setGeneratedImage(result.imageUrl);
+      // } else {
+      //   throw new Error('The AI did not return an image. Please try a different prompt.');
+      // }
     } catch (error) {
       console.error('Image generation error:', error);
       toast({
