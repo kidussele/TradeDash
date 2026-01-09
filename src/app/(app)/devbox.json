@@ -1,0 +1,15 @@
+
+{
+  "packages": [
+    "nodejs@18",
+    "npm@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "npm install"
+    ],
+    "scripts": {
+      "dev": "npm run dev -- -p 3000"
+    }
+  }
+}
