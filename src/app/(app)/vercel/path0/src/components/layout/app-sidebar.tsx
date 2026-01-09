@@ -9,13 +9,13 @@ import {
   Goal,
   Check,
   ClipboardCheck,
-  BarChart,
   Newspaper,
   NotebookText,
   HeartPulse,
   Settings,
   Flame,
   AreaChart,
+  Library,
 } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { NavLink } from '@/components/ui/nav-link';
@@ -43,7 +43,7 @@ export function AppSidebar() {
     { name: 'Market Heatmap', href: '/heatmap', icon: Flame },
     { name: 'Economic Calendar', href: '/news', icon: Newspaper },
     { name: 'Self Development', href: '/self-development', icon: HeartPulse },
-    { name: 'Resources', href: '/resource', icon: BarChart },
+    { name: 'Resources', href: '/resource', icon: Library },
     { name: 'Reports', href: '/report', icon: AreaChart },
   ];
 
